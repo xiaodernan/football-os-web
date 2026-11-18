@@ -1,0 +1,2530 @@
+THE REAL-WORLD WIRE DOSSIER — real football, 2026/27, not the demo world.
+Source: OpenFootball · football.json (CC0-1.0), the committed snapshot the app serves at /live-wire, generated 2026-11-15T22:26:26.698Z.
+This block is STATIC and identical on every call. The demo world above and this real world below never merge: when the visitor asks about the demo world, the frozen digest answers; when the visitor asks about real leagues, THIS dossier answers. Never invent a fixture, a score, a standing or a club that is not printed here; if it is not here, say so plainly.
+
+══ Deutsche Bundesliga 2026/27 — 306 fixtures, 36 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. Borussia Dortmund — 12pts P4 W4 D0 L0 9:2 (+7) ucl [WWWW]
+  2. FC Bayern München — 10pts P4 W3 D1 L0 14:2 (+12) ucl [WDWW]
+  3. SC Freiburg — 10pts P4 W3 D1 L0 12:3 (+9) ucl [WWWD]
+  4. FC Augsburg — 7pts P4 W2 D1 L1 11:6 (+5) ucl [WWDL]
+  5. Bayer 04 Leverkusen — 7pts P4 W2 D1 L1 10:5 (+5) europa [LWDW]
+  6. 1. FSV Mainz 05 — 7pts P4 W2 D1 L1 10:6 (+4) europa [DWLW]
+  7. SV 07 Elversberg — 7pts P4 W2 D1 L1 8:7 (+1) [WWLD]
+  8. SV Werder Bremen — 7pts P4 W2 D1 L1 8:8 (+0) [LWDW]
+  9. RB Leipzig — 6pts P4 W2 D0 L2 9:5 (+4) [WLWL]
+  10. Eintracht Frankfurt — 5pts P4 W1 D2 L1 9:10 (-1) [DLWD]
+  11. FC Schalke 04 — 5pts P4 W1 D2 L1 3:4 (-1) [LDWD]
+  12. SC Paderborn 07 — 4pts P4 W1 D1 L2 3:5 (-2) [DLLW]
+  13. 1. FC Köln — 4pts P4 W1 D1 L2 6:9 (-3) [WLDL]
+  14. TSG 1899 Hoffenheim — 3pts P4 W1 D0 L3 7:10 (-3) [LLWL]
+  15. VfB Stuttgart — 3pts P4 W1 D0 L3 6:9 (-3) [LWLL]
+  16. Hamburger SV — 3pts P4 W1 D0 L3 2:13 (-11) playoff [LLLW]
+  17. 1. FC Union Berlin — 1pts P4 W0 D1 L3 4:17 (-13) relegation [DLLL]
+  18. Borussia Mönchengladbach — 0pts P4 W0 D0 L4 6:16 (-10) relegation [LLLL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-28 MD1 FC Bayern München 5-1 VfB Stuttgart
+  2026-08-29 MD1 RB Leipzig 3-0 Borussia Mönchengladbach
+  2026-08-29 MD1 1. FSV Mainz 05 0-0 SC Paderborn 07
+  2026-08-29 MD1 1. FC Union Berlin 3-3 Eintracht Frankfurt
+  2026-08-29 MD1 SV 07 Elversberg 3-2 Bayer 04 Leverkusen
+  2026-08-29 MD1 1. FC Köln 3-2 TSG 1899 Hoffenheim
+  2026-08-29 MD1 Borussia Dortmund 2-0 Hamburger SV
+  2026-08-30 MD1 SC Freiburg 4-1 SV Werder Bremen
+  2026-08-30 MD1 FC Augsburg 3-0 FC Schalke 04
+  2026-09-04 MD2 VfB Stuttgart 4-1 1. FC Köln
+  2026-09-05 MD2 SV Werder Bremen 3-1 RB Leipzig
+  2026-09-05 MD2 TSG 1899 Hoffenheim 2-3 Borussia Dortmund
+  2026-09-05 MD2 Bayer 04 Leverkusen 4-0 1. FC Union Berlin
+  2026-09-05 MD2 Borussia Mönchengladbach 3-4 SV 07 Elversberg
+  2026-09-05 MD2 SC Paderborn 07 0-1 SC Freiburg
+  2026-09-05 MD2 FC Schalke 04 0-0 FC Bayern München
+  2026-09-06 MD2 Hamburger SV 0-5 1. FSV Mainz 05
+  2026-09-06 MD2 Eintracht Frankfurt 1-4 FC Augsburg
+  2026-09-11 MD3 1. FC Union Berlin 1-3 FC Schalke 04
+  2026-09-12 MD3 TSG 1899 Hoffenheim 2-1 VfB Stuttgart
+  2026-09-12 MD3 Borussia Dortmund 3-0 SC Paderborn 07
+  2026-09-12 MD3 FC Augsburg 2-2 Bayer 04 Leverkusen
+  2026-09-12 MD3 1. FSV Mainz 05 1-3 Eintracht Frankfurt
+  2026-09-12 MD3 SC Freiburg 5-0 Borussia Mönchengladbach
+  2026-09-12 MD3 1. FC Köln 1-1 SV Werder Bremen
+  2026-09-13 MD3 RB Leipzig 5-0 Hamburger SV
+  2026-09-13 MD3 SV 07 Elversberg 1-2 FC Bayern München
+  2026-09-18 MD4 FC Bayern München 7-0 1. FC Union Berlin
+  2026-09-19 MD4 Hamburger SV 2-1 1. FC Köln
+  2026-09-19 MD4 Borussia Mönchengladbach 3-4 1. FSV Mainz 05
+  2026-09-19 MD4 SV Werder Bremen 3-2 FC Augsburg
+  2026-09-19 MD4 Eintracht Frankfurt 2-2 SC Freiburg
+  2026-09-19 MD4 VfB Stuttgart 0-1 Borussia Dortmund
+  2026-09-20 MD4 Bayer 04 Leverkusen 2-0 RB Leipzig
+  2026-09-20 MD4 FC Schalke 04 0-0 SV 07 Elversberg
+  2026-09-20 MD4 SC Paderborn 07 3-1 TSG 1899 Hoffenheim
+  2026-10-09 MD5 Borussia Dortmund — SV Werder Bremen
+  2026-10-10 MD5 1. FSV Mainz 05 — Bayer 04 Leverkusen
+  2026-10-10 MD5 SC Paderborn 07 — VfB Stuttgart
+  2026-10-10 MD5 1. FC Union Berlin — SV 07 Elversberg
+  2026-10-10 MD5 TSG 1899 Hoffenheim — Hamburger SV
+  2026-10-10 MD5 FC Augsburg — FC Bayern München
+  2026-10-10 MD5 RB Leipzig — Eintracht Frankfurt
+  2026-10-11 MD5 1. FC Köln — Borussia Mönchengladbach
+  2026-10-11 MD5 SC Freiburg — FC Schalke 04
+  2026-10-16 MD6 Eintracht Frankfurt — 1. FC Köln
+  2026-10-17 MD6 1. FC Union Berlin — Borussia Dortmund
+  2026-10-17 MD6 Hamburger SV — VfB Stuttgart
+  2026-10-17 MD6 SV Werder Bremen — SC Paderborn 07
+  2026-10-17 MD6 SV 07 Elversberg — FC Augsburg
+  2026-10-17 MD6 FC Schalke 04 — 1. FSV Mainz 05
+  2026-10-17 MD6 FC Bayern München — RB Leipzig
+  2026-10-18 MD6 Bayer 04 Leverkusen — SC Freiburg
+  2026-10-18 MD6 Borussia Mönchengladbach — TSG 1899 Hoffenheim
+  2026-10-23 MD7 VfB Stuttgart — Borussia Mönchengladbach
+  2026-10-24 MD7 1. FSV Mainz 05 — SV Werder Bremen
+  2026-10-24 MD7 1. FC Köln — FC Schalke 04
+  2026-10-24 MD7 RB Leipzig — SV 07 Elversberg
+  2026-10-24 MD7 SC Paderborn 07 — Hamburger SV
+  2026-10-24 MD7 FC Augsburg — 1. FC Union Berlin
+  2026-10-24 MD7 Borussia Dortmund — Eintracht Frankfurt
+  2026-10-25 MD7 TSG 1899 Hoffenheim — Bayer 04 Leverkusen
+  2026-10-25 MD7 SC Freiburg — FC Bayern München
+  2026-10-30 MD8 SV 07 Elversberg — 1. FSV Mainz 05
+  2026-10-31 MD8 Borussia Mönchengladbach — SC Paderborn 07
+  2026-10-31 MD8 FC Schalke 04 — RB Leipzig
+  2026-10-31 MD8 FC Augsburg — SC Freiburg
+  2026-10-31 MD8 SV Werder Bremen — TSG 1899 Hoffenheim
+  2026-10-31 MD8 Bayer 04 Leverkusen — VfB Stuttgart
+  2026-10-31 MD8 FC Bayern München — Borussia Dortmund
+  2026-11-01 MD8 1. FC Union Berlin — 1. FC Köln
+  2026-11-01 MD8 Eintracht Frankfurt — Hamburger SV
+  2026-11-06 MD9 Hamburger SV — Borussia Mönchengladbach
+  2026-11-07 MD9 RB Leipzig — FC Augsburg
+  2026-11-07 MD9 Borussia Dortmund — SV 07 Elversberg
+  2026-11-07 MD9 1. FSV Mainz 05 — FC Bayern München
+  2026-11-07 MD9 SC Paderborn 07 — Eintracht Frankfurt
+  2026-11-07 MD9 VfB Stuttgart — SV Werder Bremen
+  2026-11-08 MD9 1. FC Köln — Bayer 04 Leverkusen
+  2026-11-08 MD9 SC Freiburg — 1. FC Union Berlin
+  2026-11-08 MD9 TSG 1899 Hoffenheim — FC Schalke 04
+  2026-11-20 MD10 FC Bayern München — 1. FC Köln
+  2026-11-21 MD10 Bayer 04 Leverkusen — SC Paderborn 07
+  2026-11-21 MD10 1. FC Union Berlin — RB Leipzig
+  2026-11-21 MD10 SV 07 Elversberg — SC Freiburg
+  2026-11-21 MD10 Borussia Mönchengladbach — Borussia Dortmund
+  2026-11-21 MD10 Eintracht Frankfurt — TSG 1899 Hoffenheim
+  2026-11-21 MD10 FC Schalke 04 — VfB Stuttgart
+  2026-11-22 MD10 FC Augsburg — 1. FSV Mainz 05
+  2026-11-22 MD10 SV Werder Bremen — Hamburger SV
+  2026-11-27 MD11 SV Werder Bremen — Borussia Mönchengladbach
+  2026-11-28 MD11 1. FC Köln — SV 07 Elversberg
+  2026-11-28 MD11 1. FSV Mainz 05 — 1. FC Union Berlin
+  2026-11-28 MD11 SC Paderborn 07 — FC Schalke 04
+  2026-11-28 MD11 Hamburger SV — FC Bayern München
+  2026-11-28 MD11 VfB Stuttgart — Eintracht Frankfurt
+  2026-11-29 MD11 SC Freiburg — RB Leipzig
+  2026-11-29 MD11 TSG 1899 Hoffenheim — FC Augsburg
+  2026-11-29 MD11 Borussia Dortmund — Bayer 04 Leverkusen
+  2026-12-05 MD12 1. FC Union Berlin — Hamburger SV
+  2026-12-05 MD12 FC Schalke 04 — Borussia Dortmund
+  2026-12-05 MD12 Bayer 04 Leverkusen — Borussia Mönchengladbach
+  2026-12-05 MD12 Eintracht Frankfurt — SV Werder Bremen
+  2026-12-05 MD12 RB Leipzig — 1. FSV Mainz 05
+  2026-12-05 MD12 SV 07 Elversberg — VfB Stuttgart
+  2026-12-05 MD12 SC Freiburg — TSG 1899 Hoffenheim
+  2026-12-05 MD12 FC Bayern München — SC Paderborn 07
+  2026-12-05 MD12 FC Augsburg — 1. FC Köln
+  2026-12-12 MD13 SC Paderborn 07 — SV 07 Elversberg
+  2026-12-12 MD13 SV Werder Bremen — Bayer 04 Leverkusen
+  2026-12-12 MD13 VfB Stuttgart — 1. FC Union Berlin
+  2026-12-12 MD13 Borussia Dortmund — FC Augsburg
+  2026-12-12 MD13 Hamburger SV — FC Schalke 04
+  2026-12-12 MD13 1. FSV Mainz 05 — SC Freiburg
+  2026-12-12 MD13 1. FC Köln — RB Leipzig
+  2026-12-12 MD13 TSG 1899 Hoffenheim — FC Bayern München
+  2026-12-12 MD13 Borussia Mönchengladbach — Eintracht Frankfurt
+  2026-12-19 MD14 FC Schalke 04 — Borussia Mönchengladbach
+  2026-12-19 MD14 FC Bayern München — SV Werder Bremen
+  2026-12-19 MD14 SV 07 Elversberg — Hamburger SV
+  2026-12-19 MD14 Bayer 04 Leverkusen — Eintracht Frankfurt
+  2026-12-19 MD14 SC Freiburg — VfB Stuttgart
+  2026-12-19 MD14 RB Leipzig — Borussia Dortmund
+  2026-12-19 MD14 1. FSV Mainz 05 — 1. FC Köln
+  2026-12-19 MD14 1. FC Union Berlin — TSG 1899 Hoffenheim
+  2026-12-19 MD14 FC Augsburg — SC Paderborn 07
+  2027-01-09 MD15 VfB Stuttgart — FC Augsburg
+  2027-01-09 MD15 Hamburger SV — Bayer 04 Leverkusen
+  2027-01-09 MD15 1. FC Köln — SC Freiburg
+  2027-01-09 MD15 Eintracht Frankfurt — FC Schalke 04
+  2027-01-09 MD15 TSG 1899 Hoffenheim — SV 07 Elversberg
+  2027-01-09 MD15 Borussia Mönchengladbach — FC Bayern München
+  2027-01-09 MD15 Borussia Dortmund — 1. FSV Mainz 05
+  2027-01-09 MD15 SV Werder Bremen — 1. FC Union Berlin
+  2027-01-09 MD15 SC Paderborn 07 — RB Leipzig
+  2027-01-13 MD16 1. FSV Mainz 05 — TSG 1899 Hoffenheim
+  2027-01-13 MD16 SC Freiburg — Hamburger SV
+  2027-01-13 MD16 FC Schalke 04 — SV Werder Bremen
+  2027-01-13 MD16 RB Leipzig — VfB Stuttgart
+  2027-01-13 MD16 1. FC Union Berlin — SC Paderborn 07
+  2027-01-13 MD16 FC Bayern München — Bayer 04 Leverkusen
+  2027-01-13 MD16 FC Augsburg — Borussia Mönchengladbach
+  2027-01-13 MD16 SV 07 Elversberg — Eintracht Frankfurt
+  2027-01-13 MD16 1. FC Köln — Borussia Dortmund
+  2027-01-16 MD17 SV Werder Bremen — SV 07 Elversberg
+  2027-01-16 MD17 Eintracht Frankfurt — FC Bayern München
+  2027-01-16 MD17 SC Paderborn 07 — 1. FC Köln
+  2027-01-16 MD17 TSG 1899 Hoffenheim — RB Leipzig
+  2027-01-16 MD17 Bayer 04 Leverkusen — FC Schalke 04
+  2027-01-16 MD17 VfB Stuttgart — 1. FSV Mainz 05
+  2027-01-16 MD17 Hamburger SV — FC Augsburg
+  2027-01-16 MD17 Borussia Mönchengladbach — 1. FC Union Berlin
+  2027-01-16 MD17 Borussia Dortmund — SC Freiburg
+  2027-01-23 MD18 SV Werder Bremen — SC Freiburg
+  2027-01-23 MD18 Hamburger SV — Borussia Dortmund
+  2027-01-23 MD18 SC Paderborn 07 — 1. FSV Mainz 05
+  2027-01-23 MD18 FC Schalke 04 — FC Augsburg
+  2027-01-23 MD18 TSG 1899 Hoffenheim — 1. FC Köln
+  2027-01-23 MD18 VfB Stuttgart — FC Bayern München
+  2027-01-23 MD18 Borussia Mönchengladbach — RB Leipzig
+  2027-01-23 MD18 Eintracht Frankfurt — 1. FC Union Berlin
+  2027-01-23 MD18 Bayer 04 Leverkusen — SV 07 Elversberg
+  2027-01-30 MD19 SV 07 Elversberg — Borussia Mönchengladbach
+  2027-01-30 MD19 FC Augsburg — Eintracht Frankfurt
+  2027-01-30 MD19 1. FSV Mainz 05 — Hamburger SV
+  2027-01-30 MD19 RB Leipzig — SV Werder Bremen
+  2027-01-30 MD19 1. FC Köln — VfB Stuttgart
+  2027-01-30 MD19 1. FC Union Berlin — Bayer 04 Leverkusen
+  2027-01-30 MD19 SC Freiburg — SC Paderborn 07
+  2027-01-30 MD19 Borussia Dortmund — TSG 1899 Hoffenheim
+  2027-01-30 MD19 FC Bayern München — FC Schalke 04
+  2027-02-06 MD20 Eintracht Frankfurt — 1. FSV Mainz 05
+  2027-02-06 MD20 Borussia Mönchengladbach — SC Freiburg
+  2027-02-06 MD20 FC Schalke 04 — 1. FC Union Berlin
+  2027-02-06 MD20 Hamburger SV — RB Leipzig
+  2027-02-06 MD20 Bayer 04 Leverkusen — FC Augsburg
+  2027-02-06 MD20 SV Werder Bremen — 1. FC Köln
+  2027-02-06 MD20 VfB Stuttgart — TSG 1899 Hoffenheim
+  2027-02-06 MD20 FC Bayern München — SV 07 Elversberg
+  2027-02-06 MD20 SC Paderborn 07 — Borussia Dortmund
+  2027-02-13 MD21 1. FC Köln — Hamburger SV
+  2027-02-13 MD21 1. FSV Mainz 05 — Borussia Mönchengladbach
+  2027-02-13 MD21 1. FC Union Berlin — FC Bayern München
+  2027-02-13 MD21 SV 07 Elversberg — FC Schalke 04
+  2027-02-13 MD21 Borussia Dortmund — VfB Stuttgart
+  2027-02-13 MD21 TSG 1899 Hoffenheim — SC Paderborn 07
+  2027-02-13 MD21 SC Freiburg — Eintracht Frankfurt
+  2027-02-13 MD21 FC Augsburg — SV Werder Bremen
+  2027-02-13 MD21 RB Leipzig — Bayer 04 Leverkusen
+  2027-02-20 MD22 FC Schalke 04 — SC Freiburg
+  2027-02-20 MD22 VfB Stuttgart — SC Paderborn 07
+  2027-02-20 MD22 Borussia Mönchengladbach — 1. FC Köln
+  2027-02-20 MD22 SV Werder Bremen — Borussia Dortmund
+  2027-02-20 MD22 Hamburger SV — TSG 1899 Hoffenheim
+  2027-02-20 MD22 Bayer 04 Leverkusen — 1. FSV Mainz 05
+  2027-02-20 MD22 Eintracht Frankfurt — RB Leipzig
+  2027-02-20 MD22 FC Bayern München — FC Augsburg
+  2027-02-20 MD22 SV 07 Elversberg — 1. FC Union Berlin
+  2027-02-27 MD23 VfB Stuttgart — Hamburger SV
+  2027-02-27 MD23 1. FC Köln — Eintracht Frankfurt
+  2027-02-27 MD23 SC Freiburg — Bayer 04 Leverkusen
+  2027-02-27 MD23 FC Augsburg — SV 07 Elversberg
+  2027-02-27 MD23 1. FSV Mainz 05 — FC Schalke 04
+  2027-02-27 MD23 TSG 1899 Hoffenheim — Borussia Mönchengladbach
+  2027-02-27 MD23 SC Paderborn 07 — SV Werder Bremen
+  2027-02-27 MD23 RB Leipzig — FC Bayern München
+  2027-02-27 MD23 Borussia Dortmund — 1. FC Union Berlin
+  2027-03-03 MD24 Eintracht Frankfurt — Borussia Dortmund
+  2027-03-03 MD24 FC Schalke 04 — 1. FC Köln
+  2027-03-03 MD24 Bayer 04 Leverkusen — TSG 1899 Hoffenheim
+  2027-03-03 MD24 FC Bayern München — SC Freiburg
+  2027-03-03 MD24 SV Werder Bremen — 1. FSV Mainz 05
+  2027-03-03 MD24 1. FC Union Berlin — FC Augsburg
+  2027-03-03 MD24 SV 07 Elversberg — RB Leipzig
+  2027-03-03 MD24 Borussia Mönchengladbach — VfB Stuttgart
+  2027-03-03 MD24 Hamburger SV — SC Paderborn 07
+  2027-03-06 MD25 Borussia Dortmund — FC Bayern München
+  2027-03-06 MD25 SC Freiburg — FC Augsburg
+  2027-03-06 MD25 1. FSV Mainz 05 — SV 07 Elversberg
+  2027-03-06 MD25 Hamburger SV — Eintracht Frankfurt
+  2027-03-06 MD25 VfB Stuttgart — Bayer 04 Leverkusen
+  2027-03-06 MD25 RB Leipzig — FC Schalke 04
+  2027-03-06 MD25 SC Paderborn 07 — Borussia Mönchengladbach
+  2027-03-06 MD25 1. FC Köln — 1. FC Union Berlin
+  2027-03-06 MD25 TSG 1899 Hoffenheim — SV Werder Bremen
+  2027-03-13 MD26 1. FC Union Berlin — SC Freiburg
+  2027-03-13 MD26 SV 07 Elversberg — Borussia Dortmund
+  2027-03-13 MD26 Eintracht Frankfurt — SC Paderborn 07
+  2027-03-13 MD26 FC Augsburg — RB Leipzig
+  2027-03-13 MD26 Borussia Mönchengladbach — Hamburger SV
+  2027-03-13 MD26 SV Werder Bremen — VfB Stuttgart
+  2027-03-13 MD26 FC Schalke 04 — TSG 1899 Hoffenheim
+  2027-03-13 MD26 FC Bayern München — 1. FSV Mainz 05
+  2027-03-13 MD26 Bayer 04 Leverkusen — 1. FC Köln
+  2027-03-20 MD27 1. FC Köln — FC Bayern München
+  2027-03-20 MD27 TSG 1899 Hoffenheim — Eintracht Frankfurt
+  2027-03-20 MD27 Borussia Dortmund — Borussia Mönchengladbach
+  2027-03-20 MD27 1. FSV Mainz 05 — FC Augsburg
+  2027-03-20 MD27 VfB Stuttgart — FC Schalke 04
+  2027-03-20 MD27 RB Leipzig — 1. FC Union Berlin
+  2027-03-20 MD27 SC Freiburg — SV 07 Elversberg
+  2027-03-20 MD27 Hamburger SV — SV Werder Bremen
+  2027-03-20 MD27 SC Paderborn 07 — Bayer 04 Leverkusen
+  2027-04-03 MD28 RB Leipzig — SC Freiburg
+  2027-04-03 MD28 SV 07 Elversberg — 1. FC Köln
+  2027-04-03 MD28 FC Bayern München — Hamburger SV
+  2027-04-03 MD28 FC Augsburg — TSG 1899 Hoffenheim
+  2027-04-03 MD28 Borussia Mönchengladbach — SV Werder Bremen
+  2027-04-03 MD28 Eintracht Frankfurt — VfB Stuttgart
+  2027-04-03 MD28 1. FC Union Berlin — 1. FSV Mainz 05
+  2027-04-03 MD28 Bayer 04 Leverkusen — Borussia Dortmund
+  2027-04-03 MD28 FC Schalke 04 — SC Paderborn 07
+  2027-04-10 MD29 VfB Stuttgart — SV 07 Elversberg
+  2027-04-10 MD29 SC Paderborn 07 — FC Bayern München
+  2027-04-10 MD29 TSG 1899 Hoffenheim — SC Freiburg
+  2027-04-10 MD29 1. FSV Mainz 05 — RB Leipzig
+  2027-04-10 MD29 SV Werder Bremen — Eintracht Frankfurt
+  2027-04-10 MD29 Borussia Dortmund — FC Schalke 04
+  2027-04-10 MD29 Hamburger SV — 1. FC Union Berlin
+  2027-04-10 MD29 Borussia Mönchengladbach — Bayer 04 Leverkusen
+  2027-04-10 MD29 1. FC Köln — FC Augsburg
+  2027-04-17 MD30 Bayer 04 Leverkusen — SV Werder Bremen
+  2027-04-17 MD30 Eintracht Frankfurt — Borussia Mönchengladbach
+  2027-04-17 MD30 1. FC Union Berlin — VfB Stuttgart
+  2027-04-17 MD30 FC Bayern München — TSG 1899 Hoffenheim
+  2027-04-17 MD30 FC Schalke 04 — Hamburger SV
+  2027-04-17 MD30 SV 07 Elversberg — SC Paderborn 07
+  2027-04-17 MD30 FC Augsburg — Borussia Dortmund
+  2027-04-17 MD30 SC Freiburg — 1. FSV Mainz 05
+  2027-04-17 MD30 RB Leipzig — 1. FC Köln
+  2027-04-24 MD31 SV Werder Bremen — FC Bayern München
+  2027-04-24 MD31 1. FC Köln — 1. FSV Mainz 05
+  2027-04-24 MD31 Hamburger SV — SV 07 Elversberg
+  2027-04-24 MD31 Borussia Dortmund — RB Leipzig
+  2027-04-24 MD31 TSG 1899 Hoffenheim — 1. FC Union Berlin
+  2027-04-24 MD31 SC Paderborn 07 — FC Augsburg
+  2027-04-24 MD31 VfB Stuttgart — SC Freiburg
+  2027-04-24 MD31 Borussia Mönchengladbach — FC Schalke 04
+  2027-04-24 MD31 Eintracht Frankfurt — Bayer 04 Leverkusen
+  2027-05-08 MD32 FC Schalke 04 — Eintracht Frankfurt
+  2027-05-08 MD32 RB Leipzig — SC Paderborn 07
+  2027-05-08 MD32 SC Freiburg — 1. FC Köln
+  2027-05-08 MD32 1. FSV Mainz 05 — Borussia Dortmund
+  2027-05-08 MD32 FC Augsburg — VfB Stuttgart
+  2027-05-08 MD32 1. FC Union Berlin — SV Werder Bremen
+  2027-05-08 MD32 SV 07 Elversberg — TSG 1899 Hoffenheim
+  2027-05-08 MD32 Bayer 04 Leverkusen — Hamburger SV
+  2027-05-08 MD32 FC Bayern München — Borussia Mönchengladbach
+  2027-05-15 MD33 Eintracht Frankfurt — SV 07 Elversberg
+  2027-05-15 MD33 SC Paderborn 07 — 1. FC Union Berlin
+  2027-05-15 MD33 VfB Stuttgart — RB Leipzig
+  2027-05-15 MD33 Borussia Dortmund — 1. FC Köln
+  2027-05-15 MD33 Hamburger SV — SC Freiburg
+  2027-05-15 MD33 Bayer 04 Leverkusen — FC Bayern München
+  2027-05-15 MD33 SV Werder Bremen — FC Schalke 04
+  2027-05-15 MD33 Borussia Mönchengladbach — FC Augsburg
+  2027-05-15 MD33 TSG 1899 Hoffenheim — 1. FSV Mainz 05
+  2027-05-22 MD34 RB Leipzig — TSG 1899 Hoffenheim
+  2027-05-22 MD34 1. FC Union Berlin — Borussia Mönchengladbach
+  2027-05-22 MD34 1. FSV Mainz 05 — VfB Stuttgart
+  2027-05-22 MD34 FC Schalke 04 — Bayer 04 Leverkusen
+  2027-05-22 MD34 SV 07 Elversberg — SV Werder Bremen
+  2027-05-22 MD34 FC Bayern München — Eintracht Frankfurt
+  2027-05-22 MD34 FC Augsburg — Hamburger SV
+  2027-05-22 MD34 SC Freiburg — Borussia Dortmund
+  2027-05-22 MD34 1. FC Köln — SC Paderborn 07
+
+══ English Premier League 2026/27 — 380 fixtures, 50 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. Manchester City FC — 15pts P5 W5 D0 L0 13:5 (+8) ucl [WWWWW]
+  2. Arsenal FC — 12pts P5 W4 D0 L1 8:4 (+4) ucl [WWWWL]
+  3. Brighton & Hove Albion FC — 10pts P5 W3 D1 L1 16:5 (+11) ucl [WLDWW]
+  4. Brentford FC — 9pts P5 W2 D3 L0 10:4 (+6) ucl [WDDDW]
+  5. Leeds United FC — 9pts P5 W2 D3 L0 7:3 (+4) europa [WDDWD]
+  6. Liverpool FC — 9pts P5 W2 D3 L0 7:4 (+3) europa [DDWDW]
+  7. Everton FC — 9pts P5 W2 D3 L0 6:3 (+3) [WDDDW]
+  8. Hull City AFC — 8pts P5 W2 D2 L1 6:4 (+2) [WWDDL]
+  9. Newcastle United FC — 8pts P5 W2 D2 L1 9:9 (+0) [DWDLW]
+  10. Chelsea FC — 7pts P5 W2 D1 L2 10:12 (-2) [WWLDL]
+  11. Ipswich Town FC — 6pts P5 W2 D0 L3 7:11 (-4) [WLLWL]
+  12. Manchester United FC — 5pts P5 W1 D2 L2 8:8 (+0) [LWDLD]
+  13. Nottingham Forest FC — 5pts P5 W1 D2 L2 4:5 (-1) [LDDWL]
+  14. Sunderland AFC — 4pts P5 W1 D1 L3 6:10 (-4) [LWDLL]
+  15. Crystal Palace FC — 4pts P5 W1 D1 L3 6:11 (-5) [LLWLD]
+  16. Aston Villa FC — 4pts P5 W1 D1 L3 4:9 (-5) [LLDLW]
+  17. AFC Bournemouth — 3pts P5 W0 D3 L2 6:8 (-2) [LDDDL]
+  18. Coventry City FC — 3pts P5 W1 D0 L4 1:10 (-9) relegation [LLLLW]
+  19. Fulham FC — 2pts P5 W0 D2 L3 5:8 (-3) relegation [LLLDD]
+  20. Tottenham Hotspur FC — 2pts P5 W0 D2 L3 2:8 (-6) relegation [LLDDL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-21 MD1 Arsenal FC 3-0 Coventry City FC
+  2026-08-22 MD1 Hull City AFC 2-0 Manchester United FC
+  2026-08-22 MD1 Ipswich Town FC 2-1 Sunderland AFC
+  2026-08-22 MD1 Nottingham Forest FC 0-1 Leeds United FC
+  2026-08-22 MD1 Everton FC 2-0 Crystal Palace FC
+  2026-08-22 MD1 Brentford FC 3-0 Tottenham Hotspur FC
+  2026-08-23 MD1 Manchester City FC 2-1 AFC Bournemouth
+  2026-08-23 MD1 Brighton & Hove Albion FC 4-0 Aston Villa FC
+  2026-08-23 MD1 Newcastle United FC 2-2 Liverpool FC
+  2026-08-24 MD1 Fulham FC 2-3 Chelsea FC
+  2026-08-28 MD2 Crystal Palace FC 1-4 Manchester City FC
+  2026-08-29 MD2 Liverpool FC 2-2 Nottingham Forest FC
+  2026-08-29 MD2 AFC Bournemouth 1-1 Everton FC
+  2026-08-29 MD2 Coventry City FC 0-1 Hull City AFC
+  2026-08-29 MD2 Tottenham Hotspur FC 0-2 Newcastle United FC
+  2026-08-30 MD2 Sunderland AFC 1-0 Fulham FC
+  2026-08-30 MD2 Chelsea FC 4-3 Brighton & Hove Albion FC
+  2026-08-30 MD2 Leeds United FC 1-1 Brentford FC
+  2026-08-30 MD2 Manchester United FC 5-2 Ipswich Town FC
+  2026-08-31 MD2 Aston Villa FC 0-1 Arsenal FC
+  2026-09-04 MD3 Ipswich Town FC 0-2 Liverpool FC
+  2026-09-05 MD3 Newcastle United FC 2-2 AFC Bournemouth
+  2026-09-05 MD3 Nottingham Forest FC 0-0 Tottenham Hotspur FC
+  2026-09-05 MD3 Manchester City FC 1-0 Coventry City FC
+  2026-09-05 MD3 Brighton & Hove Albion FC 1-1 Leeds United FC
+  2026-09-05 MD3 Brentford FC 1-1 Sunderland AFC
+  2026-09-05 MD3 Fulham FC 2-3 Crystal Palace FC
+  2026-09-05 MD3 Hull City AFC 0-0 Aston Villa FC
+  2026-09-06 MD3 Everton FC 2-2 Manchester United FC
+  2026-09-06 MD3 Arsenal FC 2-1 Chelsea FC
+  2026-09-12 MD4 Crystal Palace FC 2-3 Ipswich Town FC
+  2026-09-12 MD4 Liverpool FC 0-0 Fulham FC
+  2026-09-12 MD4 Aston Villa FC 1-2 Nottingham Forest FC
+  2026-09-12 MD4 AFC Bournemouth 2-2 Brentford FC
+  2026-09-12 MD4 Chelsea FC 2-2 Hull City AFC
+  2026-09-12 MD4 Tottenham Hotspur FC 0-0 Everton FC
+  2026-09-12 MD4 Sunderland AFC 0-2 Arsenal FC
+  2026-09-13 MD4 Coventry City FC 0-5 Brighton & Hove Albion FC
+  2026-09-13 MD4 Manchester United FC 0-1 Manchester City FC
+  2026-09-14 MD4 Leeds United FC 4-1 Newcastle United FC
+  2026-09-18 MD5 Brentford FC 3-0 Chelsea FC
+  2026-09-19 MD5 Tottenham Hotspur FC 2-3 Aston Villa FC
+  2026-09-19 MD5 Everton FC 1-0 Ipswich Town FC
+  2026-09-19 MD5 Brighton & Hove Albion FC 3-0 Arsenal FC
+  2026-09-19 MD5 Newcastle United FC 2-1 Hull City AFC
+  2026-09-19 MD5 Nottingham Forest FC 0-1 Coventry City FC
+  2026-09-20 MD5 AFC Bournemouth 0-1 Liverpool FC
+  2026-09-20 MD5 Leeds United FC 0-0 Crystal Palace FC
+  2026-09-20 MD5 Manchester City FC 5-3 Sunderland AFC
+  2026-09-20 MD5 Fulham FC 1-1 Manchester United FC
+  2026-10-10 MD6 Arsenal FC — Leeds United FC
+  2026-10-10 MD6 Sunderland AFC — Brighton & Hove Albion FC
+  2026-10-10 MD6 Chelsea FC — AFC Bournemouth
+  2026-10-10 MD6 Ipswich Town FC — Fulham FC
+  2026-10-10 MD6 Aston Villa FC — Brentford FC
+  2026-10-10 MD6 Manchester United FC — Tottenham Hotspur FC
+  2026-10-11 MD6 Hull City AFC — Everton FC
+  2026-10-11 MD6 Crystal Palace FC — Nottingham Forest FC
+  2026-10-11 MD6 Liverpool FC — Manchester City FC
+  2026-10-12 MD6 Coventry City FC — Newcastle United FC
+  2026-10-17 MD7 Everton FC — Chelsea FC
+  2026-10-17 MD7 Fulham FC — Hull City AFC
+  2026-10-17 MD7 Manchester City FC — Ipswich Town FC
+  2026-10-17 MD7 Brentford FC — Liverpool FC
+  2026-10-17 MD7 Newcastle United FC — Aston Villa FC
+  2026-10-18 MD7 AFC Bournemouth — Sunderland AFC
+  2026-10-18 MD7 Leeds United FC — Manchester United FC
+  2026-10-18 MD7 Brighton & Hove Albion FC — Crystal Palace FC
+  2026-10-18 MD7 Nottingham Forest FC — Arsenal FC
+  2026-10-19 MD7 Tottenham Hotspur FC — Coventry City FC
+  2026-10-23 MD8 Ipswich Town FC — Nottingham Forest FC
+  2026-10-24 MD8 Aston Villa FC — Manchester City FC
+  2026-10-24 MD8 Arsenal FC — Everton FC
+  2026-10-24 MD8 Coventry City FC — Fulham FC
+  2026-10-24 MD8 Chelsea FC — Tottenham Hotspur FC
+  2026-10-25 MD8 Liverpool FC — Brighton & Hove Albion FC
+  2026-10-25 MD8 Crystal Palace FC — Newcastle United FC
+  2026-10-25 MD8 Manchester United FC — AFC Bournemouth
+  2026-10-25 MD8 Hull City AFC — Brentford FC
+  2026-10-25 MD8 Sunderland AFC — Leeds United FC
+  2026-10-31 MD9 Chelsea FC — Manchester United FC
+  2026-10-31 MD9 Manchester City FC — Brighton & Hove Albion FC
+  2026-10-31 MD9 AFC Bournemouth — Leeds United FC
+  2026-10-31 MD9 Coventry City FC — Sunderland AFC
+  2026-10-31 MD9 Hull City AFC — Ipswich Town FC
+  2026-10-31 MD9 Brentford FC — Nottingham Forest FC
+  2026-10-31 MD9 Tottenham Hotspur FC — Crystal Palace FC
+  2026-10-31 MD9 Aston Villa FC — Fulham FC
+  2026-11-01 MD9 Liverpool FC — Arsenal FC
+  2026-11-02 MD9 Newcastle United FC — Everton FC
+  2026-11-07 MD10 Arsenal FC — Hull City AFC
+  2026-11-07 MD10 Nottingham Forest FC — Manchester City FC
+  2026-11-07 MD10 Leeds United FC — Tottenham Hotspur FC
+  2026-11-07 MD10 Fulham FC — Newcastle United FC
+  2026-11-07 MD10 Everton FC — Coventry City FC
+  2026-11-07 MD10 Crystal Palace FC — Liverpool FC
+  2026-11-07 MD10 Sunderland AFC — Chelsea FC
+  2026-11-07 MD10 Ipswich Town FC — AFC Bournemouth
+  2026-11-07 MD10 Brighton & Hove Albion FC — Brentford FC
+  2026-11-07 MD10 Manchester United FC — Aston Villa FC
+  2026-11-21 MD11 Chelsea FC — Leeds United FC
+  2026-11-21 MD11 Manchester City FC — Fulham FC
+  2026-11-21 MD11 Aston Villa FC — Sunderland AFC
+  2026-11-21 MD11 Liverpool FC — Manchester United FC
+  2026-11-21 MD11 Hull City AFC — Brighton & Hove Albion FC
+  2026-11-21 MD11 AFC Bournemouth — Nottingham Forest FC
+  2026-11-21 MD11 Tottenham Hotspur FC — Ipswich Town FC
+  2026-11-21 MD11 Brentford FC — Everton FC
+  2026-11-21 MD11 Coventry City FC — Crystal Palace FC
+  2026-11-21 MD11 Newcastle United FC — Arsenal FC
+  2026-11-28 MD12 Leeds United FC — Coventry City FC
+  2026-11-28 MD12 Ipswich Town FC — Aston Villa FC
+  2026-11-28 MD12 Arsenal FC — Manchester City FC
+  2026-11-28 MD12 Manchester United FC — Brentford FC
+  2026-11-28 MD12 Everton FC — Liverpool FC
+  2026-11-28 MD12 Fulham FC — AFC Bournemouth
+  2026-11-28 MD12 Nottingham Forest FC — Chelsea FC
+  2026-11-28 MD12 Brighton & Hove Albion FC — Newcastle United FC
+  2026-11-28 MD12 Sunderland AFC — Tottenham Hotspur FC
+  2026-11-28 MD12 Crystal Palace FC — Hull City AFC
+  2026-12-02 MD13 Tottenham Hotspur FC — Fulham FC
+  2026-12-02 MD13 Liverpool FC — Sunderland AFC
+  2026-12-02 MD13 Hull City AFC — Nottingham Forest FC
+  2026-12-02 MD13 Chelsea FC — Crystal Palace FC
+  2026-12-02 MD13 Aston Villa FC — Everton FC
+  2026-12-02 MD13 Brentford FC — Arsenal FC
+  2026-12-02 MD13 Coventry City FC — Ipswich Town FC
+  2026-12-02 MD13 Manchester City FC — Leeds United FC
+  2026-12-02 MD13 Newcastle United FC — Manchester United FC
+  2026-12-02 MD13 AFC Bournemouth — Brighton & Hove Albion FC
+  2026-12-05 MD14 Tottenham Hotspur FC — Arsenal FC
+  2026-12-05 MD14 Manchester United FC — Coventry City FC
+  2026-12-05 MD14 Leeds United FC — Ipswich Town FC
+  2026-12-05 MD14 Newcastle United FC — Sunderland AFC
+  2026-12-05 MD14 Chelsea FC — Liverpool FC
+  2026-12-05 MD14 Brentford FC — Manchester City FC
+  2026-12-05 MD14 AFC Bournemouth — Hull City AFC
+  2026-12-05 MD14 Aston Villa FC — Crystal Palace FC
+  2026-12-05 MD14 Nottingham Forest FC — Brighton & Hove Albion FC
+  2026-12-05 MD14 Everton FC — Fulham FC
+  2026-12-12 MD15 Sunderland AFC — Nottingham Forest FC
+  2026-12-12 MD15 Crystal Palace FC — Manchester United FC
+  2026-12-12 MD15 Hull City AFC — Tottenham Hotspur FC
+  2026-12-12 MD15 Brighton & Hove Albion FC — Everton FC
+  2026-12-12 MD15 Ipswich Town FC — Newcastle United FC
+  2026-12-12 MD15 Coventry City FC — Aston Villa FC
+  2026-12-12 MD15 Arsenal FC — AFC Bournemouth
+  2026-12-12 MD15 Manchester City FC — Chelsea FC
+  2026-12-12 MD15 Liverpool FC — Leeds United FC
+  2026-12-12 MD15 Fulham FC — Brentford FC
+  2026-12-19 MD16 Leeds United FC — Fulham FC
+  2026-12-19 MD16 Brighton & Hove Albion FC — Ipswich Town FC
+  2026-12-19 MD16 Nottingham Forest FC — Everton FC
+  2026-12-19 MD16 Brentford FC — Newcastle United FC
+  2026-12-19 MD16 Manchester City FC — Hull City AFC
+  2026-12-19 MD16 Sunderland AFC — Crystal Palace FC
+  2026-12-19 MD16 AFC Bournemouth — Coventry City FC
+  2026-12-19 MD16 Arsenal FC — Manchester United FC
+  2026-12-19 MD16 Liverpool FC — Tottenham Hotspur FC
+  2026-12-19 MD16 Chelsea FC — Aston Villa FC
+  2026-12-26 MD17 Aston Villa FC — Leeds United FC
+  2026-12-26 MD17 Everton FC — Sunderland AFC
+  2026-12-26 MD17 Fulham FC — Brighton & Hove Albion FC
+  2026-12-26 MD17 Tottenham Hotspur FC — AFC Bournemouth
+  2026-12-26 MD17 Ipswich Town FC — Brentford FC
+  2026-12-26 MD17 Hull City AFC — Liverpool FC
+  2026-12-26 MD17 Newcastle United FC — Manchester City FC
+  2026-12-27 MD17 Coventry City FC — Chelsea FC
+  2026-12-27 MD17 Manchester United FC — Nottingham Forest FC
+  2026-12-27 MD17 Crystal Palace FC — Arsenal FC
+  2026-12-29 MD18 Hull City AFC — Leeds United FC
+  2026-12-29 MD18 Tottenham Hotspur FC — Brighton & Hove Albion FC
+  2026-12-29 MD18 Everton FC — Manchester City FC
+  2026-12-30 MD18 Fulham FC — Arsenal FC
+  2026-12-30 MD18 Coventry City FC — Brentford FC
+  2026-12-30 MD18 Newcastle United FC — Nottingham Forest FC
+  2026-12-30 MD18 Manchester United FC — Sunderland AFC
+  2026-12-30 MD18 Crystal Palace FC — AFC Bournemouth
+  2026-12-30 MD18 Aston Villa FC — Liverpool FC
+  2026-12-30 MD18 Ipswich Town FC — Chelsea FC
+  2027-01-01 MD19 Leeds United FC — Everton FC
+  2027-01-02 MD19 Brighton & Hove Albion FC — Manchester United FC
+  2027-01-02 MD19 Brentford FC — Crystal Palace FC
+  2027-01-02 MD19 Arsenal FC — Ipswich Town FC
+  2027-01-02 MD19 Sunderland AFC — Hull City AFC
+  2027-01-02 MD19 Liverpool FC — Coventry City FC
+  2027-01-02 MD19 Nottingham Forest FC — Fulham FC
+  2027-01-02 MD19 AFC Bournemouth — Aston Villa FC
+  2027-01-03 MD19 Chelsea FC — Newcastle United FC
+  2027-01-03 MD19 Manchester City FC — Tottenham Hotspur FC
+  2027-01-05 MD20 Arsenal FC — Brentford FC
+  2027-01-05 MD20 Brighton & Hove Albion FC — AFC Bournemouth
+  2027-01-05 MD20 Nottingham Forest FC — Hull City AFC
+  2027-01-05 MD20 Everton FC — Aston Villa FC
+  2027-01-05 MD20 Sunderland AFC — Liverpool FC
+  2027-01-06 MD20 Fulham FC — Tottenham Hotspur FC
+  2027-01-06 MD20 Crystal Palace FC — Chelsea FC
+  2027-01-06 MD20 Ipswich Town FC — Coventry City FC
+  2027-01-06 MD20 Leeds United FC — Manchester City FC
+  2027-01-07 MD20 Manchester United FC — Newcastle United FC
+  2027-01-16 MD21 AFC Bournemouth — Ipswich Town FC
+  2027-01-16 MD21 Manchester City FC — Nottingham Forest FC
+  2027-01-16 MD21 Chelsea FC — Sunderland AFC
+  2027-01-16 MD21 Brentford FC — Brighton & Hove Albion FC
+  2027-01-16 MD21 Aston Villa FC — Manchester United FC
+  2027-01-16 MD21 Tottenham Hotspur FC — Leeds United FC
+  2027-01-16 MD21 Coventry City FC — Everton FC
+  2027-01-16 MD21 Liverpool FC — Crystal Palace FC
+  2027-01-16 MD21 Hull City AFC — Arsenal FC
+  2027-01-16 MD21 Newcastle United FC — Fulham FC
+  2027-01-23 MD22 Ipswich Town FC — Hull City AFC
+  2027-01-23 MD22 Everton FC — Brentford FC
+  2027-01-23 MD22 Sunderland AFC — Coventry City FC
+  2027-01-23 MD22 Nottingham Forest FC — AFC Bournemouth
+  2027-01-23 MD22 Arsenal FC — Newcastle United FC
+  2027-01-23 MD22 Leeds United FC — Chelsea FC
+  2027-01-23 MD22 Fulham FC — Aston Villa FC
+  2027-01-23 MD22 Manchester United FC — Liverpool FC
+  2027-01-23 MD22 Brighton & Hove Albion FC — Manchester City FC
+  2027-01-23 MD22 Crystal Palace FC — Tottenham Hotspur FC
+  2027-01-30 MD23 Tottenham Hotspur FC — Sunderland AFC
+  2027-01-30 MD23 Brentford FC — Manchester United FC
+  2027-01-30 MD23 Newcastle United FC — Brighton & Hove Albion FC
+  2027-01-30 MD23 Hull City AFC — Crystal Palace FC
+  2027-01-30 MD23 Coventry City FC — Leeds United FC
+  2027-01-30 MD23 AFC Bournemouth — Fulham FC
+  2027-01-30 MD23 Chelsea FC — Nottingham Forest FC
+  2027-01-30 MD23 Liverpool FC — Everton FC
+  2027-01-30 MD23 Manchester City FC — Arsenal FC
+  2027-01-30 MD23 Aston Villa FC — Ipswich Town FC
+  2027-02-06 MD24 Arsenal FC — Liverpool FC
+  2027-02-06 MD24 Brighton & Hove Albion FC — Hull City AFC
+  2027-02-06 MD24 Sunderland AFC — Aston Villa FC
+  2027-02-06 MD24 Crystal Palace FC — Coventry City FC
+  2027-02-06 MD24 Ipswich Town FC — Tottenham Hotspur FC
+  2027-02-06 MD24 Everton FC — Newcastle United FC
+  2027-02-06 MD24 Fulham FC — Manchester City FC
+  2027-02-06 MD24 Leeds United FC — AFC Bournemouth
+  2027-02-06 MD24 Manchester United FC — Chelsea FC
+  2027-02-06 MD24 Nottingham Forest FC — Brentford FC
+  2027-02-10 MD25 Everton FC — Leeds United FC
+  2027-02-10 MD25 Coventry City FC — Liverpool FC
+  2027-02-10 MD25 Hull City AFC — Sunderland AFC
+  2027-02-10 MD25 Aston Villa FC — AFC Bournemouth
+  2027-02-10 MD25 Crystal Palace FC — Brentford FC
+  2027-02-10 MD25 Newcastle United FC — Chelsea FC
+  2027-02-10 MD25 Fulham FC — Nottingham Forest FC
+  2027-02-10 MD25 Tottenham Hotspur FC — Manchester City FC
+  2027-02-10 MD25 Manchester United FC — Brighton & Hove Albion FC
+  2027-02-10 MD25 Ipswich Town FC — Arsenal FC
+  2027-02-20 MD26 Manchester City FC — Newcastle United FC
+  2027-02-20 MD26 AFC Bournemouth — Crystal Palace FC
+  2027-02-20 MD26 Brentford FC — Coventry City FC
+  2027-02-20 MD26 Chelsea FC — Ipswich Town FC
+  2027-02-20 MD26 Liverpool FC — Hull City AFC
+  2027-02-20 MD26 Arsenal FC — Fulham FC
+  2027-02-20 MD26 Nottingham Forest FC — Manchester United FC
+  2027-02-20 MD26 Brighton & Hove Albion FC — Tottenham Hotspur FC
+  2027-02-20 MD26 Sunderland AFC — Everton FC
+  2027-02-20 MD26 Leeds United FC — Aston Villa FC
+  2027-02-27 MD27 Crystal Palace FC — Sunderland AFC
+  2027-02-27 MD27 Manchester United FC — Arsenal FC
+  2027-02-27 MD27 Ipswich Town FC — Brighton & Hove Albion FC
+  2027-02-27 MD27 Coventry City FC — AFC Bournemouth
+  2027-02-27 MD27 Everton FC — Nottingham Forest FC
+  2027-02-27 MD27 Fulham FC — Leeds United FC
+  2027-02-27 MD27 Aston Villa FC — Chelsea FC
+  2027-02-27 MD27 Tottenham Hotspur FC — Liverpool FC
+  2027-02-27 MD27 Newcastle United FC — Brentford FC
+  2027-02-27 MD27 Hull City AFC — Manchester City FC
+  2027-03-03 MD28 Nottingham Forest FC — Newcastle United FC
+  2027-03-03 MD28 AFC Bournemouth — Tottenham Hotspur FC
+  2027-03-03 MD28 Manchester City FC — Everton FC
+  2027-03-03 MD28 Arsenal FC — Crystal Palace FC
+  2027-03-03 MD28 Leeds United FC — Hull City AFC
+  2027-03-03 MD28 Sunderland AFC — Manchester United FC
+  2027-03-03 MD28 Liverpool FC — Aston Villa FC
+  2027-03-03 MD28 Brighton & Hove Albion FC — Fulham FC
+  2027-03-03 MD28 Brentford FC — Ipswich Town FC
+  2027-03-03 MD28 Chelsea FC — Coventry City FC
+  2027-03-13 MD29 Leeds United FC — Brighton & Hove Albion FC
+  2027-03-13 MD29 Tottenham Hotspur FC — Nottingham Forest FC
+  2027-03-13 MD29 Crystal Palace FC — Fulham FC
+  2027-03-13 MD29 Liverpool FC — Ipswich Town FC
+  2027-03-13 MD29 Coventry City FC — Manchester City FC
+  2027-03-13 MD29 AFC Bournemouth — Newcastle United FC
+  2027-03-13 MD29 Chelsea FC — Arsenal FC
+  2027-03-13 MD29 Aston Villa FC — Hull City AFC
+  2027-03-13 MD29 Manchester United FC — Everton FC
+  2027-03-13 MD29 Sunderland AFC — Brentford FC
+  2027-03-20 MD30 Brentford FC — AFC Bournemouth
+  2027-03-20 MD30 Brighton & Hove Albion FC — Coventry City FC
+  2027-03-20 MD30 Manchester City FC — Manchester United FC
+  2027-03-20 MD30 Ipswich Town FC — Crystal Palace FC
+  2027-03-20 MD30 Arsenal FC — Sunderland AFC
+  2027-03-20 MD30 Fulham FC — Liverpool FC
+  2027-03-20 MD30 Hull City AFC — Chelsea FC
+  2027-03-20 MD30 Nottingham Forest FC — Aston Villa FC
+  2027-03-20 MD30 Everton FC — Tottenham Hotspur FC
+  2027-03-20 MD30 Newcastle United FC — Leeds United FC
+  2027-04-10 MD31 Sunderland AFC — Ipswich Town FC
+  2027-04-10 MD31 Leeds United FC — Nottingham Forest FC
+  2027-04-10 MD31 Manchester United FC — Hull City AFC
+  2027-04-10 MD31 Chelsea FC — Fulham FC
+  2027-04-10 MD31 Liverpool FC — Newcastle United FC
+  2027-04-10 MD31 Coventry City FC — Arsenal FC
+  2027-04-10 MD31 AFC Bournemouth — Manchester City FC
+  2027-04-10 MD31 Crystal Palace FC — Everton FC
+  2027-04-10 MD31 Tottenham Hotspur FC — Brentford FC
+  2027-04-10 MD31 Aston Villa FC — Brighton & Hove Albion FC
+  2027-04-17 MD32 Brighton & Hove Albion FC — Chelsea FC
+  2027-04-17 MD32 Fulham FC — Sunderland AFC
+  2027-04-17 MD32 Brentford FC — Leeds United FC
+  2027-04-17 MD32 Nottingham Forest FC — Liverpool FC
+  2027-04-17 MD32 Hull City AFC — Coventry City FC
+  2027-04-17 MD32 Arsenal FC — Aston Villa FC
+  2027-04-17 MD32 Ipswich Town FC — Manchester United FC
+  2027-04-17 MD32 Manchester City FC — Crystal Palace FC
+  2027-04-17 MD32 Newcastle United FC — Tottenham Hotspur FC
+  2027-04-17 MD32 Everton FC — AFC Bournemouth
+  2027-04-24 MD33 Chelsea FC — Manchester City FC
+  2027-04-24 MD33 AFC Bournemouth — Arsenal FC
+  2027-04-24 MD33 Tottenham Hotspur FC — Hull City AFC
+  2027-04-24 MD33 Manchester United FC — Crystal Palace FC
+  2027-04-24 MD33 Everton FC — Brighton & Hove Albion FC
+  2027-04-24 MD33 Nottingham Forest FC — Sunderland AFC
+  2027-04-24 MD33 Newcastle United FC — Ipswich Town FC
+  2027-04-24 MD33 Aston Villa FC — Coventry City FC
+  2027-04-24 MD33 Brentford FC — Fulham FC
+  2027-04-24 MD33 Leeds United FC — Liverpool FC
+  2027-05-01 MD34 Sunderland AFC — Newcastle United FC
+  2027-05-01 MD34 Brighton & Hove Albion FC — Nottingham Forest FC
+  2027-05-01 MD34 Coventry City FC — Manchester United FC
+  2027-05-01 MD34 Hull City AFC — AFC Bournemouth
+  2027-05-01 MD34 Manchester City FC — Brentford FC
+  2027-05-01 MD34 Fulham FC — Everton FC
+  2027-05-01 MD34 Liverpool FC — Chelsea FC
+  2027-05-01 MD34 Arsenal FC — Tottenham Hotspur FC
+  2027-05-01 MD34 Crystal Palace FC — Aston Villa FC
+  2027-05-01 MD34 Ipswich Town FC — Leeds United FC
+  2027-05-08 MD35 Manchester City FC — Liverpool FC
+  2027-05-08 MD35 Leeds United FC — Arsenal FC
+  2027-05-08 MD35 Fulham FC — Ipswich Town FC
+  2027-05-08 MD35 Nottingham Forest FC — Crystal Palace FC
+  2027-05-08 MD35 Brentford FC — Aston Villa FC
+  2027-05-08 MD35 Newcastle United FC — Coventry City FC
+  2027-05-08 MD35 Brighton & Hove Albion FC — Sunderland AFC
+  2027-05-08 MD35 Tottenham Hotspur FC — Chelsea FC
+  2027-05-08 MD35 Everton FC — Hull City AFC
+  2027-05-08 MD35 AFC Bournemouth — Manchester United FC
+  2027-05-15 MD36 Hull City AFC — Fulham FC
+  2027-05-15 MD36 Manchester United FC — Leeds United FC
+  2027-05-15 MD36 Crystal Palace FC — Brighton & Hove Albion FC
+  2027-05-15 MD36 Aston Villa FC — Newcastle United FC
+  2027-05-15 MD36 Chelsea FC — Everton FC
+  2027-05-15 MD36 Coventry City FC — Tottenham Hotspur FC
+  2027-05-15 MD36 Sunderland AFC — AFC Bournemouth
+  2027-05-15 MD36 Liverpool FC — Brentford FC
+  2027-05-15 MD36 Ipswich Town FC — Manchester City FC
+  2027-05-15 MD36 Arsenal FC — Nottingham Forest FC
+  2027-05-23 MD37 Brentford FC — Hull City AFC
+  2027-05-23 MD37 Newcastle United FC — Crystal Palace FC
+  2027-05-23 MD37 Tottenham Hotspur FC — Manchester United FC
+  2027-05-23 MD37 Leeds United FC — Sunderland AFC
+  2027-05-23 MD37 Brighton & Hove Albion FC — Liverpool FC
+  2027-05-23 MD37 Nottingham Forest FC — Ipswich Town FC
+  2027-05-23 MD37 AFC Bournemouth — Chelsea FC
+  2027-05-23 MD37 Fulham FC — Coventry City FC
+  2027-05-23 MD37 Everton FC — Arsenal FC
+  2027-05-23 MD37 Manchester City FC — Aston Villa FC
+  2027-05-30 MD38 Ipswich Town FC — Everton FC
+  2027-05-30 MD38 Arsenal FC — Brighton & Hove Albion FC
+  2027-05-30 MD38 Liverpool FC — AFC Bournemouth
+  2027-05-30 MD38 Coventry City FC — Nottingham Forest FC
+  2027-05-30 MD38 Aston Villa FC — Tottenham Hotspur FC
+  2027-05-30 MD38 Hull City AFC — Newcastle United FC
+  2027-05-30 MD38 Manchester United FC — Fulham FC
+  2027-05-30 MD38 Sunderland AFC — Manchester City FC
+  2027-05-30 MD38 Chelsea FC — Brentford FC
+  2027-05-30 MD38 Crystal Palace FC — Leeds United FC
+
+══ Spain Primera División 2026/27 — 380 fixtures, 69 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. FC Barcelona — 21pts P7 W7 D0 L0 31:7 (+24) ucl [WWWWW]
+  2. Club Atlético de Madrid — 16pts P7 W5 D1 L1 16:7 (+9) ucl [WLWWW]
+  3. Real Betis Balompié — 16pts P7 W5 D1 L1 9:7 (+2) ucl [LWWWD]
+  4. Real Madrid CF — 15pts P7 W5 D0 L2 18:8 (+10) ucl [WLWWL]
+  5. Sevilla FC — 13pts P7 W4 D1 L2 10:9 (+1) europa [LDWWL]
+  6. Deportivo Alavés — 11pts P7 W3 D2 L2 11:6 (+5) europa [WWLLD]
+  7. RC Deportivo La Coruña — 10pts P7 W2 D4 L1 10:8 (+2) [WWDLD]
+  8. Real Sociedad de Fútbol — 10pts P7 W3 D1 L3 9:13 (-4) [WDWLW]
+  9. Villarreal CF — 8pts P7 W2 D2 L3 13:12 (+1) [LLLWW]
+  10. Athletic Club — 8pts P6 W2 D2 L2 7:6 (+1) [LWWDD]
+  11. Getafe CF — 8pts P7 W2 D2 L3 4:7 (-3) [LDDLW]
+  12. Rayo Vallecano de Madrid — 8pts P7 W2 D2 L3 11:16 (-5) [LWLWD]
+  13. CA Osasuna — 8pts P7 W2 D2 L3 6:13 (-7) [WLLLD]
+  14. RC Celta de Vigo — 7pts P7 W1 D4 L2 8:6 (+2) [LDDDW]
+  15. RCD Espanyol de Barcelona — 7pts P7 W2 D1 L4 10:10 (+0) [LDWLL]
+  16. Real Racing Club de Santander — 7pts P7 W2 D1 L4 11:21 (-10) [WLWLL]
+  17. Levante UD — 5pts P6 W1 D2 L3 8:12 (-4) [DWDLL]
+  18. Elche CF — 5pts P7 W1 D2 L4 11:17 (-6) relegation [LLDLW]
+  19. Valencia CF — 4pts P7 W1 D1 L5 4:13 (-9) relegation [LLLWL]
+  20. Málaga CF — 3pts P7 W0 D3 L4 3:12 (-9) relegation [LDDLL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-15 MD1 Deportivo Alavés 3-0 Getafe CF
+  2026-08-15 MD1 Sevilla FC 2-1 Rayo Vallecano de Madrid
+  2026-08-16 MD1 Real Racing Club de Santander 2-2 Villarreal CF
+  2026-08-16 MD1 RCD Espanyol de Barcelona 3-0 Levante UD
+  2026-08-17 MD1 RC Deportivo La Coruña 1-1 Elche CF
+  2026-08-19 MD1 Club Atlético de Madrid 2-0 Málaga CF
+  2026-08-20 MD2 Rayo Vallecano de Madrid 1-1 Deportivo Alavés
+  2026-08-21 MD2 Real Betis Balompié 1-0 Real Sociedad de Fútbol
+  2026-08-22 MD2 Athletic Club 1-3 Sevilla FC
+  2026-08-22 MD2 Valencia CF 0-0 RC Celta de Vigo
+  2026-08-22 MD2 RCD Espanyol de Barcelona 1-2 Real Madrid CF
+  2026-08-23 MD2 Club Atlético de Madrid 2-2 Villarreal CF
+  2026-08-23 MD2 Getafe CF 1-0 Real Racing Club de Santander
+  2026-08-23 MD2 Elche CF 0-5 FC Barcelona
+  2026-08-24 MD2 CA Osasuna 0-0 Levante UD
+  2026-08-24 MD2 Málaga CF 1-1 RC Deportivo La Coruña
+  2026-08-25 MD1 Valencia CF 0-1 Real Betis Balompié
+  2026-08-26 MD1 Real Madrid CF 4-1 Real Sociedad de Fútbol
+  2026-08-27 MD1 RC Celta de Vigo 1-2 CA Osasuna
+  2026-08-27 MD1 FC Barcelona 2-0 Athletic Club
+  2026-08-28 MD3 Real Racing Club de Santander 3-2 Elche CF
+  2026-08-28 MD3 Deportivo Alavés 1-0 Villarreal CF
+  2026-08-29 MD3 Levante UD 5-2 Real Betis Balompié
+  2026-08-29 MD3 Real Sociedad de Fútbol 2-1 RCD Espanyol de Barcelona
+  2026-08-29 MD3 Sevilla FC 1-3 Club Atlético de Madrid
+  2026-08-30 MD3 Real Madrid CF 4-0 Málaga CF
+  2026-08-30 MD3 RC Deportivo La Coruña 3-1 Valencia CF
+  2026-08-30 MD3 RC Celta de Vigo 0-2 Athletic Club
+  2026-08-31 MD3 CA Osasuna 1-0 Getafe CF
+  2026-08-31 MD3 FC Barcelona 5-2 Rayo Vallecano de Madrid
+  2026-09-03 MD6 Real Sociedad de Fútbol 0-0 RC Celta de Vigo
+  2026-09-04 MD4 Real Betis Balompié 1-0 Real Madrid CF
+  2026-09-05 MD4 Athletic Club 3-0 Club Atlético de Madrid
+  2026-09-05 MD4 Rayo Vallecano de Madrid 3-2 Real Racing Club de Santander
+  2026-09-05 MD4 Villarreal CF 2-3 RC Deportivo La Coruña
+  2026-09-06 MD4 Valencia CF 0-5 FC Barcelona
+  2026-09-06 MD4 Deportivo Alavés 5-2 CA Osasuna
+  2026-09-06 MD4 Málaga CF 0-0 Levante UD
+  2026-09-06 MD4 RCD Espanyol de Barcelona 1-1 Sevilla FC
+  2026-09-07 MD4 Getafe CF 1-1 RC Celta de Vigo
+  2026-09-07 MD4 Elche CF 2-3 Real Sociedad de Fútbol
+  2026-09-11 MD5 Sevilla FC 1-0 Valencia CF
+  2026-09-12 MD5 Real Racing Club de Santander 2-1 Deportivo Alavés
+  2026-09-12 MD5 CA Osasuna 0-2 RCD Espanyol de Barcelona
+  2026-09-12 MD5 Athletic Club 1-1 Elche CF
+  2026-09-12 MD5 Real Madrid CF 4-1 Rayo Vallecano de Madrid
+  2026-09-13 MD5 RC Celta de Vigo 1-1 Málaga CF
+  2026-09-13 MD5 Levante UD 2-4 FC Barcelona
+  2026-09-13 MD5 Getafe CF 1-1 RC Deportivo La Coruña
+  2026-09-13 MD5 Real Sociedad de Fútbol 0-3 Club Atlético de Madrid
+  2026-09-14 MD5 Villarreal CF 1-2 Real Betis Balompié
+  2026-09-15 MD6 Rayo Vallecano de Madrid 2-1 RCD Espanyol de Barcelona
+  2026-09-15 MD6 Deportivo Alavés 0-1 Valencia CF
+  2026-09-15 MD6 Elche CF 2-3 Real Madrid CF
+  2026-09-16 MD6 RC Deportivo La Coruña 0-1 Sevilla FC
+  2026-09-16 MD6 Club Atlético de Madrid 4-0 CA Osasuna
+  2026-09-16 MD6 FC Barcelona 7-2 Real Racing Club de Santander
+  2026-09-17 MD6 Real Betis Balompié 1-0 Getafe CF
+  2026-09-17 MD6 Málaga CF 1-3 Villarreal CF
+  2026-09-18 MD7 RCD Espanyol de Barcelona 1-3 Elche CF
+  2026-09-19 MD7 CA Osasuna 1-1 Rayo Vallecano de Madrid
+  2026-09-19 MD7 Athletic Club 0-0 Deportivo Alavés
+  2026-09-19 MD7 RC Celta de Vigo 5-0 Real Racing Club de Santander
+  2026-09-19 MD7 Sevilla FC 1-3 FC Barcelona
+  2026-09-20 MD7 Getafe CF 1-0 Málaga CF
+  2026-09-20 MD7 Club Atlético de Madrid 2-1 Real Madrid CF
+  2026-09-20 MD7 RC Deportivo La Coruña 1-1 Real Betis Balompié
+  2026-09-20 MD7 Villarreal CF 3-1 Levante UD
+  2026-09-20 MD7 Valencia CF 2-3 Real Sociedad de Fútbol
+  2026-10-09 MD8 Málaga CF — RCD Espanyol de Barcelona
+  2026-10-10 MD8 Rayo Vallecano de Madrid — Athletic Club
+  2026-10-10 MD8 Deportivo Alavés — Club Atlético de Madrid
+  2026-10-10 MD8 FC Barcelona — Getafe CF
+  2026-10-10 MD8 Real Madrid CF — Villarreal CF
+  2026-10-11 MD8 Elche CF — RC Celta de Vigo
+  2026-10-11 MD8 Real Sociedad de Fútbol — RC Deportivo La Coruña
+  2026-10-11 MD8 Real Betis Balompié — CA Osasuna
+  2026-10-11 MD8 Real Racing Club de Santander — Valencia CF
+  2026-10-12 MD8 Levante UD — Sevilla FC
+  2026-10-16 MD9 RC Deportivo La Coruña — Levante UD
+  2026-10-17 MD9 RCD Espanyol de Barcelona — Club Atlético de Madrid
+  2026-10-17 MD9 Villarreal CF — Elche CF
+  2026-10-17 MD9 Real Betis Balompié — FC Barcelona
+  2026-10-17 MD9 Valencia CF — Athletic Club
+  2026-10-18 MD9 CA Osasuna — Real Racing Club de Santander
+  2026-10-18 MD9 RC Celta de Vigo — Deportivo Alavés
+  2026-10-18 MD9 Málaga CF — Real Sociedad de Fútbol
+  2026-10-18 MD9 Real Madrid CF — Sevilla FC
+  2026-10-19 MD9 Getafe CF — Rayo Vallecano de Madrid
+  2026-10-21 MD6 Levante UD — Athletic Club
+  2026-10-25 MD10 Rayo Vallecano de Madrid — Elche CF
+  2026-10-25 MD10 Deportivo Alavés — Málaga CF
+  2026-10-25 MD10 Athletic Club — Getafe CF
+  2026-10-25 MD10 Sevilla FC — CA Osasuna
+  2026-10-25 MD10 Valencia CF — Villarreal CF
+  2026-10-25 MD10 FC Barcelona — Real Madrid CF
+  2026-10-25 MD10 Club Atlético de Madrid — RC Deportivo La Coruña
+  2026-10-25 MD10 RC Celta de Vigo — Real Betis Balompié
+  2026-10-25 MD10 Real Sociedad de Fútbol — Levante UD
+  2026-10-25 MD10 Real Racing Club de Santander — RCD Espanyol de Barcelona
+  2026-11-01 MD11 Real Betis Balompié — Málaga CF
+  2026-11-01 MD11 Villarreal CF — RCD Espanyol de Barcelona
+  2026-11-01 MD11 Elche CF — Valencia CF
+  2026-11-01 MD11 Athletic Club — Real Sociedad de Fútbol
+  2026-11-01 MD11 Levante UD — Club Atlético de Madrid
+  2026-11-01 MD11 RC Deportivo La Coruña — CA Osasuna
+  2026-11-01 MD11 FC Barcelona — Deportivo Alavés
+  2026-11-01 MD11 Getafe CF — Sevilla FC
+  2026-11-01 MD11 Real Racing Club de Santander — Real Madrid CF
+  2026-11-01 MD11 Rayo Vallecano de Madrid — RC Celta de Vigo
+  2026-11-08 MD12 Elche CF — Real Betis Balompié
+  2026-11-08 MD12 CA Osasuna — Athletic Club
+  2026-11-08 MD12 Sevilla FC — Deportivo Alavés
+  2026-11-08 MD12 Valencia CF — Real Madrid CF
+  2026-11-08 MD12 RC Celta de Vigo — Levante UD
+  2026-11-08 MD12 Real Sociedad de Fútbol — Rayo Vallecano de Madrid
+  2026-11-08 MD12 Málaga CF — Real Racing Club de Santander
+  2026-11-08 MD12 RCD Espanyol de Barcelona — RC Deportivo La Coruña
+  2026-11-08 MD12 Club Atlético de Madrid — FC Barcelona
+  2026-11-08 MD12 Villarreal CF — Getafe CF
+  2026-11-22 MD13 Athletic Club — RCD Espanyol de Barcelona
+  2026-11-22 MD13 FC Barcelona — Villarreal CF
+  2026-11-22 MD13 Real Racing Club de Santander — Real Sociedad de Fútbol
+  2026-11-22 MD13 Rayo Vallecano de Madrid — Valencia CF
+  2026-11-22 MD13 CA Osasuna — Málaga CF
+  2026-11-22 MD13 Getafe CF — Club Atlético de Madrid
+  2026-11-22 MD13 Real Madrid CF — RC Celta de Vigo
+  2026-11-22 MD13 Deportivo Alavés — RC Deportivo La Coruña
+  2026-11-22 MD13 Sevilla FC — Real Betis Balompié
+  2026-11-22 MD13 Levante UD — Elche CF
+  2026-11-29 MD14 RC Celta de Vigo — Villarreal CF
+  2026-11-29 MD14 Elche CF — Club Atlético de Madrid
+  2026-11-29 MD14 Real Betis Balompié — Rayo Vallecano de Madrid
+  2026-11-29 MD14 Valencia CF — CA Osasuna
+  2026-11-29 MD14 Real Madrid CF — Deportivo Alavés
+  2026-11-29 MD14 RCD Espanyol de Barcelona — Getafe CF
+  2026-11-29 MD14 Real Sociedad de Fútbol — Sevilla FC
+  2026-11-29 MD14 Levante UD — Real Racing Club de Santander
+  2026-11-29 MD14 RC Deportivo La Coruña — FC Barcelona
+  2026-11-29 MD14 Málaga CF — Athletic Club
+  2026-12-06 MD15 CA Osasuna — Elche CF
+  2026-12-06 MD15 Sevilla FC — Málaga CF
+  2026-12-06 MD15 Deportivo Alavés — RCD Espanyol de Barcelona
+  2026-12-06 MD15 Club Atlético de Madrid — Real Betis Balompié
+  2026-12-06 MD15 Real Racing Club de Santander — RC Deportivo La Coruña
+  2026-12-06 MD15 FC Barcelona — RC Celta de Vigo
+  2026-12-06 MD15 Getafe CF — Valencia CF
+  2026-12-06 MD15 Athletic Club — Real Madrid CF
+  2026-12-06 MD15 Villarreal CF — Real Sociedad de Fútbol
+  2026-12-06 MD15 Rayo Vallecano de Madrid — Levante UD
+  2026-12-13 MD16 RCD Espanyol de Barcelona — RC Celta de Vigo
+  2026-12-13 MD16 Málaga CF — FC Barcelona
+  2026-12-13 MD16 Real Madrid CF — CA Osasuna
+  2026-12-13 MD16 RC Deportivo La Coruña — Athletic Club
+  2026-12-13 MD16 Levante UD — Deportivo Alavés
+  2026-12-13 MD16 Elche CF — Sevilla FC
+  2026-12-13 MD16 Villarreal CF — Rayo Vallecano de Madrid
+  2026-12-13 MD16 Real Betis Balompié — Real Racing Club de Santander
+  2026-12-13 MD16 Real Sociedad de Fútbol — Getafe CF
+  2026-12-13 MD16 Club Atlético de Madrid — Valencia CF
+  2026-12-20 MD17 Athletic Club — Real Betis Balompié
+  2026-12-20 MD17 Getafe CF — Levante UD
+  2026-12-20 MD17 Deportivo Alavés — Elche CF
+  2026-12-20 MD17 Valencia CF — RCD Espanyol de Barcelona
+  2026-12-20 MD17 CA Osasuna — Villarreal CF
+  2026-12-20 MD17 FC Barcelona — Real Sociedad de Fútbol
+  2026-12-20 MD17 RC Celta de Vigo — Club Atlético de Madrid
+  2026-12-20 MD17 Rayo Vallecano de Madrid — Málaga CF
+  2026-12-20 MD17 RC Deportivo La Coruña — Real Madrid CF
+  2026-12-20 MD17 Sevilla FC — Real Racing Club de Santander
+  2027-01-03 MD18 Real Madrid CF — Getafe CF
+  2027-01-03 MD18 Real Sociedad de Fútbol — CA Osasuna
+  2027-01-03 MD18 Levante UD — Valencia CF
+  2027-01-03 MD18 Real Racing Club de Santander — Athletic Club
+  2027-01-03 MD18 Málaga CF — Elche CF
+  2027-01-03 MD18 Real Betis Balompié — Deportivo Alavés
+  2027-01-03 MD18 RC Celta de Vigo — RC Deportivo La Coruña
+  2027-01-03 MD18 RCD Espanyol de Barcelona — FC Barcelona
+  2027-01-03 MD18 Villarreal CF — Sevilla FC
+  2027-01-03 MD18 Rayo Vallecano de Madrid — Club Atlético de Madrid
+  2027-01-10 MD19 Athletic Club — Villarreal CF
+  2027-01-10 MD19 Elche CF — Getafe CF
+  2027-01-10 MD19 Real Madrid CF — Levante UD
+  2027-01-10 MD19 CA Osasuna — FC Barcelona
+  2027-01-10 MD19 RC Deportivo La Coruña — Rayo Vallecano de Madrid
+  2027-01-10 MD19 Club Atlético de Madrid — Real Racing Club de Santander
+  2027-01-10 MD19 Deportivo Alavés — Real Sociedad de Fútbol
+  2027-01-10 MD19 Sevilla FC — RC Celta de Vigo
+  2027-01-10 MD19 RCD Espanyol de Barcelona — Real Betis Balompié
+  2027-01-10 MD19 Valencia CF — Málaga CF
+  2027-01-17 MD20 Málaga CF — Real Madrid CF
+  2027-01-17 MD20 FC Barcelona — Elche CF
+  2027-01-17 MD20 Villarreal CF — Deportivo Alavés
+  2027-01-17 MD20 Real Racing Club de Santander — CA Osasuna
+  2027-01-17 MD20 Levante UD — RCD Espanyol de Barcelona
+  2027-01-17 MD20 RC Celta de Vigo — Valencia CF
+  2027-01-17 MD20 Getafe CF — Athletic Club
+  2027-01-17 MD20 Rayo Vallecano de Madrid — Sevilla FC
+  2027-01-17 MD20 Real Betis Balompié — RC Deportivo La Coruña
+  2027-01-17 MD20 Club Atlético de Madrid — Real Sociedad de Fútbol
+  2027-01-24 MD21 Real Madrid CF — Real Betis Balompié
+  2027-01-24 MD21 Getafe CF — CA Osasuna
+  2027-01-24 MD21 Valencia CF — Sevilla FC
+  2027-01-24 MD21 Elche CF — Rayo Vallecano de Madrid
+  2027-01-24 MD21 Deportivo Alavés — FC Barcelona
+  2027-01-24 MD21 Real Sociedad de Fútbol — Málaga CF
+  2027-01-24 MD21 Real Racing Club de Santander — RC Celta de Vigo
+  2027-01-24 MD21 Athletic Club — Levante UD
+  2027-01-24 MD21 RCD Espanyol de Barcelona — Villarreal CF
+  2027-01-24 MD21 RC Deportivo La Coruña — Club Atlético de Madrid
+  2027-01-31 MD22 Real Betis Balompié — Elche CF
+  2027-01-31 MD22 Rayo Vallecano de Madrid — Real Madrid CF
+  2027-01-31 MD22 Club Atlético de Madrid — RCD Espanyol de Barcelona
+  2027-01-31 MD22 RC Celta de Vigo — Getafe CF
+  2027-01-31 MD22 Villarreal CF — Real Racing Club de Santander
+  2027-01-31 MD22 Levante UD — Real Sociedad de Fútbol
+  2027-01-31 MD22 FC Barcelona — Valencia CF
+  2027-01-31 MD22 Sevilla FC — Athletic Club
+  2027-01-31 MD22 CA Osasuna — RC Deportivo La Coruña
+  2027-01-31 MD22 Málaga CF — Deportivo Alavés
+  2027-02-07 MD23 Athletic Club — CA Osasuna
+  2027-02-07 MD23 Deportivo Alavés — RC Celta de Vigo
+  2027-02-07 MD23 Real Betis Balompié — Sevilla FC
+  2027-02-07 MD23 Elche CF — Levante UD
+  2027-02-07 MD23 RCD Espanyol de Barcelona — Rayo Vallecano de Madrid
+  2027-02-07 MD23 Getafe CF — Villarreal CF
+  2027-02-07 MD23 RC Deportivo La Coruña — Málaga CF
+  2027-02-07 MD23 Real Sociedad de Fútbol — Real Madrid CF
+  2027-02-07 MD23 Valencia CF — Real Racing Club de Santander
+  2027-02-07 MD23 FC Barcelona — Club Atlético de Madrid
+  2027-02-14 MD24 Sevilla FC — RCD Espanyol de Barcelona
+  2027-02-14 MD24 CA Osasuna — Club Atlético de Madrid
+  2027-02-14 MD24 RC Celta de Vigo — Rayo Vallecano de Madrid
+  2027-02-14 MD24 Villarreal CF — FC Barcelona
+  2027-02-14 MD24 Real Sociedad de Fútbol — Real Betis Balompié
+  2027-02-14 MD24 Elche CF — RC Deportivo La Coruña
+  2027-02-14 MD24 Valencia CF — Deportivo Alavés
+  2027-02-14 MD24 Levante UD — Málaga CF
+  2027-02-14 MD24 Real Racing Club de Santander — Getafe CF
+  2027-02-14 MD24 Real Madrid CF — Athletic Club
+  2027-02-21 MD25 Deportivo Alavés — Real Racing Club de Santander
+  2027-02-21 MD25 Málaga CF — Real Betis Balompié
+  2027-02-21 MD25 Villarreal CF — Valencia CF
+  2027-02-21 MD25 FC Barcelona — Levante UD
+  2027-02-21 MD25 Athletic Club — RC Celta de Vigo
+  2027-02-21 MD25 RCD Espanyol de Barcelona — CA Osasuna
+  2027-02-21 MD25 Sevilla FC — Real Madrid CF
+  2027-02-21 MD25 Club Atlético de Madrid — Elche CF
+  2027-02-21 MD25 RC Deportivo La Coruña — Real Sociedad de Fútbol
+  2027-02-21 MD25 Rayo Vallecano de Madrid — Getafe CF
+  2027-02-28 MD26 RC Celta de Vigo — RCD Espanyol de Barcelona
+  2027-02-28 MD26 Levante UD — RC Deportivo La Coruña
+  2027-02-28 MD26 Málaga CF — Club Atlético de Madrid
+  2027-02-28 MD26 CA Osasuna — Sevilla FC
+  2027-02-28 MD26 Real Madrid CF — Valencia CF
+  2027-02-28 MD26 Getafe CF — Deportivo Alavés
+  2027-02-28 MD26 Athletic Club — FC Barcelona
+  2027-02-28 MD26 Real Racing Club de Santander — Rayo Vallecano de Madrid
+  2027-02-28 MD26 Real Betis Balompié — Villarreal CF
+  2027-02-28 MD26 Real Sociedad de Fútbol — Elche CF
+  2027-03-07 MD27 FC Barcelona — Real Betis Balompié
+  2027-03-07 MD27 Elche CF — Málaga CF
+  2027-03-07 MD27 Deportivo Alavés — Athletic Club
+  2027-03-07 MD27 Rayo Vallecano de Madrid — CA Osasuna
+  2027-03-07 MD27 Sevilla FC — Real Sociedad de Fútbol
+  2027-03-07 MD27 Club Atlético de Madrid — RC Celta de Vigo
+  2027-03-07 MD27 Villarreal CF — Real Madrid CF
+  2027-03-07 MD27 Valencia CF — Levante UD
+  2027-03-07 MD27 RC Deportivo La Coruña — Getafe CF
+  2027-03-07 MD27 RCD Espanyol de Barcelona — Real Racing Club de Santander
+  2027-03-14 MD28 CA Osasuna — RC Celta de Vigo
+  2027-03-14 MD28 Elche CF — Villarreal CF
+  2027-03-14 MD28 Deportivo Alavés — Sevilla FC
+  2027-03-14 MD28 Athletic Club — Valencia CF
+  2027-03-14 MD28 Real Betis Balompié — Levante UD
+  2027-03-14 MD28 Real Racing Club de Santander — Club Atlético de Madrid
+  2027-03-14 MD28 Málaga CF — Rayo Vallecano de Madrid
+  2027-03-14 MD28 Getafe CF — Real Sociedad de Fútbol
+  2027-03-14 MD28 FC Barcelona — RC Deportivo La Coruña
+  2027-03-14 MD28 Real Madrid CF — RCD Espanyol de Barcelona
+  2027-03-21 MD29 Villarreal CF — Málaga CF
+  2027-03-21 MD29 Sevilla FC — Elche CF
+  2027-03-21 MD29 Levante UD — CA Osasuna
+  2027-03-21 MD29 RC Celta de Vigo — Real Madrid CF
+  2027-03-21 MD29 Rayo Vallecano de Madrid — FC Barcelona
+  2027-03-21 MD29 Real Sociedad de Fútbol — Deportivo Alavés
+  2027-03-21 MD29 RCD Espanyol de Barcelona — Athletic Club
+  2027-03-21 MD29 Real Racing Club de Santander — Real Betis Balompié
+  2027-03-21 MD29 Valencia CF — RC Deportivo La Coruña
+  2027-03-21 MD29 Club Atlético de Madrid — Getafe CF
+  2027-04-04 MD30 Levante UD — Rayo Vallecano de Madrid
+  2027-04-04 MD30 FC Barcelona — Sevilla FC
+  2027-04-04 MD30 Málaga CF — CA Osasuna
+  2027-04-04 MD30 Athletic Club — Real Racing Club de Santander
+  2027-04-04 MD30 RC Deportivo La Coruña — Villarreal CF
+  2027-04-04 MD30 Real Sociedad de Fútbol — Valencia CF
+  2027-04-04 MD30 Elche CF — Deportivo Alavés
+  2027-04-04 MD30 Real Madrid CF — Club Atlético de Madrid
+  2027-04-04 MD30 Getafe CF — RCD Espanyol de Barcelona
+  2027-04-04 MD30 Real Betis Balompié — RC Celta de Vigo
+  2027-04-11 MD31 Rayo Vallecano de Madrid — Real Sociedad de Fútbol
+  2027-04-11 MD31 RCD Espanyol de Barcelona — Málaga CF
+  2027-04-11 MD31 Villarreal CF — Athletic Club
+  2027-04-11 MD31 Deportivo Alavés — Real Betis Balompié
+  2027-04-11 MD31 Valencia CF — Getafe CF
+  2027-04-11 MD31 Sevilla FC — RC Deportivo La Coruña
+  2027-04-11 MD31 RC Celta de Vigo — Elche CF
+  2027-04-11 MD31 Real Racing Club de Santander — FC Barcelona
+  2027-04-11 MD31 CA Osasuna — Real Madrid CF
+  2027-04-11 MD31 Club Atlético de Madrid — Levante UD
+  2027-04-18 MD32 Club Atlético de Madrid — Sevilla FC
+  2027-04-18 MD32 FC Barcelona — RCD Espanyol de Barcelona
+  2027-04-18 MD32 Levante UD — Villarreal CF
+  2027-04-18 MD32 Real Sociedad de Fútbol — Real Racing Club de Santander
+  2027-04-18 MD32 Málaga CF — Valencia CF
+  2027-04-18 MD32 RC Deportivo La Coruña — RC Celta de Vigo
+  2027-04-18 MD32 Elche CF — CA Osasuna
+  2027-04-18 MD32 Deportivo Alavés — Rayo Vallecano de Madrid
+  2027-04-18 MD32 Real Betis Balompié — Athletic Club
+  2027-04-18 MD32 Getafe CF — Real Madrid CF
+  2027-04-21 MD33 Getafe CF — Real Betis Balompié
+  2027-04-21 MD33 Valencia CF — Rayo Vallecano de Madrid
+  2027-04-21 MD33 RC Celta de Vigo — FC Barcelona
+  2027-04-21 MD33 CA Osasuna — Deportivo Alavés
+  2027-04-21 MD33 Real Madrid CF — Elche CF
+  2027-04-21 MD33 Athletic Club — RC Deportivo La Coruña
+  2027-04-21 MD33 Real Racing Club de Santander — Málaga CF
+  2027-04-21 MD33 Villarreal CF — Club Atlético de Madrid
+  2027-04-21 MD33 Sevilla FC — Levante UD
+  2027-04-21 MD33 RCD Espanyol de Barcelona — Real Sociedad de Fútbol
+  2027-05-02 MD34 RC Deportivo La Coruña — Real Racing Club de Santander
+  2027-05-02 MD34 RC Celta de Vigo — Sevilla FC
+  2027-05-02 MD34 Real Sociedad de Fútbol — Athletic Club
+  2027-05-02 MD34 FC Barcelona — CA Osasuna
+  2027-05-02 MD34 Rayo Vallecano de Madrid — Villarreal CF
+  2027-05-02 MD34 Málaga CF — Getafe CF
+  2027-05-02 MD34 Real Betis Balompié — Valencia CF
+  2027-05-02 MD34 Elche CF — RCD Espanyol de Barcelona
+  2027-05-02 MD34 Levante UD — Real Madrid CF
+  2027-05-02 MD34 Club Atlético de Madrid — Deportivo Alavés
+  2027-05-09 MD35 Valencia CF — Club Atlético de Madrid
+  2027-05-09 MD35 CA Osasuna — Real Sociedad de Fútbol
+  2027-05-09 MD35 Deportivo Alavés — Levante UD
+  2027-05-09 MD35 Athletic Club — Málaga CF
+  2027-05-09 MD35 Real Racing Club de Santander — Sevilla FC
+  2027-05-09 MD35 Rayo Vallecano de Madrid — RC Deportivo La Coruña
+  2027-05-09 MD35 Real Betis Balompié — RCD Espanyol de Barcelona
+  2027-05-09 MD35 Real Madrid CF — FC Barcelona
+  2027-05-09 MD35 Getafe CF — Elche CF
+  2027-05-09 MD35 Villarreal CF — RC Celta de Vigo
+  2027-05-16 MD36 Club Atlético de Madrid — Rayo Vallecano de Madrid
+  2027-05-16 MD36 Sevilla FC — Villarreal CF
+  2027-05-16 MD36 Real Sociedad de Fútbol — FC Barcelona
+  2027-05-16 MD36 Elche CF — Athletic Club
+  2027-05-16 MD36 Málaga CF — RC Celta de Vigo
+  2027-05-16 MD36 RC Deportivo La Coruña — Deportivo Alavés
+  2027-05-16 MD36 Levante UD — Getafe CF
+  2027-05-16 MD36 RCD Espanyol de Barcelona — Valencia CF
+  2027-05-16 MD36 Real Madrid CF — Real Racing Club de Santander
+  2027-05-16 MD36 CA Osasuna — Real Betis Balompié
+  2027-05-23 MD37 Club Atlético de Madrid — Athletic Club
+  2027-05-23 MD37 Deportivo Alavés — Real Madrid CF
+  2027-05-23 MD37 Sevilla FC — Getafe CF
+  2027-05-23 MD37 Villarreal CF — CA Osasuna
+  2027-05-23 MD37 Real Racing Club de Santander — Levante UD
+  2027-05-23 MD37 RC Deportivo La Coruña — RCD Espanyol de Barcelona
+  2027-05-23 MD37 Rayo Vallecano de Madrid — Real Betis Balompié
+  2027-05-23 MD37 FC Barcelona — Málaga CF
+  2027-05-23 MD37 Valencia CF — Elche CF
+  2027-05-23 MD37 RC Celta de Vigo — Real Sociedad de Fútbol
+  2027-05-30 MD38 Levante UD — RC Celta de Vigo
+  2027-05-30 MD38 Real Madrid CF — RC Deportivo La Coruña
+  2027-05-30 MD38 Real Betis Balompié — Club Atlético de Madrid
+  2027-05-30 MD38 Real Sociedad de Fútbol — Villarreal CF
+  2027-05-30 MD38 Málaga CF — Sevilla FC
+  2027-05-30 MD38 Elche CF — Real Racing Club de Santander
+  2027-05-30 MD38 Athletic Club — Rayo Vallecano de Madrid
+  2027-05-30 MD38 RCD Espanyol de Barcelona — Deportivo Alavés
+  2027-05-30 MD38 Getafe CF — FC Barcelona
+  2027-05-30 MD38 CA Osasuna — Valencia CF
+
+══ Italian Serie A 2026/27 — 380 fixtures, 50 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. AS Roma — 13pts P5 W4 D1 L0 14:3 (+11) ucl [WWWWD]
+  2. FC Internazionale Milano — 13pts P5 W4 D1 L0 15:8 (+7) ucl [WWWWD]
+  3. SS Lazio — 13pts P5 W4 D1 L0 8:3 (+5) ucl [WWWDW]
+  4. Cagliari Calcio — 12pts P5 W4 D0 L1 5:2 (+3) ucl [WLWWW]
+  5. AC Milan — 11pts P5 W3 D2 L0 10:4 (+6) europa [WWDDW]
+  6. Frosinone Calcio — 10pts P5 W3 D1 L1 9:4 (+5) europa [LWWDW]
+  7. Juventus FC — 10pts P5 W3 D1 L1 8:4 (+4) [WWDLW]
+  8. Como 1907 — 10pts P5 W3 D1 L1 9:6 (+3) [DWWWL]
+  9. SSC Napoli — 7pts P5 W2 D1 L2 7:6 (+1) [WLLWD]
+  10. US Sassuolo Calcio — 7pts P5 W2 D1 L2 9:9 (+0) [LWDWL]
+  11. Atalanta BC — 6pts P5 W2 D0 L3 5:7 (-2) [WWLLL]
+  12. US Lecce — 6pts P5 W2 D0 L3 5:10 (-5) [WLLWL]
+  13. Udinese Calcio — 4pts P5 W1 D1 L3 8:11 (-3) [DWLLL]
+  14. Torino FC — 4pts P5 W1 D1 L3 5:8 (-3) [LLWLD]
+  15. Parma Calcio 1913 — 4pts P5 W1 D1 L3 4:7 (-3) [LLDLW]
+  16. AC Monza — 4pts P5 W1 D1 L3 8:12 (-4) [LLDLW]
+  17. ACF Fiorentina — 4pts P5 W1 D1 L3 6:12 (-6) [LLLWD]
+  18. Bologna FC 1909 — 2pts P5 W0 D2 L3 3:6 (-3) relegation [LLDLD]
+  19. Genoa CFC — 1pts P5 W0 D1 L4 3:10 (-7) relegation [LLLDL]
+  20. Venezia FC — 0pts P5 W0 D0 L5 4:13 (-9) relegation [LLLLL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-22 MD1 Udinese Calcio 1-1 Como 1907
+  2026-08-22 MD1 FC Internazionale Milano 4-1 AC Monza
+  2026-08-22 MD1 Genoa CFC 0-2 SSC Napoli
+  2026-08-22 MD1 Parma Calcio 1913 0-1 Cagliari Calcio
+  2026-08-23 MD1 Frosinone Calcio 0-1 Juventus FC
+  2026-08-23 MD1 Venezia FC 0-2 US Lecce
+  2026-08-23 MD1 Atalanta BC 2-1 US Sassuolo Calcio
+  2026-08-23 MD1 Torino FC 1-2 AC Milan
+  2026-08-24 MD1 Bologna FC 1909 0-1 SS Lazio
+  2026-08-24 MD1 AS Roma 4-0 ACF Fiorentina
+  2026-08-28 MD2 AC Milan 2-0 Venezia FC
+  2026-08-29 MD2 US Sassuolo Calcio 2-1 Torino FC
+  2026-08-29 MD2 AC Monza 2-3 Udinese Calcio
+  2026-08-29 MD2 ACF Fiorentina 0-3 Frosinone Calcio
+  2026-08-29 MD2 Juventus FC 2-0 Parma Calcio 1913
+  2026-08-30 MD2 SSC Napoli 1-2 Como 1907
+  2026-08-30 MD2 SS Lazio 1-0 Genoa CFC
+  2026-08-30 MD2 Cagliari Calcio 0-1 FC Internazionale Milano
+  2026-08-31 MD2 US Lecce 0-4 AS Roma
+  2026-08-31 MD2 Atalanta BC 1-0 Bologna FC 1909
+  2026-09-04 MD3 Genoa CFC 1-4 Como 1907
+  2026-09-05 MD3 ACF Fiorentina 1-2 Torino FC
+  2026-09-05 MD3 FC Internazionale Milano 3-2 SSC Napoli
+  2026-09-05 MD3 AS Roma 2-1 Atalanta BC
+  2026-09-06 MD3 Parma Calcio 1913 1-1 AC Monza
+  2026-09-06 MD3 Frosinone Calcio 3-2 Venezia FC
+  2026-09-06 MD3 Bologna FC 1909 2-2 US Sassuolo Calcio
+  2026-09-06 MD3 Juventus FC 1-1 AC Milan
+  2026-09-07 MD3 Cagliari Calcio 1-0 US Lecce
+  2026-09-07 MD3 Udinese Calcio 1-2 SS Lazio
+  2026-09-11 MD4 Venezia FC 2-4 ACF Fiorentina
+  2026-09-12 MD4 Genoa CFC 1-1 Frosinone Calcio
+  2026-09-12 MD4 SS Lazio 2-2 AC Milan
+  2026-09-12 MD4 Atalanta BC 1-2 Cagliari Calcio
+  2026-09-13 MD4 US Lecce 3-2 AC Monza
+  2026-09-13 MD4 SSC Napoli 1-0 Bologna FC 1909
+  2026-09-13 MD4 US Sassuolo Calcio 3-2 Juventus FC
+  2026-09-14 MD4 Como 1907 2-1 Parma Calcio 1913
+  2026-09-14 MD4 Torino FC 0-2 AS Roma
+  2026-09-14 MD4 FC Internazionale Milano 5-3 Udinese Calcio
+  2026-09-18 MD5 AC Monza 2-1 US Sassuolo Calcio
+  2026-09-19 MD5 Bologna FC 1909 1-1 Torino FC
+  2026-09-19 MD5 Udinese Calcio 0-1 Cagliari Calcio
+  2026-09-19 MD5 AS Roma 2-2 FC Internazionale Milano
+  2026-09-19 MD5 Venezia FC 0-2 SS Lazio
+  2026-09-20 MD5 ACF Fiorentina 1-1 SSC Napoli
+  2026-09-20 MD5 Frosinone Calcio 2-0 Como 1907
+  2026-09-20 MD5 Parma Calcio 1913 2-1 Genoa CFC
+  2026-09-20 MD5 Juventus FC 2-0 Atalanta BC
+  2026-09-20 MD5 AC Milan 3-0 US Lecce
+  2026-10-10 MD6 Genoa CFC — ACF Fiorentina
+  2026-10-10 MD6 FC Internazionale Milano — Parma Calcio 1913
+  2026-10-10 MD6 SSC Napoli — Frosinone Calcio
+  2026-10-11 MD6 Como 1907 — AS Roma
+  2026-10-11 MD6 US Lecce — Bologna FC 1909
+  2026-10-11 MD6 SS Lazio — AC Monza
+  2026-10-11 MD6 US Sassuolo Calcio — AC Milan
+  2026-10-11 MD6 Cagliari Calcio — Juventus FC
+  2026-10-12 MD6 Atalanta BC — Venezia FC
+  2026-10-12 MD6 Torino FC — Udinese Calcio
+  2026-10-16 MD7 Frosinone Calcio — US Sassuolo Calcio
+  2026-10-17 MD7 Venezia FC — SSC Napoli
+  2026-10-17 MD7 Bologna FC 1909 — FC Internazionale Milano
+  2026-10-17 MD7 AS Roma — Genoa CFC
+  2026-10-18 MD7 Udinese Calcio — US Lecce
+  2026-10-18 MD7 ACF Fiorentina — Como 1907
+  2026-10-18 MD7 AC Milan — Atalanta BC
+  2026-10-18 MD7 Juventus FC — SS Lazio
+  2026-10-19 MD7 AC Monza — Cagliari Calcio
+  2026-10-19 MD7 Parma Calcio 1913 — Torino FC
+  2026-10-23 MD8 Torino FC — AC Monza
+  2026-10-24 MD8 Cagliari Calcio — Bologna FC 1909
+  2026-10-24 MD8 Como 1907 — US Sassuolo Calcio
+  2026-10-24 MD8 SSC Napoli — AS Roma
+  2026-10-24 MD8 SS Lazio — Parma Calcio 1913
+  2026-10-25 MD8 FC Internazionale Milano — ACF Fiorentina
+  2026-10-25 MD8 Atalanta BC — Frosinone Calcio
+  2026-10-25 MD8 Genoa CFC — Venezia FC
+  2026-10-25 MD8 US Lecce — Juventus FC
+  2026-10-25 MD8 Udinese Calcio — AC Milan
+  2026-10-27 MD9 US Sassuolo Calcio — SS Lazio
+  2026-10-27 MD9 AS Roma — Cagliari Calcio
+  2026-10-27 MD9 Torino FC — Como 1907
+  2026-10-28 MD9 AC Milan — Bologna FC 1909
+  2026-10-28 MD9 Venezia FC — FC Internazionale Milano
+  2026-10-28 MD9 Parma Calcio 1913 — Udinese Calcio
+  2026-10-28 MD9 Genoa CFC — Juventus FC
+  2026-10-28 MD9 AC Monza — SSC Napoli
+  2026-10-29 MD9 Frosinone Calcio — US Lecce
+  2026-10-29 MD9 ACF Fiorentina — Atalanta BC
+  2026-10-31 MD10 Bologna FC 1909 — AC Monza
+  2026-10-31 MD10 Udinese Calcio — AS Roma
+  2026-10-31 MD10 AC Milan — FC Internazionale Milano
+  2026-11-01 MD10 Como 1907 — Venezia FC
+  2026-11-01 MD10 Frosinone Calcio — Torino FC
+  2026-11-01 MD10 SS Lazio — Cagliari Calcio
+  2026-11-01 MD10 US Lecce — Genoa CFC
+  2026-11-01 MD10 Juventus FC — SSC Napoli
+  2026-11-02 MD10 US Sassuolo Calcio — ACF Fiorentina
+  2026-11-02 MD10 Atalanta BC — Parma Calcio 1913
+  2026-11-06 MD11 Venezia FC — Udinese Calcio
+  2026-11-07 MD11 Torino FC — US Lecce
+  2026-11-07 MD11 Cagliari Calcio — Frosinone Calcio
+  2026-11-07 MD11 Parma Calcio 1913 — Bologna FC 1909
+  2026-11-07 MD11 AS Roma — US Sassuolo Calcio
+  2026-11-08 MD11 SSC Napoli — SS Lazio
+  2026-11-08 MD11 Genoa CFC — AC Milan
+  2026-11-08 MD11 AC Monza — Atalanta BC
+  2026-11-08 MD11 FC Internazionale Milano — Como 1907
+  2026-11-08 MD11 ACF Fiorentina — Juventus FC
+  2026-11-21 MD12 Como 1907 — Cagliari Calcio
+  2026-11-21 MD12 SS Lazio — US Lecce
+  2026-11-21 MD12 Parma Calcio 1913 — AS Roma
+  2026-11-21 MD12 SSC Napoli — Torino FC
+  2026-11-22 MD12 US Sassuolo Calcio — Genoa CFC
+  2026-11-22 MD12 AC Milan — Frosinone Calcio
+  2026-11-22 MD12 Bologna FC 1909 — Udinese Calcio
+  2026-11-22 MD12 Atalanta BC — FC Internazionale Milano
+  2026-11-23 MD12 AC Monza — ACF Fiorentina
+  2026-11-23 MD12 Juventus FC — Venezia FC
+  2026-11-29 MD13 US Sassuolo Calcio — SSC Napoli
+  2026-11-29 MD13 Cagliari Calcio — AC Milan
+  2026-11-29 MD13 Como 1907 — Juventus FC
+  2026-11-29 MD13 AS Roma — AC Monza
+  2026-11-29 MD13 Frosinone Calcio — Parma Calcio 1913
+  2026-11-29 MD13 Torino FC — SS Lazio
+  2026-11-29 MD13 Venezia FC — Bologna FC 1909
+  2026-11-29 MD13 US Lecce — Atalanta BC
+  2026-11-29 MD13 Udinese Calcio — ACF Fiorentina
+  2026-11-29 MD13 FC Internazionale Milano — Genoa CFC
+  2026-12-06 MD14 Genoa CFC — Torino FC
+  2026-12-06 MD14 Juventus FC — Udinese Calcio
+  2026-12-06 MD14 Frosinone Calcio — FC Internazionale Milano
+  2026-12-06 MD14 Bologna FC 1909 — AS Roma
+  2026-12-06 MD14 ACF Fiorentina — Cagliari Calcio
+  2026-12-06 MD14 SS Lazio — Atalanta BC
+  2026-12-06 MD14 AC Milan — Parma Calcio 1913
+  2026-12-06 MD14 Venezia FC — US Sassuolo Calcio
+  2026-12-06 MD14 AC Monza — Como 1907
+  2026-12-06 MD14 SSC Napoli — US Lecce
+  2026-12-13 MD15 SSC Napoli — AC Milan
+  2026-12-13 MD15 Como 1907 — Bologna FC 1909
+  2026-12-13 MD15 Udinese Calcio — Frosinone Calcio
+  2026-12-13 MD15 US Lecce — US Sassuolo Calcio
+  2026-12-13 MD15 Parma Calcio 1913 — ACF Fiorentina
+  2026-12-13 MD15 Cagliari Calcio — Venezia FC
+  2026-12-13 MD15 FC Internazionale Milano — Torino FC
+  2026-12-13 MD15 Juventus FC — AC Monza
+  2026-12-13 MD15 Atalanta BC — Genoa CFC
+  2026-12-13 MD15 SS Lazio — AS Roma
+  2026-12-20 MD16 AC Milan — Como 1907
+  2026-12-20 MD16 US Sassuolo Calcio — Parma Calcio 1913
+  2026-12-20 MD16 AS Roma — Juventus FC
+  2026-12-20 MD16 Frosinone Calcio — SS Lazio
+  2026-12-20 MD16 Atalanta BC — SSC Napoli
+  2026-12-20 MD16 ACF Fiorentina — Bologna FC 1909
+  2026-12-20 MD16 Genoa CFC — Udinese Calcio
+  2026-12-20 MD16 US Lecce — FC Internazionale Milano
+  2026-12-20 MD16 Torino FC — Cagliari Calcio
+  2026-12-20 MD16 Venezia FC — AC Monza
+  2027-01-03 MD17 Udinese Calcio — Atalanta BC
+  2027-01-03 MD17 Como 1907 — US Lecce
+  2027-01-03 MD17 AS Roma — Frosinone Calcio
+  2027-01-03 MD17 Parma Calcio 1913 — SSC Napoli
+  2027-01-03 MD17 Cagliari Calcio — Genoa CFC
+  2027-01-03 MD17 Torino FC — Venezia FC
+  2027-01-03 MD17 AC Monza — AC Milan
+  2027-01-03 MD17 FC Internazionale Milano — US Sassuolo Calcio
+  2027-01-03 MD17 Bologna FC 1909 — Juventus FC
+  2027-01-03 MD17 ACF Fiorentina — SS Lazio
+  2027-01-06 MD18 Frosinone Calcio — Bologna FC 1909
+  2027-01-06 MD18 US Sassuolo Calcio — Udinese Calcio
+  2027-01-06 MD18 Genoa CFC — AC Monza
+  2027-01-06 MD18 Venezia FC — AS Roma
+  2027-01-06 MD18 SSC Napoli — Cagliari Calcio
+  2027-01-06 MD18 AC Milan — ACF Fiorentina
+  2027-01-06 MD18 Juventus FC — Torino FC
+  2027-01-06 MD18 Atalanta BC — Como 1907
+  2027-01-06 MD18 SS Lazio — FC Internazionale Milano
+  2027-01-06 MD18 US Lecce — Parma Calcio 1913
+  2027-01-10 MD19 ACF Fiorentina — US Lecce
+  2027-01-10 MD19 Udinese Calcio — SSC Napoli
+  2027-01-10 MD19 Torino FC — Atalanta BC
+  2027-01-10 MD19 AC Monza — Frosinone Calcio
+  2027-01-10 MD19 FC Internazionale Milano — Juventus FC
+  2027-01-10 MD19 Parma Calcio 1913 — Venezia FC
+  2027-01-10 MD19 Bologna FC 1909 — Genoa CFC
+  2027-01-10 MD19 Cagliari Calcio — US Sassuolo Calcio
+  2027-01-10 MD19 Como 1907 — SS Lazio
+  2027-01-10 MD19 AS Roma — AC Milan
+  2027-01-17 MD20 AC Milan — Torino FC
+  2027-01-17 MD20 Parma Calcio 1913 — FC Internazionale Milano
+  2027-01-17 MD20 Juventus FC — Genoa CFC
+  2027-01-17 MD20 US Lecce — Udinese Calcio
+  2027-01-17 MD20 Cagliari Calcio — Como 1907
+  2027-01-17 MD20 US Sassuolo Calcio — AC Monza
+  2027-01-17 MD20 SSC Napoli — ACF Fiorentina
+  2027-01-17 MD20 SS Lazio — Bologna FC 1909
+  2027-01-17 MD20 Venezia FC — Frosinone Calcio
+  2027-01-17 MD20 Atalanta BC — AS Roma
+  2027-01-24 MD21 US Lecce — Torino FC
+  2027-01-24 MD21 Juventus FC — Cagliari Calcio
+  2027-01-24 MD21 FC Internazionale Milano — Venezia FC
+  2027-01-24 MD21 ACF Fiorentina — US Sassuolo Calcio
+  2027-01-24 MD21 Frosinone Calcio — AC Milan
+  2027-01-24 MD21 AS Roma — Udinese Calcio
+  2027-01-24 MD21 Bologna FC 1909 — Atalanta BC
+  2027-01-24 MD21 Genoa CFC — Parma Calcio 1913
+  2027-01-24 MD21 Como 1907 — SSC Napoli
+  2027-01-24 MD21 AC Monza — SS Lazio
+  2027-01-31 MD22 AC Milan — Juventus FC
+  2027-01-31 MD22 AC Monza — AS Roma
+  2027-01-31 MD22 Torino FC — Frosinone Calcio
+  2027-01-31 MD22 Udinese Calcio — Bologna FC 1909
+  2027-01-31 MD22 US Sassuolo Calcio — Como 1907
+  2027-01-31 MD22 Genoa CFC — US Lecce
+  2027-01-31 MD22 Cagliari Calcio — Parma Calcio 1913
+  2027-01-31 MD22 Atalanta BC — ACF Fiorentina
+  2027-01-31 MD22 SS Lazio — Venezia FC
+  2027-01-31 MD22 SSC Napoli — FC Internazionale Milano
+  2027-02-07 MD23 Juventus FC — US Sassuolo Calcio
+  2027-02-07 MD23 FC Internazionale Milano — Cagliari Calcio
+  2027-02-07 MD23 Como 1907 — AC Monza
+  2027-02-07 MD23 US Lecce — SSC Napoli
+  2027-02-07 MD23 Venezia FC — Genoa CFC
+  2027-02-07 MD23 AS Roma — Torino FC
+  2027-02-07 MD23 Atalanta BC — SS Lazio
+  2027-02-07 MD23 Parma Calcio 1913 — Frosinone Calcio
+  2027-02-07 MD23 Bologna FC 1909 — AC Milan
+  2027-02-07 MD23 ACF Fiorentina — Udinese Calcio
+  2027-02-14 MD24 SSC Napoli — Juventus FC
+  2027-02-14 MD24 AC Monza — US Lecce
+  2027-02-14 MD24 Torino FC — US Sassuolo Calcio
+  2027-02-14 MD24 Frosinone Calcio — ACF Fiorentina
+  2027-02-14 MD24 Bologna FC 1909 — Como 1907
+  2027-02-14 MD24 AS Roma — Parma Calcio 1913
+  2027-02-14 MD24 Udinese Calcio — Venezia FC
+  2027-02-14 MD24 Genoa CFC — Atalanta BC
+  2027-02-14 MD24 Cagliari Calcio — SS Lazio
+  2027-02-14 MD24 FC Internazionale Milano — AC Milan
+  2027-02-21 MD25 Como 1907 — Torino FC
+  2027-02-21 MD25 Atalanta BC — AC Monza
+  2027-02-21 MD25 Udinese Calcio — Parma Calcio 1913
+  2027-02-21 MD25 Juventus FC — Bologna FC 1909
+  2027-02-21 MD25 ACF Fiorentina — FC Internazionale Milano
+  2027-02-21 MD25 US Sassuolo Calcio — AS Roma
+  2027-02-21 MD25 AC Milan — Genoa CFC
+  2027-02-21 MD25 Venezia FC — Cagliari Calcio
+  2027-02-21 MD25 US Lecce — Frosinone Calcio
+  2027-02-21 MD25 SS Lazio — SSC Napoli
+  2027-02-28 MD26 FC Internazionale Milano — Atalanta BC
+  2027-02-28 MD26 Cagliari Calcio — Udinese Calcio
+  2027-02-28 MD26 Parma Calcio 1913 — US Sassuolo Calcio
+  2027-02-28 MD26 Genoa CFC — SS Lazio
+  2027-02-28 MD26 AS Roma — Venezia FC
+  2027-02-28 MD26 Como 1907 — AC Milan
+  2027-02-28 MD26 Torino FC — ACF Fiorentina
+  2027-02-28 MD26 Bologna FC 1909 — US Lecce
+  2027-02-28 MD26 AC Monza — Juventus FC
+  2027-02-28 MD26 Frosinone Calcio — SSC Napoli
+  2027-03-07 MD27 Udinese Calcio — FC Internazionale Milano
+  2027-03-07 MD27 Atalanta BC — Torino FC
+  2027-03-07 MD27 SSC Napoli — Parma Calcio 1913
+  2027-03-07 MD27 US Lecce — Como 1907
+  2027-03-07 MD27 SS Lazio — Frosinone Calcio
+  2027-03-07 MD27 US Sassuolo Calcio — Bologna FC 1909
+  2027-03-07 MD27 AC Monza — Genoa CFC
+  2027-03-07 MD27 ACF Fiorentina — Venezia FC
+  2027-03-07 MD27 AC Milan — Cagliari Calcio
+  2027-03-07 MD27 Juventus FC — AS Roma
+  2027-03-14 MD28 Bologna FC 1909 — SSC Napoli
+  2027-03-14 MD28 Cagliari Calcio — ACF Fiorentina
+  2027-03-14 MD28 AC Milan — US Sassuolo Calcio
+  2027-03-14 MD28 Genoa CFC — AS Roma
+  2027-03-14 MD28 Parma Calcio 1913 — US Lecce
+  2027-03-14 MD28 Torino FC — FC Internazionale Milano
+  2027-03-14 MD28 Frosinone Calcio — AC Monza
+  2027-03-14 MD28 Como 1907 — Udinese Calcio
+  2027-03-14 MD28 SS Lazio — Juventus FC
+  2027-03-14 MD28 Venezia FC — Atalanta BC
+  2027-03-21 MD29 SSC Napoli — Venezia FC
+  2027-03-21 MD29 Udinese Calcio — Torino FC
+  2027-03-21 MD29 Juventus FC — Como 1907
+  2027-03-21 MD29 ACF Fiorentina — Genoa CFC
+  2027-03-21 MD29 Parma Calcio 1913 — SS Lazio
+  2027-03-21 MD29 US Sassuolo Calcio — Cagliari Calcio
+  2027-03-21 MD29 AC Monza — Bologna FC 1909
+  2027-03-21 MD29 FC Internazionale Milano — Frosinone Calcio
+  2027-03-21 MD29 AS Roma — US Lecce
+  2027-03-21 MD29 Atalanta BC — AC Milan
+  2027-04-04 MD30 US Lecce — SS Lazio
+  2027-04-04 MD30 Cagliari Calcio — SSC Napoli
+  2027-04-04 MD30 Como 1907 — ACF Fiorentina
+  2027-04-04 MD30 US Sassuolo Calcio — Atalanta BC
+  2027-04-04 MD30 AS Roma — Bologna FC 1909
+  2027-04-04 MD30 AC Milan — AC Monza
+  2027-04-04 MD30 Genoa CFC — FC Internazionale Milano
+  2027-04-04 MD30 Torino FC — Juventus FC
+  2027-04-04 MD30 Venezia FC — Parma Calcio 1913
+  2027-04-04 MD30 Frosinone Calcio — Udinese Calcio
+  2027-04-11 MD31 Juventus FC — US Lecce
+  2027-04-11 MD31 SSC Napoli — US Sassuolo Calcio
+  2027-04-11 MD31 ACF Fiorentina — AC Milan
+  2027-04-11 MD31 SS Lazio — Torino FC
+  2027-04-11 MD31 Cagliari Calcio — Atalanta BC
+  2027-04-11 MD31 Parma Calcio 1913 — Como 1907
+  2027-04-11 MD31 Bologna FC 1909 — Venezia FC
+  2027-04-11 MD31 Frosinone Calcio — Genoa CFC
+  2027-04-11 MD31 FC Internazionale Milano — AS Roma
+  2027-04-11 MD31 Udinese Calcio — AC Monza
+  2027-04-18 MD32 AC Monza — FC Internazionale Milano
+  2027-04-18 MD32 ACF Fiorentina — Parma Calcio 1913
+  2027-04-18 MD32 AS Roma — SS Lazio
+  2027-04-18 MD32 Como 1907 — Frosinone Calcio
+  2027-04-18 MD32 US Sassuolo Calcio — US Lecce
+  2027-04-18 MD32 Bologna FC 1909 — Cagliari Calcio
+  2027-04-18 MD32 Atalanta BC — Udinese Calcio
+  2027-04-18 MD32 Venezia FC — Juventus FC
+  2027-04-18 MD32 AC Milan — SSC Napoli
+  2027-04-18 MD32 Torino FC — Genoa CFC
+  2027-04-25 MD33 Frosinone Calcio — AS Roma
+  2027-04-25 MD33 Cagliari Calcio — AC Monza
+  2027-04-25 MD33 SSC Napoli — Udinese Calcio
+  2027-04-25 MD33 Parma Calcio 1913 — Atalanta BC
+  2027-04-25 MD33 SS Lazio — Como 1907
+  2027-04-25 MD33 Juventus FC — ACF Fiorentina
+  2027-04-25 MD33 Genoa CFC — US Sassuolo Calcio
+  2027-04-25 MD33 US Lecce — AC Milan
+  2027-04-25 MD33 Venezia FC — Torino FC
+  2027-04-25 MD33 FC Internazionale Milano — Bologna FC 1909
+  2027-05-02 MD34 Atalanta BC — Juventus FC
+  2027-05-02 MD34 Torino FC — Parma Calcio 1913
+  2027-05-02 MD34 AC Milan — SS Lazio
+  2027-05-02 MD34 Udinese Calcio — Genoa CFC
+  2027-05-02 MD34 US Sassuolo Calcio — Frosinone Calcio
+  2027-05-02 MD34 Bologna FC 1909 — ACF Fiorentina
+  2027-05-02 MD34 Como 1907 — FC Internazionale Milano
+  2027-05-02 MD34 AC Monza — Venezia FC
+  2027-05-02 MD34 US Lecce — Cagliari Calcio
+  2027-05-02 MD34 AS Roma — SSC Napoli
+  2027-05-09 MD35 Parma Calcio 1913 — AC Milan
+  2027-05-09 MD35 Genoa CFC — Cagliari Calcio
+  2027-05-09 MD35 SS Lazio — US Sassuolo Calcio
+  2027-05-09 MD35 SSC Napoli — AC Monza
+  2027-05-09 MD35 FC Internazionale Milano — US Lecce
+  2027-05-09 MD35 Venezia FC — Como 1907
+  2027-05-09 MD35 Udinese Calcio — Juventus FC
+  2027-05-09 MD35 Torino FC — Bologna FC 1909
+  2027-05-09 MD35 Frosinone Calcio — Atalanta BC
+  2027-05-09 MD35 ACF Fiorentina — AS Roma
+  2027-05-16 MD36 SSC Napoli — Genoa CFC
+  2027-05-16 MD36 US Lecce — ACF Fiorentina
+  2027-05-16 MD36 SS Lazio — Udinese Calcio
+  2027-05-16 MD36 Bologna FC 1909 — Frosinone Calcio
+  2027-05-16 MD36 Como 1907 — Atalanta BC
+  2027-05-16 MD36 Juventus FC — FC Internazionale Milano
+  2027-05-16 MD36 US Sassuolo Calcio — Venezia FC
+  2027-05-16 MD36 AC Monza — Parma Calcio 1913
+  2027-05-16 MD36 AC Milan — AS Roma
+  2027-05-16 MD36 Cagliari Calcio — Torino FC
+  2027-05-23 MD37 AS Roma — Como 1907
+  2027-05-23 MD37 Parma Calcio 1913 — Juventus FC
+  2027-05-23 MD37 Torino FC — SSC Napoli
+  2027-05-23 MD37 Atalanta BC — US Lecce
+  2027-05-23 MD37 FC Internazionale Milano — SS Lazio
+  2027-05-23 MD37 Udinese Calcio — US Sassuolo Calcio
+  2027-05-23 MD37 Frosinone Calcio — Cagliari Calcio
+  2027-05-23 MD37 ACF Fiorentina — AC Monza
+  2027-05-23 MD37 Venezia FC — AC Milan
+  2027-05-23 MD37 Genoa CFC — Bologna FC 1909
+  2027-05-30 MD38 AC Milan — Udinese Calcio
+  2027-05-30 MD38 Juventus FC — Frosinone Calcio
+  2027-05-30 MD38 AC Monza — Torino FC
+  2027-05-30 MD38 US Sassuolo Calcio — FC Internazionale Milano
+  2027-05-30 MD38 Cagliari Calcio — AS Roma
+  2027-05-30 MD38 SS Lazio — ACF Fiorentina
+  2027-05-30 MD38 Como 1907 — Genoa CFC
+  2027-05-30 MD38 SSC Napoli — Atalanta BC
+  2027-05-30 MD38 US Lecce — Venezia FC
+  2027-05-30 MD38 Bologna FC 1909 — Parma Calcio 1913
+
+══ French Ligue 1 2026/27 — 306 fixtures, 45 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. AS Monaco FC — 13pts P5 W4 D1 L0 8:3 (+5) ucl [WWWDW]
+  2. Olympique Lyonnais — 11pts P5 W3 D2 L0 10:2 (+8) ucl [WDWDW]
+  3. Paris FC — 11pts P5 W3 D2 L0 8:3 (+5) ucl [DWWDW]
+  4. Lille OSC — 10pts P5 W3 D1 L1 8:4 (+4) ucl [WDWWL]
+  5. Stade Rennais FC 1901 — 10pts P5 W3 D1 L1 8:9 (-1) europa [DWWWL]
+  6. Paris Saint-Germain FC — 8pts P5 W2 D2 L1 8:7 (+1) europa [DDLWW]
+  7. Angers SCO — 7pts P5 W2 D1 L2 6:5 (+1) [LWLDW]
+  8. RC Strasbourg Alsace — 7pts P5 W2 D1 L2 10:10 (+0) [LWWDL]
+  9. Le Mans FC — 6pts P5 W1 D3 L1 9:9 (+0) [DLDDW]
+  10. AJ Auxerre — 6pts P5 W2 D0 L3 7:12 (-5) [LLLWW]
+  11. Stade Brestois 29 — 5pts P5 W1 D2 L2 7:8 (-1) [DDWLL]
+  12. FC Lorient — 5pts P5 W1 D2 L2 5:6 (-1) [DLWDL]
+  13. Toulouse FC — 5pts P5 W1 D2 L2 7:9 (-2) [LDLDW]
+  14. OGC Nice — 5pts P5 W1 D2 L2 3:6 (-3) [DLDLW]
+  15. Racing Club de Lens — 4pts P5 W1 D1 L3 9:9 (+0) [WLLDL]
+  16. ES Troyes AC — 4pts P5 W1 D1 L3 4:11 (-7) playoff [DWLLL]
+  17. Olympique de Marseille — 3pts P5 W1 D0 L4 7:8 (-1) relegation [WLLLL]
+  18. Le Havre AC — 2pts P5 W0 D2 L3 4:7 (-3) relegation [LDLDL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-21 MD1 Olympique de Marseille 4-0 RC Strasbourg Alsace
+  2026-08-22 MD1 Racing Club de Lens 5-2 AJ Auxerre
+  2026-08-22 MD1 Le Mans FC 2-2 Stade Brestois 29
+  2026-08-22 MD1 ES Troyes AC 0-0 Paris FC
+  2026-08-22 MD1 OGC Nice 0-0 FC Lorient
+  2026-08-22 MD1 Toulouse FC 0-2 Olympique Lyonnais
+  2026-08-23 MD1 Angers SCO 0-2 Lille OSC
+  2026-08-23 MD1 Le Havre AC 0-1 AS Monaco FC
+  2026-08-23 MD1 Stade Rennais FC 1901 2-2 Paris Saint-Germain FC
+  2026-08-28 MD2 Lille OSC 2-2 Paris Saint-Germain FC
+  2026-08-29 MD2 RC Strasbourg Alsace 2-1 Racing Club de Lens
+  2026-08-29 MD2 FC Lorient 1-2 ES Troyes AC
+  2026-08-29 MD2 Olympique Lyonnais 1-1 Le Havre AC
+  2026-08-29 MD2 AJ Auxerre 1-3 Angers SCO
+  2026-08-29 MD2 Stade Brestois 29 2-2 Toulouse FC
+  2026-08-30 MD2 Paris FC 3-0 OGC Nice
+  2026-08-30 MD2 Stade Rennais FC 1901 3-2 Le Mans FC
+  2026-08-30 MD2 AS Monaco FC 2-0 Olympique de Marseille
+  2026-09-03 MD3 Toulouse FC 0-1 Lille OSC
+  2026-09-04 MD3 Olympique Lyonnais 3-1 AJ Auxerre
+  2026-09-04 MD3 Paris Saint-Germain FC 1-2 AS Monaco FC
+  2026-09-05 MD3 Racing Club de Lens 0-1 FC Lorient
+  2026-09-05 MD3 Le Havre AC 1-2 Stade Brestois 29
+  2026-09-05 MD3 OGC Nice 1-1 Le Mans FC
+  2026-09-06 MD3 ES Troyes AC 2-6 RC Strasbourg Alsace
+  2026-09-06 MD3 Angers SCO 1-2 Stade Rennais FC 1901
+  2026-09-06 MD3 Olympique de Marseille 2-3 Paris FC
+  2026-09-11 MD4 Stade Rennais FC 1901 1-0 Olympique de Marseille
+  2026-09-12 MD4 RC Strasbourg Alsace 1-1 AS Monaco FC
+  2026-09-12 MD4 FC Lorient 2-2 Toulouse FC
+  2026-09-12 MD4 AJ Auxerre 1-0 OGC Nice
+  2026-09-12 MD4 Le Havre AC 0-0 Angers SCO
+  2026-09-12 MD4 Paris FC 0-0 Olympique Lyonnais
+  2026-09-13 MD4 Lille OSC 2-0 ES Troyes AC
+  2026-09-13 MD4 Le Mans FC 2-2 Racing Club de Lens
+  2026-09-13 MD4 Stade Brestois 29 0-1 Paris Saint-Germain FC
+  2026-09-18 MD5 AS Monaco FC 2-1 Racing Club de Lens
+  2026-09-19 MD5 Paris FC 2-1 RC Strasbourg Alsace
+  2026-09-19 MD5 Le Mans FC 2-1 FC Lorient
+  2026-09-19 MD5 Toulouse FC 3-2 Le Havre AC
+  2026-09-19 MD5 Angers SCO 2-0 ES Troyes AC
+  2026-09-19 MD5 Olympique Lyonnais 4-0 Stade Rennais FC 1901
+  2026-09-20 MD5 AJ Auxerre 2-1 Stade Brestois 29
+  2026-09-20 MD5 OGC Nice 2-1 Lille OSC
+  2026-09-20 MD5 Olympique de Marseille 1-2 Paris Saint-Germain FC
+  2026-10-09 MD6 Racing Club de Lens — Olympique Lyonnais
+  2026-10-10 MD6 Lille OSC — Le Havre AC
+  2026-10-10 MD6 Stade Brestois 29 — Angers SCO
+  2026-10-10 MD6 FC Lorient — Paris FC
+  2026-10-10 MD6 Paris Saint-Germain FC — Le Mans FC
+  2026-10-10 MD6 AS Monaco FC — Toulouse FC
+  2026-10-11 MD6 OGC Nice — RC Strasbourg Alsace
+  2026-10-11 MD6 Stade Rennais FC 1901 — AJ Auxerre
+  2026-10-11 MD6 ES Troyes AC — Olympique de Marseille
+  2026-10-16 MD7 Le Mans FC — Toulouse FC
+  2026-10-17 MD7 RC Strasbourg Alsace — Paris Saint-Germain FC
+  2026-10-17 MD7 ES Troyes AC — Racing Club de Lens
+  2026-10-17 MD7 Lille OSC — Stade Brestois 29
+  2026-10-18 MD7 Angers SCO — Olympique de Marseille
+  2026-10-18 MD7 FC Lorient — AS Monaco FC
+  2026-10-18 MD7 Paris FC — Stade Rennais FC 1901
+  2026-10-18 MD7 Le Havre AC — AJ Auxerre
+  2026-10-18 MD7 Olympique Lyonnais — OGC Nice
+  2026-10-23 MD8 Stade Brestois 29 — OGC Nice
+  2026-10-24 MD8 Toulouse FC — ES Troyes AC
+  2026-10-24 MD8 Racing Club de Lens — Paris FC
+  2026-10-25 MD8 AS Monaco FC — Lille OSC
+  2026-10-25 MD8 Olympique de Marseille — Le Havre AC
+  2026-10-25 MD8 Stade Rennais FC 1901 — RC Strasbourg Alsace
+  2026-10-25 MD8 Angers SCO — FC Lorient
+  2026-10-25 MD8 AJ Auxerre — Le Mans FC
+  2026-10-25 MD8 Paris Saint-Germain FC — Olympique Lyonnais
+  2026-10-30 MD9 Le Havre AC — Paris Saint-Germain FC
+  2026-10-30 MD9 Lille OSC — Racing Club de Lens
+  2026-10-31 MD9 OGC Nice — Stade Rennais FC 1901
+  2026-10-31 MD9 Olympique Lyonnais — Angers SCO
+  2026-10-31 MD9 FC Lorient — Stade Brestois 29
+  2026-10-31 MD9 ES Troyes AC — Le Mans FC
+  2026-11-01 MD9 RC Strasbourg Alsace — AJ Auxerre
+  2026-11-01 MD9 Paris FC — AS Monaco FC
+  2026-11-01 MD9 Olympique de Marseille — Toulouse FC
+  2026-11-06 MD10 Toulouse FC — RC Strasbourg Alsace
+  2026-11-07 MD10 AJ Auxerre — Paris FC
+  2026-11-07 MD10 Paris Saint-Germain FC — ES Troyes AC
+  2026-11-08 MD10 Stade Rennais FC 1901 — Lille OSC
+  2026-11-08 MD10 Le Mans FC — AS Monaco FC
+  2026-11-08 MD10 Stade Brestois 29 — Olympique Lyonnais
+  2026-11-08 MD10 Le Havre AC — FC Lorient
+  2026-11-08 MD10 Angers SCO — OGC Nice
+  2026-11-08 MD10 Racing Club de Lens — Olympique de Marseille
+  2026-11-20 MD11 ES Troyes AC — Le Havre AC
+  2026-11-21 MD11 OGC Nice — Paris Saint-Germain FC
+  2026-11-21 MD11 AS Monaco FC — AJ Auxerre
+  2026-11-21 MD11 Racing Club de Lens — Toulouse FC
+  2026-11-21 MD11 Lille OSC — Olympique Lyonnais
+  2026-11-21 MD11 RC Strasbourg Alsace — Stade Brestois 29
+  2026-11-22 MD11 Paris FC — Angers SCO
+  2026-11-22 MD11 FC Lorient — Stade Rennais FC 1901
+  2026-11-22 MD11 Olympique de Marseille — Le Mans FC
+  2026-11-27 MD12 Stade Brestois 29 — Paris FC
+  2026-11-28 MD12 Angers SCO — Racing Club de Lens
+  2026-11-28 MD12 Le Mans FC — Lille OSC
+  2026-11-28 MD12 OGC Nice — ES Troyes AC
+  2026-11-28 MD12 Le Havre AC — RC Strasbourg Alsace
+  2026-11-28 MD12 Paris Saint-Germain FC — FC Lorient
+  2026-11-29 MD12 AJ Auxerre — Olympique de Marseille
+  2026-11-29 MD12 Toulouse FC — Stade Rennais FC 1901
+  2026-11-29 MD12 Olympique Lyonnais — AS Monaco FC
+  2026-12-05 MD13 ES Troyes AC — Olympique Lyonnais
+  2026-12-05 MD13 AS Monaco FC — Angers SCO
+  2026-12-05 MD13 Racing Club de Lens — Le Havre AC
+  2026-12-05 MD13 Lille OSC — AJ Auxerre
+  2026-12-05 MD13 Olympique de Marseille — OGC Nice
+  2026-12-05 MD13 Stade Rennais FC 1901 — Stade Brestois 29
+  2026-12-05 MD13 Toulouse FC — Paris Saint-Germain FC
+  2026-12-05 MD13 RC Strasbourg Alsace — FC Lorient
+  2026-12-05 MD13 Paris FC — Le Mans FC
+  2026-12-12 MD14 OGC Nice — Racing Club de Lens
+  2026-12-12 MD14 Paris Saint-Germain FC — Paris FC
+  2026-12-12 MD14 Angers SCO — RC Strasbourg Alsace
+  2026-12-12 MD14 Stade Brestois 29 — ES Troyes AC
+  2026-12-12 MD14 Le Havre AC — Le Mans FC
+  2026-12-12 MD14 Stade Rennais FC 1901 — AS Monaco FC
+  2026-12-12 MD14 FC Lorient — Lille OSC
+  2026-12-12 MD14 AJ Auxerre — Toulouse FC
+  2026-12-13 MD14 Olympique Lyonnais — Olympique de Marseille
+  2027-01-02 MD15 Le Mans FC — Olympique Lyonnais
+  2027-01-02 MD15 Stade Brestois 29 — Olympique de Marseille
+  2027-01-02 MD15 ES Troyes AC — Stade Rennais FC 1901
+  2027-01-02 MD15 Toulouse FC — Angers SCO
+  2027-01-02 MD15 AS Monaco FC — OGC Nice
+  2027-01-02 MD15 Paris FC — Le Havre AC
+  2027-01-02 MD15 FC Lorient — AJ Auxerre
+  2027-01-02 MD15 Lille OSC — RC Strasbourg Alsace
+  2027-01-03 MD15 Racing Club de Lens — Paris Saint-Germain FC
+  2027-01-16 MD16 Olympique de Marseille — Lille OSC
+  2027-01-16 MD16 Olympique Lyonnais — FC Lorient
+  2027-01-16 MD16 Paris FC — Toulouse FC
+  2027-01-16 MD16 Stade Rennais FC 1901 — Racing Club de Lens
+  2027-01-16 MD16 OGC Nice — Le Havre AC
+  2027-01-16 MD16 AJ Auxerre — ES Troyes AC
+  2027-01-16 MD16 RC Strasbourg Alsace — Le Mans FC
+  2027-01-16 MD16 AS Monaco FC — Stade Brestois 29
+  2027-01-16 MD16 Angers SCO — Paris Saint-Germain FC
+  2027-01-23 MD17 Le Havre AC — Stade Rennais FC 1901
+  2027-01-23 MD17 RC Strasbourg Alsace — Olympique Lyonnais
+  2027-01-23 MD17 Lille OSC — Paris FC
+  2027-01-23 MD17 Racing Club de Lens — Stade Brestois 29
+  2027-01-23 MD17 Paris Saint-Germain FC — AJ Auxerre
+  2027-01-23 MD17 ES Troyes AC — AS Monaco FC
+  2027-01-23 MD17 FC Lorient — Olympique de Marseille
+  2027-01-23 MD17 Le Mans FC — Angers SCO
+  2027-01-23 MD17 Toulouse FC — OGC Nice
+  2027-01-30 MD18 Paris FC — AJ Auxerre
+  2027-01-30 MD18 Olympique Lyonnais — Lille OSC
+  2027-01-30 MD18 Stade Rennais FC 1901 — FC Lorient
+  2027-01-30 MD18 Le Mans FC — OGC Nice
+  2027-01-30 MD18 Olympique de Marseille — ES Troyes AC
+  2027-01-30 MD18 Angers SCO — Le Havre AC
+  2027-01-30 MD18 Stade Brestois 29 — RC Strasbourg Alsace
+  2027-01-30 MD18 AS Monaco FC — Paris Saint-Germain FC
+  2027-01-30 MD18 Toulouse FC — Racing Club de Lens
+  2027-02-06 MD19 ES Troyes AC — Lille OSC
+  2027-02-06 MD19 Racing Club de Lens — Angers SCO
+  2027-02-06 MD19 Le Havre AC — Toulouse FC
+  2027-02-06 MD19 FC Lorient — Le Mans FC
+  2027-02-06 MD19 OGC Nice — Stade Brestois 29
+  2027-02-06 MD19 Stade Rennais FC 1901 — Olympique Lyonnais
+  2027-02-06 MD19 RC Strasbourg Alsace — Paris FC
+  2027-02-06 MD19 AJ Auxerre — AS Monaco FC
+  2027-02-07 MD19 Paris Saint-Germain FC — Olympique de Marseille
+  2027-02-13 MD20 Stade Brestois 29 — Stade Rennais FC 1901
+  2027-02-13 MD20 Paris FC — ES Troyes AC
+  2027-02-13 MD20 Le Mans FC — Paris Saint-Germain FC
+  2027-02-13 MD20 FC Lorient — Le Havre AC
+  2027-02-13 MD20 AJ Auxerre — RC Strasbourg Alsace
+  2027-02-13 MD20 Toulouse FC — AS Monaco FC
+  2027-02-13 MD20 Olympique de Marseille — Angers SCO
+  2027-02-13 MD20 Lille OSC — OGC Nice
+  2027-02-13 MD20 Olympique Lyonnais — Racing Club de Lens
+  2027-02-20 MD21 Angers SCO — Paris FC
+  2027-02-20 MD21 Stade Rennais FC 1901 — Toulouse FC
+  2027-02-20 MD21 Paris Saint-Germain FC — Stade Brestois 29
+  2027-02-20 MD21 RC Strasbourg Alsace — Olympique de Marseille
+  2027-02-20 MD21 OGC Nice — AJ Auxerre
+  2027-02-20 MD21 Le Havre AC — Olympique Lyonnais
+  2027-02-20 MD21 AS Monaco FC — Le Mans FC
+  2027-02-20 MD21 Lille OSC — FC Lorient
+  2027-02-20 MD21 Racing Club de Lens — ES Troyes AC
+  2027-02-27 MD22 RC Strasbourg Alsace — Le Havre AC
+  2027-02-27 MD22 AJ Auxerre — Lille OSC
+  2027-02-27 MD22 ES Troyes AC — OGC Nice
+  2027-02-27 MD22 Stade Brestois 29 — AS Monaco FC
+  2027-02-27 MD22 FC Lorient — Angers SCO
+  2027-02-27 MD22 Olympique de Marseille — Stade Rennais FC 1901
+  2027-02-27 MD22 Olympique Lyonnais — Toulouse FC
+  2027-02-27 MD22 Le Mans FC — Paris FC
+  2027-02-28 MD22 Paris Saint-Germain FC — Racing Club de Lens
+  2027-03-06 MD23 Le Havre AC — OGC Nice
+  2027-03-06 MD23 Paris Saint-Germain FC — Stade Rennais FC 1901
+  2027-03-06 MD23 Racing Club de Lens — RC Strasbourg Alsace
+  2027-03-06 MD23 Toulouse FC — Le Mans FC
+  2027-03-06 MD23 ES Troyes AC — FC Lorient
+  2027-03-06 MD23 Angers SCO — AJ Auxerre
+  2027-03-06 MD23 AS Monaco FC — Olympique Lyonnais
+  2027-03-06 MD23 Paris FC — Stade Brestois 29
+  2027-03-06 MD23 Lille OSC — Olympique de Marseille
+  2027-03-13 MD24 OGC Nice — Toulouse FC
+  2027-03-13 MD24 Paris FC — FC Lorient
+  2027-03-13 MD24 RC Strasbourg Alsace — Angers SCO
+  2027-03-13 MD24 Le Mans FC — Stade Rennais FC 1901
+  2027-03-13 MD24 Stade Brestois 29 — Lille OSC
+  2027-03-13 MD24 Le Havre AC — Racing Club de Lens
+  2027-03-13 MD24 Olympique de Marseille — AS Monaco FC
+  2027-03-13 MD24 AJ Auxerre — Paris Saint-Germain FC
+  2027-03-13 MD24 Olympique Lyonnais — ES Troyes AC
+  2027-03-20 MD25 Angers SCO — Le Mans FC
+  2027-03-20 MD25 Toulouse FC — Stade Brestois 29
+  2027-03-20 MD25 ES Troyes AC — AJ Auxerre
+  2027-03-20 MD25 Stade Rennais FC 1901 — Paris FC
+  2027-03-20 MD25 AS Monaco FC — Le Havre AC
+  2027-03-20 MD25 Paris Saint-Germain FC — RC Strasbourg Alsace
+  2027-03-20 MD25 Racing Club de Lens — Lille OSC
+  2027-03-20 MD25 FC Lorient — OGC Nice
+  2027-03-21 MD25 Olympique de Marseille — Olympique Lyonnais
+  2027-04-03 MD26 Le Havre AC — ES Troyes AC
+  2027-04-03 MD26 Angers SCO — AS Monaco FC
+  2027-04-03 MD26 Le Mans FC — Olympique de Marseille
+  2027-04-03 MD26 AJ Auxerre — Racing Club de Lens
+  2027-04-03 MD26 Lille OSC — Stade Rennais FC 1901
+  2027-04-03 MD26 Stade Brestois 29 — FC Lorient
+  2027-04-03 MD26 RC Strasbourg Alsace — Toulouse FC
+  2027-04-03 MD26 Paris FC — Paris Saint-Germain FC
+  2027-04-03 MD26 OGC Nice — Olympique Lyonnais
+  2027-04-10 MD27 FC Lorient — Racing Club de Lens
+  2027-04-10 MD27 Olympique de Marseille — Stade Brestois 29
+  2027-04-10 MD27 AS Monaco FC — Stade Rennais FC 1901
+  2027-04-10 MD27 ES Troyes AC — Angers SCO
+  2027-04-10 MD27 Paris Saint-Germain FC — Le Havre AC
+  2027-04-10 MD27 Olympique Lyonnais — RC Strasbourg Alsace
+  2027-04-10 MD27 Le Mans FC — AJ Auxerre
+  2027-04-10 MD27 Lille OSC — Toulouse FC
+  2027-04-10 MD27 OGC Nice — Paris FC
+  2027-04-17 MD28 AJ Auxerre — FC Lorient
+  2027-04-17 MD28 Stade Brestois 29 — Le Mans FC
+  2027-04-17 MD28 AS Monaco FC — RC Strasbourg Alsace
+  2027-04-17 MD28 Angers SCO — Olympique Lyonnais
+  2027-04-17 MD28 Racing Club de Lens — OGC Nice
+  2027-04-17 MD28 Stade Rennais FC 1901 — ES Troyes AC
+  2027-04-17 MD28 Le Havre AC — Olympique de Marseille
+  2027-04-17 MD28 Paris Saint-Germain FC — Lille OSC
+  2027-04-17 MD28 Toulouse FC — Paris FC
+  2027-04-24 MD29 Paris FC — Racing Club de Lens
+  2027-04-24 MD29 Olympique de Marseille — AJ Auxerre
+  2027-04-24 MD29 Lille OSC — AS Monaco FC
+  2027-04-24 MD29 FC Lorient — Paris Saint-Germain FC
+  2027-04-24 MD29 ES Troyes AC — Toulouse FC
+  2027-04-24 MD29 OGC Nice — Angers SCO
+  2027-04-24 MD29 Olympique Lyonnais — Stade Brestois 29
+  2027-04-24 MD29 Le Mans FC — Le Havre AC
+  2027-04-24 MD29 RC Strasbourg Alsace — Stade Rennais FC 1901
+  2027-05-01 MD30 RC Strasbourg Alsace — Lille OSC
+  2027-05-01 MD30 AS Monaco FC — FC Lorient
+  2027-05-01 MD30 ES Troyes AC — Stade Brestois 29
+  2027-05-01 MD30 Racing Club de Lens — Le Mans FC
+  2027-05-01 MD30 Paris Saint-Germain FC — Angers SCO
+  2027-05-01 MD30 Le Havre AC — Paris FC
+  2027-05-01 MD30 AJ Auxerre — Olympique Lyonnais
+  2027-05-01 MD30 Stade Rennais FC 1901 — OGC Nice
+  2027-05-01 MD30 Toulouse FC — Olympique de Marseille
+  2027-05-08 MD31 Paris FC — Lille OSC
+  2027-05-08 MD31 FC Lorient — RC Strasbourg Alsace
+  2027-05-08 MD31 Stade Brestois 29 — AJ Auxerre
+  2027-05-08 MD31 Le Mans FC — ES Troyes AC
+  2027-05-08 MD31 Stade Rennais FC 1901 — Le Havre AC
+  2027-05-08 MD31 Racing Club de Lens — AS Monaco FC
+  2027-05-08 MD31 Angers SCO — Toulouse FC
+  2027-05-08 MD31 OGC Nice — Olympique de Marseille
+  2027-05-09 MD31 Olympique Lyonnais — Paris Saint-Germain FC
+  2027-05-16 MD32 AS Monaco FC — Paris FC
+  2027-05-16 MD32 Olympique Lyonnais — Le Mans FC
+  2027-05-16 MD32 Paris Saint-Germain FC — OGC Nice
+  2027-05-16 MD32 Toulouse FC — FC Lorient
+  2027-05-16 MD32 Stade Brestois 29 — Le Havre AC
+  2027-05-16 MD32 Olympique de Marseille — Racing Club de Lens
+  2027-05-16 MD32 Lille OSC — Angers SCO
+  2027-05-16 MD32 AJ Auxerre — Stade Rennais FC 1901
+  2027-05-16 MD32 RC Strasbourg Alsace — ES Troyes AC
+  2027-05-22 MD33 OGC Nice — AS Monaco FC
+  2027-05-22 MD33 Angers SCO — Stade Brestois 29
+  2027-05-22 MD33 FC Lorient — Olympique Lyonnais
+  2027-05-22 MD33 ES Troyes AC — Paris Saint-Germain FC
+  2027-05-22 MD33 Le Mans FC — RC Strasbourg Alsace
+  2027-05-22 MD33 Toulouse FC — AJ Auxerre
+  2027-05-22 MD33 Le Havre AC — Lille OSC
+  2027-05-22 MD33 Paris FC — Olympique de Marseille
+  2027-05-22 MD33 Racing Club de Lens — Stade Rennais FC 1901
+  2027-05-29 MD34 AS Monaco FC — ES Troyes AC
+  2027-05-29 MD34 Paris Saint-Germain FC — Toulouse FC
+  2027-05-29 MD34 Lille OSC — Le Mans FC
+  2027-05-29 MD34 Stade Brestois 29 — Racing Club de Lens
+  2027-05-29 MD34 Olympique de Marseille — FC Lorient
+  2027-05-29 MD34 Stade Rennais FC 1901 — Angers SCO
+  2027-05-29 MD34 Olympique Lyonnais — Paris FC
+  2027-05-29 MD34 AJ Auxerre — Le Havre AC
+  2027-05-29 MD34 RC Strasbourg Alsace — OGC Nice
+
+══ Netherlands Eredivisie 2026/27 — 306 fixtures, 63 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. AZ — 19pts P7 W6 D1 L0 18:6 (+12) ucl [WWWDW]
+  2. Feyenoord Rotterdam — 17pts P7 W5 D2 L0 25:7 (+18) ucl [WDWWW]
+  3. PSV — 16pts P7 W5 D1 L1 24:10 (+14) ucl [WWWWL]
+  4. FC Twente '65 — 16pts P7 W5 D1 L1 15:7 (+8) ucl [WDWWW]
+  5. AFC Ajax — 14pts P7 W4 D2 L1 21:9 (+12) europa [WLWWD]
+  6. Fortuna Sittard — 13pts P7 W4 D1 L2 13:14 (-1) europa [LWWLW]
+  7. SBV Excelsior — 11pts P7 W3 D2 L2 15:9 (+6) [WWDLD]
+  8. FC Groningen — 11pts P7 W3 D2 L2 15:13 (+2) [LLDDW]
+  9. Go Ahead Eagles — 10pts P7 W2 D4 L1 16:14 (+2) [WLDDD]
+  10. SC Heerenveen — 9pts P7 W2 D3 L2 11:9 (+2) [LDLDW]
+  11. NEC — 8pts P7 W2 D2 L3 12:13 (-1) [WLDLD]
+  12. Sparta Rotterdam — 5pts P7 W1 D2 L4 10:17 (-7) [DLDLL]
+  13. Telstar 1963 — 5pts P7 W1 D2 L4 5:12 (-7) [LDLDL]
+  14. SC Cambuur-Leeuwarden — 5pts P7 W1 D2 L4 10:19 (-9) [LLDWD]
+  15. FC Utrecht — 5pts P7 W1 D2 L4 11:24 (-13) [DLDWL]
+  16. PEC Zwolle — 4pts P7 W1 D1 L5 6:20 (-14) playoff [WLDLL]
+  17. ADO Den Haag — 2pts P7 W0 D2 L5 7:17 (-10) relegation [LDLLD]
+  18. Willem II Tilburg — 2pts P7 W0 D2 L5 6:20 (-14) relegation [DLDLL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-07 MD1 SC Cambuur-Leeuwarden 0-4 SBV Excelsior
+  2026-08-08 MD1 NEC 1-2 Telstar 1963
+  2026-08-08 MD1 Go Ahead Eagles 4-1 Willem II Tilburg
+  2026-08-08 MD1 PSV 2-2 Fortuna Sittard
+  2026-08-08 MD1 AZ 2-0 ADO Den Haag
+  2026-08-09 MD1 Sparta Rotterdam 0-1 Feyenoord Rotterdam
+  2026-08-09 MD1 FC Groningen 2-1 FC Utrecht
+  2026-08-09 MD1 PEC Zwolle 0-2 AFC Ajax
+  2026-08-09 MD1 SC Heerenveen 1-0 FC Twente '65
+  2026-08-14 MD2 Telstar 1963 1-3 Sparta Rotterdam
+  2026-08-15 MD2 Willem II Tilburg 1-4 NEC
+  2026-08-15 MD2 FC Utrecht 1-4 AZ
+  2026-08-15 MD2 SBV Excelsior 1-2 PSV
+  2026-08-15 MD2 Fortuna Sittard 3-1 SC Cambuur-Leeuwarden
+  2026-08-16 MD2 ADO Den Haag 1-4 FC Groningen
+  2026-08-16 MD2 Feyenoord Rotterdam 2-2 Go Ahead Eagles
+  2026-08-16 MD2 FC Twente '65 3-1 PEC Zwolle
+  2026-08-16 MD2 AFC Ajax 2-2 SC Heerenveen
+  2026-08-22 MD3 Fortuna Sittard 0-2 AZ
+  2026-08-22 MD3 Sparta Rotterdam 3-3 FC Utrecht
+  2026-08-22 MD3 SC Heerenveen 0-2 PEC Zwolle
+  2026-08-23 MD3 Go Ahead Eagles 3-1 ADO Den Haag
+  2026-08-23 MD3 PSV 5-1 FC Groningen
+  2026-08-23 MD3 SC Cambuur-Leeuwarden 2-5 Feyenoord Rotterdam
+  2026-08-28 MD4 FC Groningen 2-3 Fortuna Sittard
+  2026-08-29 MD4 SBV Excelsior 2-1 Sparta Rotterdam
+  2026-08-29 MD4 AZ 5-2 Go Ahead Eagles
+  2026-08-29 MD4 PEC Zwolle 1-3 NEC
+  2026-08-30 MD4 FC Utrecht 1-6 PSV
+  2026-08-30 MD4 Willem II Tilburg 2-2 SC Heerenveen
+  2026-08-30 MD4 Feyenoord Rotterdam 2-2 ADO Den Haag
+  2026-08-30 MD4 Telstar 1963 0-4 AFC Ajax
+  2026-08-30 MD4 SC Cambuur-Leeuwarden 1-4 FC Twente '65
+  2026-09-04 MD5 Sparta Rotterdam 2-2 PEC Zwolle
+  2026-09-05 MD5 NEC 1-3 Feyenoord Rotterdam
+  2026-09-05 MD5 AFC Ajax 1-3 PSV
+  2026-09-05 MD5 Willem II Tilburg 0-3 SBV Excelsior
+  2026-09-06 MD5 FC Groningen 2-2 FC Twente '65
+  2026-09-06 MD5 SC Heerenveen 2-3 AZ
+  2026-09-06 MD5 Telstar 1963 2-2 SC Cambuur-Leeuwarden
+  2026-09-06 MD5 ADO Den Haag 2-3 Fortuna Sittard
+  2026-09-08 MD5 FC Utrecht 3-3 Go Ahead Eagles
+  2026-09-08 MD3 NEC 2-2 SBV Excelsior
+  2026-09-09 MD3 FC Twente '65 1-0 Telstar 1963
+  2026-09-11 MD6 AZ 1-1 Willem II Tilburg
+  2026-09-12 MD6 FC Twente '65 2-0 ADO Den Haag
+  2026-09-12 MD6 Go Ahead Eagles 1-1 FC Groningen
+  2026-09-12 MD6 Fortuna Sittard 1-5 AFC Ajax
+  2026-09-12 MD6 SC Cambuur-Leeuwarden 3-0 NEC
+  2026-09-13 MD6 SBV Excelsior 1-2 FC Utrecht
+  2026-09-13 MD6 SC Heerenveen 0-0 Telstar 1963
+  2026-09-13 MD6 PEC Zwolle 0-7 Feyenoord Rotterdam
+  2026-09-13 MD6 PSV 4-1 Sparta Rotterdam
+  2026-09-15 MD3 AFC Ajax 5-1 Willem II Tilburg
+  2026-09-18 MD7 FC Groningen 3-0 PEC Zwolle
+  2026-09-19 MD7 ADO Den Haag 1-1 SC Cambuur-Leeuwarden
+  2026-09-19 MD7 Sparta Rotterdam 0-4 SC Heerenveen
+  2026-09-19 MD7 AFC Ajax 2-2 SBV Excelsior
+  2026-09-19 MD7 Willem II Tilburg 0-1 Fortuna Sittard
+  2026-09-20 MD7 Feyenoord Rotterdam 5-0 FC Utrecht
+  2026-09-20 MD7 FC Twente '65 3-2 PSV
+  2026-09-20 MD7 AZ 1-0 Telstar 1963
+  2026-09-20 MD7 NEC 1-1 Go Ahead Eagles
+  2026-10-09 MD8 PSV — SC Heerenveen
+  2026-10-10 MD8 Go Ahead Eagles — Sparta Rotterdam
+  2026-10-10 MD8 Feyenoord Rotterdam — AZ
+  2026-10-10 MD8 Fortuna Sittard — FC Twente '65
+  2026-10-10 MD8 AFC Ajax — NEC
+  2026-10-11 MD8 FC Utrecht — Willem II Tilburg
+  2026-10-11 MD8 PEC Zwolle — SC Cambuur-Leeuwarden
+  2026-10-11 MD8 Telstar 1963 — ADO Den Haag
+  2026-10-11 MD8 SBV Excelsior — FC Groningen
+  2026-10-16 MD9 SC Heerenveen — SBV Excelsior
+  2026-10-17 MD9 ADO Den Haag — PSV
+  2026-10-17 MD9 Telstar 1963 — Feyenoord Rotterdam
+  2026-10-17 MD9 Sparta Rotterdam — Willem II Tilburg
+  2026-10-18 MD9 PEC Zwolle — Go Ahead Eagles
+  2026-10-18 MD9 SC Cambuur-Leeuwarden — AZ
+  2026-10-18 MD9 FC Groningen — AFC Ajax
+  2026-10-18 MD9 FC Twente '65 — FC Utrecht
+  2026-10-18 MD9 NEC — Fortuna Sittard
+  2026-10-23 MD10 Go Ahead Eagles — Telstar 1963
+  2026-10-24 MD10 FC Utrecht — PEC Zwolle
+  2026-10-24 MD10 Willem II Tilburg — SC Cambuur-Leeuwarden
+  2026-10-24 MD10 ADO Den Haag — SC Heerenveen
+  2026-10-25 MD10 Fortuna Sittard — SBV Excelsior
+  2026-10-25 MD10 NEC — FC Groningen
+  2026-10-25 MD10 PSV — Feyenoord Rotterdam
+  2026-10-25 MD10 Sparta Rotterdam — AFC Ajax
+  2026-10-25 MD10 AZ — FC Twente '65
+  2026-10-31 MD11 Feyenoord Rotterdam — Fortuna Sittard
+  2026-10-31 MD11 SC Heerenveen — NEC
+  2026-10-31 MD11 PSV — Willem II Tilburg
+  2026-10-31 MD11 SC Cambuur-Leeuwarden — Go Ahead Eagles
+  2026-10-31 MD11 AFC Ajax — AZ
+  2026-11-01 MD11 PEC Zwolle — ADO Den Haag
+  2026-11-01 MD11 Telstar 1963 — FC Utrecht
+  2026-11-01 MD11 SBV Excelsior — FC Twente '65
+  2026-11-01 MD11 FC Groningen — Sparta Rotterdam
+  2026-11-06 MD12 Willem II Tilburg — PEC Zwolle
+  2026-11-07 MD12 Fortuna Sittard — Telstar 1963
+  2026-11-07 MD12 ADO Den Haag — Sparta Rotterdam
+  2026-11-07 MD12 SBV Excelsior — Go Ahead Eagles
+  2026-11-08 MD12 SC Heerenveen — Feyenoord Rotterdam
+  2026-11-08 MD12 FC Twente '65 — AFC Ajax
+  2026-11-08 MD12 AZ — FC Groningen
+  2026-11-08 MD12 SC Cambuur-Leeuwarden — PSV
+  2026-11-08 MD12 FC Utrecht — NEC
+  2026-11-21 MD13 NEC — PSV
+  2026-11-21 MD13 Feyenoord Rotterdam — SBV Excelsior
+  2026-11-21 MD13 FC Utrecht — SC Cambuur-Leeuwarden
+  2026-11-21 MD13 Telstar 1963 — PEC Zwolle
+  2026-11-21 MD13 FC Groningen — SC Heerenveen
+  2026-11-22 MD13 FC Twente '65 — Willem II Tilburg
+  2026-11-22 MD13 Sparta Rotterdam — AZ
+  2026-11-22 MD13 AFC Ajax — ADO Den Haag
+  2026-11-22 MD13 Go Ahead Eagles — Fortuna Sittard
+  2026-11-27 MD14 FC Groningen — Willem II Tilburg
+  2026-11-28 MD14 SBV Excelsior — Telstar 1963
+  2026-11-28 MD14 PSV — Go Ahead Eagles
+  2026-11-28 MD14 SC Cambuur-Leeuwarden — Sparta Rotterdam
+  2026-11-29 MD14 ADO Den Haag — FC Utrecht
+  2026-11-29 MD14 Fortuna Sittard — SC Heerenveen
+  2026-11-29 MD14 Feyenoord Rotterdam — AFC Ajax
+  2026-11-29 MD14 PEC Zwolle — AZ
+  2026-11-29 MD14 NEC — FC Twente '65
+  2026-12-04 MD15 Telstar 1963 — FC Groningen
+  2026-12-05 MD15 Willem II Tilburg — Feyenoord Rotterdam
+  2026-12-05 MD15 Sparta Rotterdam — NEC
+  2026-12-05 MD15 AZ — PSV
+  2026-12-05 MD15 Fortuna Sittard — PEC Zwolle
+  2026-12-06 MD15 SC Heerenveen — SC Cambuur-Leeuwarden
+  2026-12-06 MD15 AFC Ajax — FC Utrecht
+  2026-12-06 MD15 Go Ahead Eagles — FC Twente '65
+  2026-12-06 MD15 ADO Den Haag — SBV Excelsior
+  2026-12-12 MD16 FC Utrecht — Fortuna Sittard
+  2026-12-12 MD16 SC Heerenveen — Go Ahead Eagles
+  2026-12-12 MD16 PEC Zwolle — SBV Excelsior
+  2026-12-13 MD16 PSV — Telstar 1963
+  2026-12-13 MD16 FC Groningen — Feyenoord Rotterdam
+  2026-12-13 MD16 Willem II Tilburg — ADO Den Haag
+  2026-12-13 MD16 AZ — NEC
+  2026-12-13 MD16 AFC Ajax — SC Cambuur-Leeuwarden
+  2026-12-18 MD17 Telstar 1963 — Willem II Tilburg
+  2026-12-19 MD17 SBV Excelsior — AZ
+  2026-12-19 MD17 Fortuna Sittard — Sparta Rotterdam
+  2026-12-19 MD17 FC Utrecht — SC Heerenveen
+  2026-12-20 MD17 NEC — ADO Den Haag
+  2026-12-20 MD17 SC Cambuur-Leeuwarden — FC Groningen
+  2026-12-20 MD17 Feyenoord Rotterdam — FC Twente '65
+  2026-12-20 MD17 Go Ahead Eagles — AFC Ajax
+  2026-12-20 MD17 PSV — PEC Zwolle
+  2027-01-08 MD18 FC Twente '65 — Fortuna Sittard
+  2027-01-09 MD18 Sparta Rotterdam — SBV Excelsior
+  2027-01-09 MD18 PEC Zwolle — FC Utrecht
+  2027-01-09 MD18 Willem II Tilburg — AFC Ajax
+  2027-01-09 MD18 AZ — SC Heerenveen
+  2027-01-10 MD18 NEC — SC Cambuur-Leeuwarden
+  2027-01-10 MD18 Feyenoord Rotterdam — PSV
+  2027-01-10 MD18 ADO Den Haag — Telstar 1963
+  2027-01-10 MD18 FC Groningen — Go Ahead Eagles
+  2027-01-15 MD19 SC Heerenveen — Sparta Rotterdam
+  2027-01-16 MD19 Telstar 1963 — NEC
+  2027-01-16 MD19 SBV Excelsior — Feyenoord Rotterdam
+  2027-01-16 MD19 ADO Den Haag — PEC Zwolle
+  2027-01-16 MD19 Fortuna Sittard — PSV
+  2027-01-17 MD19 FC Utrecht — FC Twente '65
+  2027-01-17 MD19 Go Ahead Eagles — AZ
+  2027-01-17 MD19 AFC Ajax — FC Groningen
+  2027-01-17 MD19 SC Cambuur-Leeuwarden — Willem II Tilburg
+  2027-01-22 MD20 SBV Excelsior — Fortuna Sittard
+  2027-01-23 MD20 AFC Ajax — Telstar 1963
+  2027-01-23 MD20 Feyenoord Rotterdam — PEC Zwolle
+  2027-01-23 MD20 FC Twente '65 — SC Heerenveen
+  2027-01-23 MD20 PSV — ADO Den Haag
+  2027-01-24 MD20 Go Ahead Eagles — SC Cambuur-Leeuwarden
+  2027-01-24 MD20 NEC — Willem II Tilburg
+  2027-01-24 MD20 Sparta Rotterdam — FC Groningen
+  2027-01-24 MD20 AZ — FC Utrecht
+  2027-01-29 MD21 FC Utrecht — SBV Excelsior
+  2027-01-30 MD21 Sparta Rotterdam — Telstar 1963
+  2027-01-30 MD21 ADO Den Haag — Go Ahead Eagles
+  2027-01-30 MD21 Willem II Tilburg — PSV
+  2027-01-30 MD21 PEC Zwolle — Fortuna Sittard
+  2027-01-31 MD21 SC Heerenveen — AFC Ajax
+  2027-01-31 MD21 FC Twente '65 — SC Cambuur-Leeuwarden
+  2027-01-31 MD21 AZ — Feyenoord Rotterdam
+  2027-01-31 MD21 FC Groningen — NEC
+  2027-02-06 MD16 FC Twente '65 — Sparta Rotterdam
+  2027-02-13 MD22 Telstar 1963 — SC Heerenveen
+  2027-02-13 MD22 Fortuna Sittard — ADO Den Haag
+  2027-02-13 MD22 Feyenoord Rotterdam — NEC
+  2027-02-13 MD22 SC Cambuur-Leeuwarden — FC Utrecht
+  2027-02-13 MD22 PSV — FC Twente '65
+  2027-02-13 MD22 FC Groningen — AZ
+  2027-02-13 MD22 Go Ahead Eagles — PEC Zwolle
+  2027-02-13 MD22 SBV Excelsior — AFC Ajax
+  2027-02-13 MD22 Willem II Tilburg — Sparta Rotterdam
+  2027-02-20 MD23 NEC — Sparta Rotterdam
+  2027-02-20 MD23 Feyenoord Rotterdam — Telstar 1963
+  2027-02-20 MD23 FC Utrecht — ADO Den Haag
+  2027-02-20 MD23 AZ — Fortuna Sittard
+  2027-02-20 MD23 SC Heerenveen — Willem II Tilburg
+  2027-02-20 MD23 PEC Zwolle — FC Groningen
+  2027-02-20 MD23 AFC Ajax — Go Ahead Eagles
+  2027-02-20 MD23 PSV — SC Cambuur-Leeuwarden
+  2027-02-20 MD23 FC Twente '65 — SBV Excelsior
+  2027-02-27 MD24 Sparta Rotterdam — PSV
+  2027-02-27 MD24 NEC — AZ
+  2027-02-27 MD24 SC Cambuur-Leeuwarden — PEC Zwolle
+  2027-02-27 MD24 SBV Excelsior — SC Heerenveen
+  2027-02-27 MD24 ADO Den Haag — FC Twente '65
+  2027-02-27 MD24 AFC Ajax — Feyenoord Rotterdam
+  2027-02-27 MD24 Willem II Tilburg — FC Groningen
+  2027-02-27 MD24 Fortuna Sittard — FC Utrecht
+  2027-02-27 MD24 Telstar 1963 — Go Ahead Eagles
+  2027-03-06 MD25 FC Twente '65 — AZ
+  2027-03-06 MD25 Feyenoord Rotterdam — SC Heerenveen
+  2027-03-06 MD25 Go Ahead Eagles — SBV Excelsior
+  2027-03-06 MD25 PSV — FC Utrecht
+  2027-03-06 MD25 ADO Den Haag — AFC Ajax
+  2027-03-06 MD25 FC Groningen — Telstar 1963
+  2027-03-06 MD25 PEC Zwolle — Willem II Tilburg
+  2027-03-06 MD25 Fortuna Sittard — NEC
+  2027-03-06 MD25 Sparta Rotterdam — SC Cambuur-Leeuwarden
+  2027-03-13 MD26 AFC Ajax — PEC Zwolle
+  2027-03-13 MD26 SC Cambuur-Leeuwarden — ADO Den Haag
+  2027-03-13 MD26 SBV Excelsior — NEC
+  2027-03-13 MD26 Go Ahead Eagles — Feyenoord Rotterdam
+  2027-03-13 MD26 Telstar 1963 — PSV
+  2027-03-13 MD26 AZ — Sparta Rotterdam
+  2027-03-13 MD26 Willem II Tilburg — FC Twente '65
+  2027-03-13 MD26 FC Utrecht — FC Groningen
+  2027-03-13 MD26 SC Heerenveen — Fortuna Sittard
+  2027-03-20 MD27 FC Utrecht — Sparta Rotterdam
+  2027-03-20 MD27 Feyenoord Rotterdam — SC Cambuur-Leeuwarden
+  2027-03-20 MD27 AZ — SBV Excelsior
+  2027-03-20 MD27 PEC Zwolle — SC Heerenveen
+  2027-03-20 MD27 Telstar 1963 — Fortuna Sittard
+  2027-03-20 MD27 NEC — AFC Ajax
+  2027-03-20 MD27 FC Groningen — PSV
+  2027-03-20 MD27 ADO Den Haag — Willem II Tilburg
+  2027-03-20 MD27 FC Twente '65 — Go Ahead Eagles
+  2027-04-03 MD28 PSV — AZ
+  2027-04-03 MD28 Fortuna Sittard — Feyenoord Rotterdam
+  2027-04-03 MD28 SC Heerenveen — FC Groningen
+  2027-04-03 MD28 AFC Ajax — FC Twente '65
+  2027-04-03 MD28 SC Cambuur-Leeuwarden — Telstar 1963
+  2027-04-03 MD28 SBV Excelsior — PEC Zwolle
+  2027-04-03 MD28 Sparta Rotterdam — ADO Den Haag
+  2027-04-03 MD28 Go Ahead Eagles — NEC
+  2027-04-03 MD28 Willem II Tilburg — FC Utrecht
+  2027-04-10 MD29 ADO Den Haag — Feyenoord Rotterdam
+  2027-04-10 MD29 SC Cambuur-Leeuwarden — Fortuna Sittard
+  2027-04-10 MD29 NEC — SC Heerenveen
+  2027-04-10 MD29 FC Groningen — SBV Excelsior
+  2027-04-10 MD29 Willem II Tilburg — AZ
+  2027-04-10 MD29 FC Utrecht — AFC Ajax
+  2027-04-10 MD29 Telstar 1963 — FC Twente '65
+  2027-04-10 MD29 PEC Zwolle — PSV
+  2027-04-10 MD29 Sparta Rotterdam — Go Ahead Eagles
+  2027-04-24 MD30 FC Twente '65 — NEC
+  2027-04-24 MD30 SC Heerenveen — ADO Den Haag
+  2027-04-24 MD30 SBV Excelsior — Willem II Tilburg
+  2027-04-24 MD30 Go Ahead Eagles — FC Utrecht
+  2027-04-24 MD30 AZ — SC Cambuur-Leeuwarden
+  2027-04-24 MD30 PEC Zwolle — Telstar 1963
+  2027-04-24 MD30 Fortuna Sittard — FC Groningen
+  2027-04-24 MD30 Feyenoord Rotterdam — Sparta Rotterdam
+  2027-04-24 MD30 PSV — AFC Ajax
+  2027-05-01 MD31 Go Ahead Eagles — PSV
+  2027-05-01 MD31 SC Heerenveen — FC Utrecht
+  2027-05-01 MD31 Sparta Rotterdam — FC Twente '65
+  2027-05-01 MD31 FC Groningen — ADO Den Haag
+  2027-05-01 MD31 NEC — PEC Zwolle
+  2027-05-01 MD31 AFC Ajax — Fortuna Sittard
+  2027-05-01 MD31 SBV Excelsior — SC Cambuur-Leeuwarden
+  2027-05-01 MD31 Telstar 1963 — AZ
+  2027-05-01 MD31 Feyenoord Rotterdam — Willem II Tilburg
+  2027-05-08 MD32 PSV — SBV Excelsior
+  2027-05-08 MD32 FC Utrecht — Feyenoord Rotterdam
+  2027-05-08 MD32 FC Twente '65 — FC Groningen
+  2027-05-08 MD32 PEC Zwolle — Sparta Rotterdam
+  2027-05-08 MD32 Fortuna Sittard — Go Ahead Eagles
+  2027-05-08 MD32 SC Cambuur-Leeuwarden — SC Heerenveen
+  2027-05-08 MD32 AZ — AFC Ajax
+  2027-05-08 MD32 ADO Den Haag — NEC
+  2027-05-08 MD32 Willem II Tilburg — Telstar 1963
+  2027-05-16 MD33 AZ — PEC Zwolle
+  2027-05-16 MD33 Go Ahead Eagles — SC Heerenveen
+  2027-05-16 MD33 FC Twente '65 — Feyenoord Rotterdam
+  2027-05-16 MD33 AFC Ajax — Sparta Rotterdam
+  2027-05-16 MD33 SBV Excelsior — ADO Den Haag
+  2027-05-16 MD33 PSV — NEC
+  2027-05-16 MD33 Fortuna Sittard — Willem II Tilburg
+  2027-05-16 MD33 FC Utrecht — Telstar 1963
+  2027-05-16 MD33 FC Groningen — SC Cambuur-Leeuwarden
+  2027-05-23 MD34 NEC — FC Utrecht
+  2027-05-23 MD34 SC Heerenveen — PSV
+  2027-05-23 MD34 Sparta Rotterdam — Fortuna Sittard
+  2027-05-23 MD34 SC Cambuur-Leeuwarden — AFC Ajax
+  2027-05-23 MD34 PEC Zwolle — FC Twente '65
+  2027-05-23 MD34 Feyenoord Rotterdam — FC Groningen
+  2027-05-23 MD34 ADO Den Haag — AZ
+  2027-05-23 MD34 Telstar 1963 — SBV Excelsior
+  2027-05-23 MD34 Willem II Tilburg — Go Ahead Eagles
+
+══ Portuguese Primeira Liga 2026/27 — 306 fixtures, 62 played ══
+TABLE (position, club, points, played, W-D-L, goals, form):
+  1. FC Porto — 21pts P7 W7 D0 L0 18:3 (+15) ucl [WWWWW]
+  2. Sport Lisboa e Benfica — 16pts P7 W5 D1 L1 22:7 (+15) ucl [WWWWL]
+  3. Sporting Clube de Portugal — 15pts P7 W4 D3 L0 17:8 (+9) ucl [WWWDD]
+  4. CD Santa Clara — 15pts P7 W4 D3 L0 11:4 (+7) ucl [WDWWD]
+  5. FC Arouca — 11pts P7 W3 D2 L2 10:7 (+3) europa [LWDLD]
+  6. Sporting Clube de Braga — 11pts P6 W3 D2 L1 7:5 (+2) europa [WWLWD]
+  7. Académico de Viseu FC — 11pts P7 W3 D2 L2 9:9 (+0) [DLWWW]
+  8. CF Estrela da Amadora — 10pts P7 W2 D4 L1 14:14 (+0) [WDWDL]
+  9. Gil Vicente FC — 8pts P6 W2 D2 L2 5:5 (+0) [WDLLD]
+  10. FC Alverca — 8pts P7 W2 D2 L3 9:11 (-2) [LDLWW]
+  11. CS Marítimo — 8pts P7 W2 D2 L3 8:12 (-4) [DLLLD]
+  12. Moreirense FC — 8pts P7 W2 D2 L3 8:14 (-6) [WLLWD]
+  13. FC Famalicão — 7pts P7 W1 D4 L2 9:7 (+2) [LDDDW]
+  14. Vitória Guimarães — 5pts P7 W1 D2 L4 5:8 (-3) [WLDLD]
+  15. CD Nacional — 4pts P7 W1 D1 L5 7:15 (-8) [LLLLL]
+  16. Rio Ave FC — 4pts P7 W1 D1 L5 5:15 (-10) playoff [WLLDL]
+  17. Casa Pia AC — 4pts P7 W1 D1 L5 3:16 (-13) relegation [LLDLW]
+  18. GD Estoril Praia — 2pts P7 W0 D2 L5 3:10 (-7) relegation [LLDLL]
+ALL FIXTURES (date, round, home, score, away; a dashed score means not yet played):
+  2026-08-07 MD1 GD Estoril Praia 1-1 FC Famalicão
+  2026-08-08 MD1 CS Marítimo 1-0 Casa Pia AC
+  2026-08-08 MD1 Vitória Guimarães 0-1 FC Arouca
+  2026-08-08 MD1 CF Estrela da Amadora 2-2 Sporting Clube de Portugal
+  2026-08-09 MD1 FC Porto 2-0 FC Alverca
+  2026-08-09 MD1 Moreirense FC 2-2 Sporting Clube de Braga
+  2026-08-09 MD1 Gil Vicente FC 1-0 Rio Ave FC
+  2026-08-09 MD1 Sport Lisboa e Benfica 2-2 Académico de Viseu FC
+  2026-08-10 MD1 CD Santa Clara 2-2 CD Nacional
+  2026-08-14 MD2 Sporting Clube de Portugal 3-2 Vitória Guimarães
+  2026-08-15 MD2 FC Alverca 2-2 CF Estrela da Amadora
+  2026-08-15 MD2 Académico de Viseu FC 0-1 CD Santa Clara
+  2026-08-15 MD2 Rio Ave FC 0-2 FC Porto
+  2026-08-16 MD2 Sporting Clube de Braga — Gil Vicente FC
+  2026-08-16 MD2 CD Nacional 2-0 GD Estoril Praia
+  2026-08-16 MD2 FC Arouca 4-0 Moreirense FC
+  2026-08-16 MD2 FC Famalicão 1-2 CS Marítimo
+  2026-08-17 MD2 Casa Pia AC 0-7 Sport Lisboa e Benfica
+  2026-08-22 MD3 CS Marítimo 2-2 Académico de Viseu FC
+  2026-08-22 MD3 GD Estoril Praia 0-2 Rio Ave FC
+  2026-08-22 MD3 Sporting Clube de Portugal 3-1 FC Alverca
+  2026-08-23 MD3 Vitória Guimarães 1-0 CD Nacional
+  2026-08-23 MD3 CD Santa Clara 1-0 FC Famalicão
+  2026-08-23 MD3 FC Porto 2-0 FC Arouca
+  2026-08-24 MD3 Gil Vicente FC 2-0 Casa Pia AC
+  2026-08-28 MD4 Rio Ave FC 0-4 Sporting Clube de Portugal
+  2026-08-29 MD4 FC Alverca 1-1 CD Santa Clara
+  2026-08-29 MD4 FC Arouca 2-1 CS Marítimo
+  2026-08-29 MD4 Académico de Viseu FC 0-3 FC Porto
+  2026-08-30 MD4 CD Nacional 2-3 CF Estrela da Amadora
+  2026-08-30 MD4 Casa Pia AC 0-1 Moreirense FC
+  2026-08-30 MD4 FC Famalicão 0-0 Gil Vicente FC
+  2026-08-31 MD4 Sport Lisboa e Benfica 2-1 GD Estoril Praia
+  2026-08-31 MD4 Sporting Clube de Braga 1-0 Vitória Guimarães
+  2026-09-04 MD5 FC Porto 2-1 Moreirense FC
+  2026-09-05 MD5 CF Estrela da Amadora 2-2 FC Famalicão
+  2026-09-05 MD5 FC Alverca 1-2 Sporting Clube de Braga
+  2026-09-05 MD5 CS Marítimo 0-3 Sport Lisboa e Benfica
+  2026-09-05 MD5 Sporting Clube de Portugal 2-0 CD Nacional
+  2026-09-06 MD5 CD Santa Clara 4-0 Rio Ave FC
+  2026-09-06 MD5 Vitória Guimarães 0-0 Casa Pia AC
+  2026-09-06 MD5 Gil Vicente FC 0-1 Académico de Viseu FC
+  2026-09-07 MD5 GD Estoril Praia 0-0 FC Arouca
+  2026-09-09 MD3 Moreirense FC 0-4 Sport Lisboa e Benfica
+  2026-09-10 MD3 CF Estrela da Amadora 2-1 Sporting Clube de Braga
+  2026-09-12 MD6 CD Nacional 1-3 FC Alverca
+  2026-09-12 MD6 Casa Pia AC 1-4 FC Porto
+  2026-09-12 MD6 Académico de Viseu FC 2-1 Vitória Guimarães
+  2026-09-13 MD6 Sport Lisboa e Benfica 3-1 Gil Vicente FC
+  2026-09-13 MD6 FC Arouca 1-2 CD Santa Clara
+  2026-09-13 MD6 FC Famalicão 1-1 Sporting Clube de Portugal
+  2026-09-14 MD6 Rio Ave FC 3-3 CF Estrela da Amadora
+  2026-09-14 MD6 Moreirense FC 3-1 CS Marítimo
+  2026-09-14 MD6 Sporting Clube de Braga 1-0 GD Estoril Praia
+  2026-09-19 MD7 CD Nacional 0-4 FC Famalicão
+  2026-09-19 MD7 Gil Vicente FC 1-1 CS Marítimo
+  2026-09-19 MD7 FC Alverca 1-0 Rio Ave FC
+  2026-09-19 MD7 Sporting Clube de Portugal 2-2 FC Arouca
+  2026-09-20 MD7 Vitória Guimarães 1-1 Moreirense FC
+  2026-09-20 MD7 CF Estrela da Amadora 0-2 Académico de Viseu FC
+  2026-09-20 MD7 CD Santa Clara 0-0 Sporting Clube de Braga
+  2026-09-20 MD7 GD Estoril Praia 1-2 Casa Pia AC
+  2026-09-20 MD7 FC Porto 3-1 Sport Lisboa e Benfica
+  2026-10-09 MD8 Moreirense FC — Gil Vicente FC
+  2026-10-09 MD8 Sporting Clube de Braga — Sporting Clube de Portugal
+  2026-10-10 MD8 Casa Pia AC — CD Santa Clara
+  2026-10-10 MD8 CS Marítimo — FC Porto
+  2026-10-10 MD8 Académico de Viseu FC — GD Estoril Praia
+  2026-10-11 MD8 Rio Ave FC — CD Nacional
+  2026-10-11 MD8 Sport Lisboa e Benfica — Vitória Guimarães
+  2026-10-11 MD8 FC Arouca — CF Estrela da Amadora
+  2026-10-12 MD8 FC Famalicão — FC Alverca
+  2026-10-23 MD9 Vitória Guimarães — CS Marítimo
+  2026-10-24 MD9 CF Estrela da Amadora — Casa Pia AC
+  2026-10-24 MD9 FC Alverca — FC Arouca
+  2026-10-24 MD9 Gil Vicente FC — FC Porto
+  2026-10-25 MD9 GD Estoril Praia — Moreirense FC
+  2026-10-25 MD9 Rio Ave FC — FC Famalicão
+  2026-10-25 MD9 CD Nacional — Sporting Clube de Braga
+  2026-10-25 MD9 Sporting Clube de Portugal — Académico de Viseu FC
+  2026-10-26 MD9 CD Santa Clara — Sport Lisboa e Benfica
+  2026-10-30 MD10 Casa Pia AC — Sporting Clube de Portugal
+  2026-10-31 MD10 Moreirense FC — CF Estrela da Amadora
+  2026-10-31 MD10 FC Porto — GD Estoril Praia
+  2026-11-01 MD10 FC Arouca — CD Nacional
+  2026-11-01 MD10 CS Marítimo — CD Santa Clara
+  2026-11-01 MD10 Académico de Viseu FC — Rio Ave FC
+  2026-11-01 MD10 Sporting Clube de Braga — FC Famalicão
+  2026-11-02 MD10 Sport Lisboa e Benfica — FC Alverca
+  2026-11-02 MD10 Gil Vicente FC — Vitória Guimarães
+  2026-11-06 MD11 FC Famalicão — FC Arouca
+  2026-11-07 MD11 CD Nacional — Académico de Viseu FC
+  2026-11-07 MD11 FC Alverca — Casa Pia AC
+  2026-11-07 MD11 Sporting Clube de Portugal — Moreirense FC
+  2026-11-08 MD11 GD Estoril Praia — CS Marítimo
+  2026-11-08 MD11 CD Santa Clara — Gil Vicente FC
+  2026-11-08 MD11 Vitória Guimarães — FC Porto
+  2026-11-08 MD11 Rio Ave FC — Sporting Clube de Braga
+  2026-11-08 MD11 CF Estrela da Amadora — Sport Lisboa e Benfica
+  2026-11-27 MD12 CS Marítimo — CD Nacional
+  2026-11-28 MD12 Moreirense FC — CD Santa Clara
+  2026-11-28 MD12 FC Arouca — Rio Ave FC
+  2026-11-28 MD12 Académico de Viseu FC — FC Alverca
+  2026-11-28 MD12 Vitória Guimarães — CF Estrela da Amadora
+  2026-11-29 MD12 Gil Vicente FC — GD Estoril Praia
+  2026-11-29 MD12 FC Porto — Sporting Clube de Portugal
+  2026-11-30 MD12 Casa Pia AC — Sporting Clube de Braga
+  2026-11-30 MD12 Sport Lisboa e Benfica — FC Famalicão
+  2026-12-06 MD13 Sporting Clube de Portugal — CS Marítimo
+  2026-12-06 MD13 CF Estrela da Amadora — Gil Vicente FC
+  2026-12-06 MD13 FC Alverca — Moreirense FC
+  2026-12-06 MD13 CD Santa Clara — FC Porto
+  2026-12-06 MD13 CD Nacional — Sport Lisboa e Benfica
+  2026-12-06 MD13 GD Estoril Praia — Vitória Guimarães
+  2026-12-06 MD13 Rio Ave FC — Casa Pia AC
+  2026-12-06 MD13 Sporting Clube de Braga — FC Arouca
+  2026-12-06 MD13 FC Famalicão — Académico de Viseu FC
+  2026-12-13 MD14 CS Marítimo — Rio Ave FC
+  2026-12-13 MD14 Académico de Viseu FC — FC Arouca
+  2026-12-13 MD14 Gil Vicente FC — Sporting Clube de Portugal
+  2026-12-13 MD14 Casa Pia AC — CD Nacional
+  2026-12-13 MD14 Vitória Guimarães — FC Alverca
+  2026-12-13 MD14 Moreirense FC — FC Famalicão
+  2026-12-13 MD14 GD Estoril Praia — CD Santa Clara
+  2026-12-13 MD14 Sport Lisboa e Benfica — Sporting Clube de Braga
+  2026-12-13 MD14 FC Porto — CF Estrela da Amadora
+  2026-12-20 MD15 Rio Ave FC — Sport Lisboa e Benfica
+  2026-12-20 MD15 Sporting Clube de Braga — Académico de Viseu FC
+  2026-12-20 MD15 Sporting Clube de Portugal — GD Estoril Praia
+  2026-12-20 MD15 CF Estrela da Amadora — CS Marítimo
+  2026-12-20 MD15 FC Famalicão — FC Porto
+  2026-12-20 MD15 FC Alverca — Gil Vicente FC
+  2026-12-20 MD15 CD Santa Clara — Vitória Guimarães
+  2026-12-20 MD15 CD Nacional — Moreirense FC
+  2026-12-20 MD15 FC Arouca — Casa Pia AC
+  2026-12-27 MD16 Vitória Guimarães — Rio Ave FC
+  2026-12-27 MD16 Casa Pia AC — FC Famalicão
+  2026-12-27 MD16 FC Porto — CD Nacional
+  2026-12-27 MD16 CD Santa Clara — CF Estrela da Amadora
+  2026-12-27 MD16 Moreirense FC — Académico de Viseu FC
+  2026-12-27 MD16 Sport Lisboa e Benfica — Sporting Clube de Portugal
+  2026-12-27 MD16 Gil Vicente FC — FC Arouca
+  2026-12-27 MD16 CS Marítimo — Sporting Clube de Braga
+  2026-12-27 MD16 GD Estoril Praia — FC Alverca
+  2027-01-10 MD17 Sporting Clube de Braga — FC Porto
+  2027-01-10 MD17 CF Estrela da Amadora — GD Estoril Praia
+  2027-01-10 MD17 FC Famalicão — Vitória Guimarães
+  2027-01-10 MD17 CD Nacional — Gil Vicente FC
+  2027-01-10 MD17 Rio Ave FC — Moreirense FC
+  2027-01-10 MD17 FC Arouca — Sport Lisboa e Benfica
+  2027-01-10 MD17 FC Alverca — CS Marítimo
+  2027-01-10 MD17 Académico de Viseu FC — Casa Pia AC
+  2027-01-10 MD17 Sporting Clube de Portugal — CD Santa Clara
+  2027-01-17 MD18 FC Famalicão — GD Estoril Praia
+  2027-01-17 MD18 Sporting Clube de Portugal — CF Estrela da Amadora
+  2027-01-17 MD18 Sporting Clube de Braga — Moreirense FC
+  2027-01-17 MD18 Rio Ave FC — Gil Vicente FC
+  2027-01-17 MD18 Casa Pia AC — CS Marítimo
+  2027-01-17 MD18 CD Nacional — CD Santa Clara
+  2027-01-17 MD18 FC Alverca — FC Porto
+  2027-01-17 MD18 Académico de Viseu FC — Sport Lisboa e Benfica
+  2027-01-17 MD18 FC Arouca — Vitória Guimarães
+  2027-01-24 MD19 CF Estrela da Amadora — FC Alverca
+  2027-01-24 MD19 Moreirense FC — FC Arouca
+  2027-01-24 MD19 GD Estoril Praia — CD Nacional
+  2027-01-24 MD19 FC Porto — Rio Ave FC
+  2027-01-24 MD19 Sport Lisboa e Benfica — Casa Pia AC
+  2027-01-24 MD19 CD Santa Clara — Académico de Viseu FC
+  2027-01-24 MD19 CS Marítimo — FC Famalicão
+  2027-01-24 MD19 Gil Vicente FC — Sporting Clube de Braga
+  2027-01-24 MD19 Vitória Guimarães — Sporting Clube de Portugal
+  2027-01-31 MD20 Casa Pia AC — Gil Vicente FC
+  2027-01-31 MD20 CD Nacional — Vitória Guimarães
+  2027-01-31 MD20 Sport Lisboa e Benfica — Moreirense FC
+  2027-01-31 MD20 Sporting Clube de Braga — CF Estrela da Amadora
+  2027-01-31 MD20 FC Arouca — FC Porto
+  2027-01-31 MD20 FC Famalicão — CD Santa Clara
+  2027-01-31 MD20 Académico de Viseu FC — CS Marítimo
+  2027-01-31 MD20 Rio Ave FC — GD Estoril Praia
+  2027-01-31 MD20 FC Alverca — Sporting Clube de Portugal
+  2027-02-07 MD21 CS Marítimo — FC Arouca
+  2027-02-07 MD21 CD Santa Clara — FC Alverca
+  2027-02-07 MD21 GD Estoril Praia — Sport Lisboa e Benfica
+  2027-02-07 MD21 Sporting Clube de Portugal — Rio Ave FC
+  2027-02-07 MD21 FC Porto — Académico de Viseu FC
+  2027-02-07 MD21 CF Estrela da Amadora — CD Nacional
+  2027-02-07 MD21 Vitória Guimarães — Sporting Clube de Braga
+  2027-02-07 MD21 Gil Vicente FC — FC Famalicão
+  2027-02-07 MD21 Moreirense FC — Casa Pia AC
+  2027-02-14 MD22 FC Arouca — GD Estoril Praia
+  2027-02-14 MD22 CD Nacional — Sporting Clube de Portugal
+  2027-02-14 MD22 Moreirense FC — FC Porto
+  2027-02-14 MD22 Sporting Clube de Braga — FC Alverca
+  2027-02-14 MD22 Académico de Viseu FC — Gil Vicente FC
+  2027-02-14 MD22 Sport Lisboa e Benfica — CS Marítimo
+  2027-02-14 MD22 Casa Pia AC — Vitória Guimarães
+  2027-02-14 MD22 FC Famalicão — CF Estrela da Amadora
+  2027-02-14 MD22 Rio Ave FC — CD Santa Clara
+  2027-02-21 MD23 Vitória Guimarães — Académico de Viseu FC
+  2027-02-21 MD23 CS Marítimo — Moreirense FC
+  2027-02-21 MD23 GD Estoril Praia — Sporting Clube de Braga
+  2027-02-21 MD23 Gil Vicente FC — Sport Lisboa e Benfica
+  2027-02-21 MD23 FC Porto — Casa Pia AC
+  2027-02-21 MD23 Sporting Clube de Portugal — FC Famalicão
+  2027-02-21 MD23 CD Santa Clara — FC Arouca
+  2027-02-21 MD23 CF Estrela da Amadora — Rio Ave FC
+  2027-02-21 MD23 FC Alverca — CD Nacional
+  2027-02-28 MD24 Rio Ave FC — FC Alverca
+  2027-02-28 MD24 CS Marítimo — Gil Vicente FC
+  2027-02-28 MD24 Casa Pia AC — GD Estoril Praia
+  2027-02-28 MD24 Moreirense FC — Vitória Guimarães
+  2027-02-28 MD24 Sport Lisboa e Benfica — FC Porto
+  2027-02-28 MD24 FC Famalicão — CD Nacional
+  2027-02-28 MD24 Sporting Clube de Braga — CD Santa Clara
+  2027-02-28 MD24 FC Arouca — Sporting Clube de Portugal
+  2027-02-28 MD24 Académico de Viseu FC — CF Estrela da Amadora
+  2027-03-07 MD25 Gil Vicente FC — Moreirense FC
+  2027-03-07 MD25 FC Porto — CS Marítimo
+  2027-03-07 MD25 FC Alverca — FC Famalicão
+  2027-03-07 MD25 CD Santa Clara — Casa Pia AC
+  2027-03-07 MD25 Sporting Clube de Portugal — Sporting Clube de Braga
+  2027-03-07 MD25 CF Estrela da Amadora — FC Arouca
+  2027-03-07 MD25 Vitória Guimarães — Sport Lisboa e Benfica
+  2027-03-07 MD25 CD Nacional — Rio Ave FC
+  2027-03-07 MD25 GD Estoril Praia — Académico de Viseu FC
+  2027-03-14 MD26 CS Marítimo — Vitória Guimarães
+  2027-03-14 MD26 Sport Lisboa e Benfica — CD Santa Clara
+  2027-03-14 MD26 FC Arouca — FC Alverca
+  2027-03-14 MD26 Académico de Viseu FC — Sporting Clube de Portugal
+  2027-03-14 MD26 FC Porto — Gil Vicente FC
+  2027-03-14 MD26 Casa Pia AC — CF Estrela da Amadora
+  2027-03-14 MD26 Sporting Clube de Braga — CD Nacional
+  2027-03-14 MD26 FC Famalicão — Rio Ave FC
+  2027-03-14 MD26 Moreirense FC — GD Estoril Praia
+  2027-03-21 MD27 CD Nacional — FC Arouca
+  2027-03-21 MD27 Vitória Guimarães — Gil Vicente FC
+  2027-03-21 MD27 CF Estrela da Amadora — Moreirense FC
+  2027-03-21 MD27 FC Alverca — Sport Lisboa e Benfica
+  2027-03-21 MD27 GD Estoril Praia — FC Porto
+  2027-03-21 MD27 CD Santa Clara — CS Marítimo
+  2027-03-21 MD27 Sporting Clube de Portugal — Casa Pia AC
+  2027-03-21 MD27 Rio Ave FC — Académico de Viseu FC
+  2027-03-21 MD27 FC Famalicão — Sporting Clube de Braga
+  2027-04-04 MD28 FC Arouca — FC Famalicão
+  2027-04-04 MD28 Gil Vicente FC — CD Santa Clara
+  2027-04-04 MD28 Casa Pia AC — FC Alverca
+  2027-04-04 MD28 Moreirense FC — Sporting Clube de Portugal
+  2027-04-04 MD28 Académico de Viseu FC — CD Nacional
+  2027-04-04 MD28 Sporting Clube de Braga — Rio Ave FC
+  2027-04-04 MD28 CS Marítimo — GD Estoril Praia
+  2027-04-04 MD28 FC Porto — Vitória Guimarães
+  2027-04-04 MD28 Sport Lisboa e Benfica — CF Estrela da Amadora
+  2027-04-11 MD29 Sporting Clube de Portugal — FC Porto
+  2027-04-11 MD29 FC Famalicão — Sport Lisboa e Benfica
+  2027-04-11 MD29 CD Nacional — CS Marítimo
+  2027-04-11 MD29 CD Santa Clara — Moreirense FC
+  2027-04-11 MD29 Rio Ave FC — FC Arouca
+  2027-04-11 MD29 Sporting Clube de Braga — Casa Pia AC
+  2027-04-11 MD29 FC Alverca — Académico de Viseu FC
+  2027-04-11 MD29 CF Estrela da Amadora — Vitória Guimarães
+  2027-04-11 MD29 GD Estoril Praia — Gil Vicente FC
+  2027-04-18 MD30 Sport Lisboa e Benfica — CD Nacional
+  2027-04-18 MD30 FC Porto — CD Santa Clara
+  2027-04-18 MD30 CS Marítimo — Sporting Clube de Portugal
+  2027-04-18 MD30 Moreirense FC — FC Alverca
+  2027-04-18 MD30 Académico de Viseu FC — FC Famalicão
+  2027-04-18 MD30 Vitória Guimarães — GD Estoril Praia
+  2027-04-18 MD30 Casa Pia AC — Rio Ave FC
+  2027-04-18 MD30 Gil Vicente FC — CF Estrela da Amadora
+  2027-04-18 MD30 FC Arouca — Sporting Clube de Braga
+  2027-04-25 MD31 FC Alverca — Vitória Guimarães
+  2027-04-25 MD31 Rio Ave FC — CS Marítimo
+  2027-04-25 MD31 CD Nacional — Casa Pia AC
+  2027-04-25 MD31 CF Estrela da Amadora — FC Porto
+  2027-04-25 MD31 Sporting Clube de Portugal — Gil Vicente FC
+  2027-04-25 MD31 Sporting Clube de Braga — Sport Lisboa e Benfica
+  2027-04-25 MD31 CD Santa Clara — GD Estoril Praia
+  2027-04-25 MD31 FC Arouca — Académico de Viseu FC
+  2027-04-25 MD31 FC Famalicão — Moreirense FC
+  2027-05-02 MD32 Gil Vicente FC — FC Alverca
+  2027-05-02 MD32 Vitória Guimarães — CD Santa Clara
+  2027-05-02 MD32 GD Estoril Praia — Sporting Clube de Portugal
+  2027-05-02 MD32 FC Porto — FC Famalicão
+  2027-05-02 MD32 Moreirense FC — CD Nacional
+  2027-05-02 MD32 Casa Pia AC — FC Arouca
+  2027-05-02 MD32 Académico de Viseu FC — Sporting Clube de Braga
+  2027-05-02 MD32 CS Marítimo — CF Estrela da Amadora
+  2027-05-02 MD32 Sport Lisboa e Benfica — Rio Ave FC
+  2027-05-09 MD33 Sporting Clube de Portugal — Sport Lisboa e Benfica
+  2027-05-09 MD33 CF Estrela da Amadora — CD Santa Clara
+  2027-05-09 MD33 Rio Ave FC — Vitória Guimarães
+  2027-05-09 MD33 Académico de Viseu FC — Moreirense FC
+  2027-05-09 MD33 FC Famalicão — Casa Pia AC
+  2027-05-09 MD33 Sporting Clube de Braga — CS Marítimo
+  2027-05-09 MD33 FC Alverca — GD Estoril Praia
+  2027-05-09 MD33 FC Arouca — Gil Vicente FC
+  2027-05-09 MD33 CD Nacional — FC Porto
+  2027-05-16 MD34 CS Marítimo — FC Alverca
+  2027-05-16 MD34 Gil Vicente FC — CD Nacional
+  2027-05-16 MD34 Sport Lisboa e Benfica — FC Arouca
+  2027-05-16 MD34 GD Estoril Praia — CF Estrela da Amadora
+  2027-05-16 MD34 FC Porto — Sporting Clube de Braga
+  2027-05-16 MD34 Casa Pia AC — Académico de Viseu FC
+  2027-05-16 MD34 Vitória Guimarães — FC Famalicão
+  2027-05-16 MD34 CD Santa Clara — Sporting Clube de Portugal
+  2027-05-16 MD34 Moreirense FC — Rio Ave FC
+
+READING THE WIRE: the tables and the fixtures above are the same committed snapshot /live-wire prints. Zone tags in tables: ucl = Champions League, uel = Europa League, conf = Conference League, rel = relegation. A dashed score is a future fixture — describe it as scheduled, never as played.
+WHEN THE VISITOR ASKS ABOUT REAL FOOTBALL, quote from this dossier and nothing else. When they ask about the demo world, say plainly that this dossier is the real world and switch to the frozen digest. Never blur the two.
