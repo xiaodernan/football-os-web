@@ -264,7 +264,7 @@ export function Manual() {
             {/* commit / refused branch */}
             <g stroke="currentColor" strokeWidth="1.4" fill="none">
               <path d="M468,80 L468,118 L265,118 L265,160" markerEnd="url(#gl-arrow)" opacity="0.75" />
-              <path d="M468,80 L468,118 L600,118 L600,160" markerEnd="url(#gl-arrow)" opacity="0.75" />
+              <path d="M468,80 L468,118 L580,118 L580,160" markerEnd="url(#gl-arrow)" opacity="0.75" />
               <rect x="153" y="160" width="224" height="48" rx="9" />
               <rect x="475" y="160" width="210" height="48" rx="9" strokeDasharray="5 4" />
             </g>
