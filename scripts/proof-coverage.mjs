@@ -82,8 +82,10 @@ const EXEMPT = {
  *  this file's own `lines()`, and the ceiling is what makes the figure move when the entry
  *  changes shape instead of the list quietly agreeing with itself. M522: 9 -> 20 — the lane's
  *  M458 service-worker registration grew the entry and did not pay; the exemption count is
- *  still one, only the shape it names got longer. */
-const EXEMPT_CEILING = 20;
+ *  still one, only the shape it names got longer. M1193: the registration is base-composed
+ *  (import.meta.env.BASE_URL) and the comment block folded — 20 -> 17. The number only ever
+ *  goes down; growing it back makes the gate red by design. */
+const EXEMPT_CEILING = 17;
 
 // ---------------------------------------------------------------------------
 // The pile the OLD population could not see. The census used to walk three directories

@@ -42,7 +42,9 @@ const checkIndex = (html) =>
 const checkMain = (js) =>
   /import\.meta\.env\.PROD/.test(js) &&
   /"serviceWorker"\s+in\s+navigator/.test(js) &&
-  /serviceWorker\.register\("\/sw\.js\?v="/.test(js); // M1148: the register carries the per-build stamp
+  // M1193: the register is base-composed — GitHub Pages serves the app from /football-os-web/.
+  (/serviceWorker\.register\("\/sw\.js\?v="/.test(js) ||
+   /serviceWorker\.register\(import\.meta\.env\.BASE_URL \+ "sw\.js\?v="/.test(js));
 
 const checkSw = (js) => {
   const need = [
@@ -51,9 +53,9 @@ const checkSw = (js) => {
     /self\.skipWaiting\(\)/,                          // install takes over
     /key !== VERSION/,                                // activate drops old caches
     /url\.origin !== self\.location\.origin/,         // same-origin guard
-    /url\.pathname\.startsWith\("\/functions\/"\)/,   // the API is never cached
+    /BASE\s*\+\s*"functions\/"/,                    // the API is never cached (M1193: base-composed)
     /request\.mode === "navigate"/,                   // navigations…
-    /caches\.match\("\/index\.html"\)/,               // …fall back to the cached shell
+    /caches\.match\(BASE\s*\+\s*"index\.html"\)/,    // …fall back to the cached shell (M1193: base-composed)
     /caches\.match\(request\)\.then\(\(cached\)/,     // static: cached first…
     /return cached \|\| network/,                     // …network fills behind
   ];
@@ -67,9 +69,9 @@ const badManifestNoMaskable = JSON.stringify({ name: "X", short_name: "X", start
 const badManifestEmptyIcons = JSON.stringify({ name: "X", short_name: "X", start_url: "/", display: "standalone", theme_color: "#000000", background_color: "#000000", icons: [] });
 const badIndex = "<html><head><title>x</title></head><body></body></html>";
 const badMainDevOnly = 'if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js");';
-const badSwNoApi = swJs.replace('if (url.pathname.startsWith("/functions/")) return;', "");
+const badSwNoApi = swJs.replace('if (url.pathname.startsWith(BASE + "functions/")) return;', "");
 const badSwNoOrigin = swJs.replace("if (url.origin !== self.location.origin) return;", "");
-const badSwNoFallback = swJs.replace('caches.match("/index.html")', 'caches.match("/nope")');
+const badSwNoFallback = swJs.replace('caches.match(BASE + "index.html")', 'caches.match("nope")');
 ok(`all four checks are armed — each reads the real files and refuses its broken fixtures (manifest ${checkManifest(manifestText)}/${checkManifest(badManifestNoDisplay)}/${checkManifest(badManifestNoMaskable)}/${checkManifest(badManifestEmptyIcons)}, index ${checkIndex(indexHtml)}/${checkIndex(badIndex)}, main ${checkMain(mainTsx)}/${checkMain(badMainDevOnly)}, sw ${checkSw(swJs)}/${checkSw(badSwNoApi)}/${checkSw(badSwNoOrigin)}/${checkSw(badSwNoFallback)})`,
   checkManifest(manifestText) && !checkManifest(badManifestNoDisplay) && !checkManifest(badManifestNoMaskable) && !checkManifest(badManifestEmptyIcons) &&
   checkIndex(indexHtml) && !checkIndex(badIndex) &&

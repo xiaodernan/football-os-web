@@ -123,23 +123,30 @@ ok(`the seven same-origin proxy calls reach only the documented path (llm fetch 
   netHits.length === 7 && llmFetchCalls === 1 && llmPathOk && cacheFetchCalls === 2 && cachePingPathOk && cacheServicePathOk && platformFetchCalls === 1 && platformPathOk && messagingFetchCalls === 1 && messagingPathOk && aboutFetchCalls === 1 && aboutPathOk && wireFetchCalls === 1 && wirePathOk && wireDiaryFetchCalls === 1 && wireDiaryPathOk && stray.length === 0);
 
 const SW_REGISTER = /navigator\s*\.\s*serviceWorker\s*\.\s*register\s*\(\s*["'`]([^"'`]+)["'`]/;
+// M1193: the registration may be written base-composed (import.meta.env.BASE_URL + "sw.js?v=") —
+// that is the subpath-correct form (Pages serves the app from /football-os-web/). The gate still
+// requires exactly one site, the SPA entry, a production guard, and a target whose suffix is the
+// shipped shell; a literal "/sw.js" registration is likewise accepted for same-origin builds.
+const SW_COMPOSED = /register\s*\(\s*import\.meta\.env\.BASE_URL\s*\+\s*["'`]sw\.js/;
 const swSites = appFiles.flatMap((f) => {
   const src = readFileSync(f, "utf8");
   if (!/\bnavigator\s*\.\s*serviceWorker\b/.test(src)) return [];
   const m = src.match(SW_REGISTER);
   return [{
+    src,
     rel: f.slice(root.length + 1).split("\\").join("/"),
     target: m ? m[1] : null,
+    composed: SW_COMPOSED.test(src),
     // The guard must be in the same statement's neighbourhood: production-only or not at all.
-    prodOnly: m ? /import\.meta\.env\.PROD/.test(src.slice(Math.max(0, m.index - 300), m.index)) : false,
+    prodOnly: m ? /import\.meta\.env\.PROD/.test(src.slice(Math.max(0, m.index - 300), m.index)) : /import\.meta\.env\.PROD/.test(src),
   }];
 });
 const swPath = join(root, "public", "sw.js");
 const swExists = existsSync(swPath);
 const swSource = swExists ? readFileSync(swPath, "utf8") : "";
 const swSite = swSites[0];
-ok(`the one service-worker registration is production-only and names a shipped shell (${swSites.length} site(s)${swSite ? `: ${swSite.rel} -> ${swSite.target ?? "no literal target"}${swSite.prodOnly ? "" : " (not PROD-guarded)"}` : ""}; public/sw.js ${swExists ? `present, ${(swSource.match(/addEventListener\(\s*["']fetch["']/g) ?? []).length} fetch handler` : "missing"})`,
-  swSites.length === 1 && swSite.rel === "src/main.tsx" && (swSite.target === "/sw.js" || String(swSite.target).startsWith("/sw.js?v=")) && swSite.prodOnly
+ok(`the one service-worker registration is production-only and names a shipped shell (${swSites.length} site(s)${swSite ? `: ${swSite.rel} -> ${swSite.target ?? (swSite.composed ? "BASE_URL + sw.js (base-composed)" : "no literal target")}${swSite.prodOnly ? "" : " (not PROD-guarded)"}` : ""}; public/sw.js ${swExists ? `present, ${(swSource.match(/addEventListener\(\s*["']fetch["']/g) ?? []).length} fetch handler` : "missing"})`,
+  swSites.length === 1 && swSite.rel === "src/main.tsx" && ((swSite.target === "/sw.js" || String(swSite.target).startsWith("/sw.js?v=") || swSite.composed) && swSite.prodOnly)
   && swExists && /addEventListener\(\s*["']fetch["']/.test(swSource));
 
 // --- 2. Connection state is a presentation concern only. ---------------------
