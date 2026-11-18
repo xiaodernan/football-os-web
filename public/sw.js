@@ -12,6 +12,9 @@
 // M1148: the worker's cache namespace carries the same per-build stamp the page registered with,
 // so every deploy wipes the previous namespace on activate instead of serving stale chunks to a
 // new shell. When the page registered without a stamp (older builds) it falls back to v1.
+// M1193: everything the worker precaches or falls back to is resolved against the app's own base
+// path (e.g. /football-os-web/ on GitHub Pages, / in local prod builds). The old root-absolute
+// list precached the domain apex — the operator's IO site — and the offline shell could never open.
 const VERSION = (() => {
   try {
     const v = new URL(self.location.href).searchParams.get("v");
@@ -20,7 +23,8 @@ const VERSION = (() => {
     return "football-os-v1";
   }
 })();
-const SHELL = ["/", "/index.html", "/manifest.webmanifest", "/icon.svg"];
+const BASE = self.location.pathname.replace(/[^/]*$/, "");
+const SHELL = [BASE, BASE + "index.html", BASE + "manifest.webmanifest", BASE + "icon.svg"];
 
 const put = async (request, response) => {
   const cache = await caches.open(VERSION);
@@ -51,7 +55,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/functions/")) return;
+  if (url.pathname.startsWith(BASE + "functions/")) return;
 
   if (request.mode === "navigate") {
     event.respondWith(
@@ -60,7 +64,7 @@ self.addEventListener("fetch", (event) => {
           if (response.ok) put(request, response.clone());
           return response;
         })
-        .catch(() => caches.match("/index.html")),
+        .catch(() => caches.match(BASE + "index.html")),
     );
     return;
   }
