@@ -36,6 +36,6 @@ jobs:
             echo "no fact-pack change to commit"
             exit 0
           fi
-          git pull --rebase origin master
           git commit -m "fact pack regenerated weekly: $(node -e 'const d=require("./docs/latest.json"); console.log("total_commits=" + d.total_commits, "milestone=" + d.milestone, "assets=" + d.assets);')"
+          git pull --rebase origin master
           git push origin master
