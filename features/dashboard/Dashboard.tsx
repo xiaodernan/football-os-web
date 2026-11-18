@@ -18,6 +18,7 @@ import { nextSteps, NEXT_MATCH_SOON_MINUTES, type NextStepKind } from "@/domain/
 import { newsKindLabel, newsTitle, rowLine } from "@/domain/rowText";
 import { overallRating, byDateDesc } from "@/domain/attributes";
 import { achievementInput, evaluateAchievements, nextBadges } from "@/domain/achievements";
+import Counselor from "./Counselor";
 import { summarizeLearn } from "@/domain/learn";
 import { plannedSessions } from "@/domain/training";
 import { loadFilmClips } from "@/domain/filmLibrary";
@@ -152,6 +153,7 @@ export function Dashboard() {
               <span className="text-primary">→</span>
             </Link>
           ))}
+          <Counselor facts={facts} />
         </div>
       </Panel>
 

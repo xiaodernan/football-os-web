@@ -574,7 +574,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
 // M1188: +1 domain/dispatch.ts (the one order the model names; the reader rides it on /ops).
-const APP_SRC_PIN = 211; // M1188: +1 domain/dispatch.ts
+const APP_SRC_PIN = 213; // M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk.
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -612,7 +612,7 @@ const APP_SRC_PIN = 211; // M1188: +1 domain/dispatch.ts
 // M1169 The Grand Dispatch: +1 TSX.
 // M1173 The Golden Hour: +1 TSX (GoldenHour.tsx).
 // M1175 The Wire Diary: +1 TSX (WireDiary.tsx).
-const TSX_PIN = 110;
+const TSX_PIN = 111; // M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk.
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -667,7 +667,7 @@ const TSX_PIN = 110;
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 214; // M1188 The Dispatch: +1 domain/dispatch.ts
+const SRC_PIN = 216; // M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both.
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -4928,7 +4928,11 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // M1194 The Gate Lane: +9 literal t() sites on the manual (title, body, six stage/item lines,
 // and the svg aria-label) — 3508 -> 3517, then +8 SVG label sites when every visible word moved
 // through t() so the raw-UI-debt census stays at zero — 3517 -> 3525.
-  shapeCounts.literal === 3525 && shapeCounts.template === 152 && shapeCounts.expression === 70
+// M1195 The Counselor: +14 literal t() sites — kicker, question seed, viaLocal, verified/rejected chips, ask/answering
+// toggle (7), and the six literal branches of localLine() (live, soon, emptyPlan, noFilm, emptyWatchlist, nothing) —
+// 3525 -> 3539 measured on this tree. The fold-answer indirection moved from an expression-key call to six literal
+// branches, so expression returns to 70 and localSoon carries {n} (litVarSites 570 -> 571).
+  shapeCounts.literal === 3539 && shapeCounts.template === 152 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5107,7 +5111,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1178 The Consultation: foldAnswer.intro passes its variables at one more literal site �� 558 -> 559.
   // M1187 The Latch: the model badge adds one more interpolating literal site (it names LLM_CONFIG.model) — 568 -> 569.
   // M1188 The Dispatch: the dispatch badge rides the same door — 569 -> 570.
-  litVarSites === 570 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+// M1195 The Counselor: the localSoon branch hands over {n} on its literal key — 570 -> 571.
+  litVarSites === 571 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.

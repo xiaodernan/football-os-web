@@ -179,7 +179,7 @@ const DEAD_CEILING = 25;
 // M1178 The Consultation: +1 domain/consult.ts -> 206 -> 207.
 // M1179 The Tutor: +1 domain/tutor.ts -> 207 -> 208.
 // M1187: 213 -> 214 — domain/latch.ts joins the population.
-const POP_PIN = 215; // M1188 The Dispatch: 214 -> 215 - domain/dispatch.ts joins the population.
+const POP_PIN = 217; // M1188 The Dispatch: 214 -> 215 — domain/dispatch.ts joins the population. M1195 The Counselor: 215 -> 217 — domain/counsel.ts AND features/dashboard/Counselor.tsx both join it.
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -221,7 +221,7 @@ const POP_PIN = 215; // M1188 The Dispatch: 214 -> 215 - domain/dispatch.ts join
 // M1064: domain 44 -> 45 (ringMath.ts).
 // M1076: data 7 -> 8 — data/llm.ts.
 // M1080: domain 45 -> 46, features 57 -> 58 — domain/seasonRoom.ts + features/seasonroom/SeasonRoom.tsx.
-const BY_DIR_PIN = { components: 15, data: 11, domain: 82, features: 87, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 }; // M1152: data 9 -> 10, features 77 -> 78 · M1153: domain 61 -> 62 · M1155: domain 62 -> 63 (grandTour.ts), features 78 -> 79 · M1157: domain 63 -> 64 (prescription.ts) · M1160: domain 64 -> 65 (sacredCalendar.ts), features 80 -> 81 · M1162: domain 65 -> 66 (curtain.ts), features 81 -> 82 (curtain/) · M1164: domain 66 -> 67 (wireLedger.ts), features 82 -> 83 (ledger/) · M1165: domain 67 -> 68 (worldTable.ts), features 83 -> 84 (worldtable/) · M1166: domain 68 -> 69 (wireRag.ts) · M1169: features 84 -> 85 (granddispatch/) · M1173: domain 69 -> 70 (goldenHour.ts), features 85 -> 86 (goldenhour/) · M1175: domain 70 -> 71 (wireDiary.ts), features 86 -> 87 (wirediary/) · M1176: domain 71 -> 72 (askDesk.ts) · M1177: 73 (tracedFsm.ts) · 73 -> 74 (scoutStudio.ts) · M1178: 74 -> 75 (consult.ts) · M1179: 75 -> 76 (tutor.ts) · M1187: domain 80 -> 81 (domain/latch.ts) · M1188: domain 81 -> 82 (domain/dispatch.ts)
+const BY_DIR_PIN = { components: 15, data: 11, domain: 83, features: 88, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 }; // M1188: domain 81 -> 82 (domain/dispatch.ts) · M1195: domain 82 -> 83 (domain/counsel.ts), features 87 -> 88 (dashboard/Counselor.tsx)
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -247,7 +247,7 @@ const BY_DIR_PIN = { components: 15, data: 11, domain: 82, features: 87, functio
 // M1152: features/livewire/LiveWire.tsx sits two levels down — 93 -> 94.
 // M1164: +1 (features/ledger/Ledger.tsx is two levels down).
 // M1165: +1 (features/worldtable/WorldTable.tsx is two levels down).
-const DEEP_PIN = 103; // M1175: +1 features/wirediary/WireDiary.tsx
+const DEEP_PIN = 104; // M1175 The Wire Diary: 94 -> 103 when wireDiary.ts joined the ledger · M1195: features/dashboard/Counselor.tsx sits two levels down — 103 -> 104.: +1 features/wirediary/WireDiary.tsx
 
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name
