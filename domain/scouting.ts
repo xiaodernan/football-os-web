@@ -4,7 +4,7 @@ import type { CategoryAverage } from "./attributes";
 import { playerVector } from "./playerDna";
 import type { Attributes, PlayerRef, PositionGroup } from "./types";
 import type { RowText } from "./rowText";
-import {clamp, fmt2, ABSENT } from "@/lib/utils";
+import { clamp, fmt2, ABSENT, round2 } from "@/lib/utils";
 
 // Scouting model (spec §28). Deliberately built only from fields the dataset
 // actually provides (overall, potential, value, age, archetype, foot) — it never
@@ -215,6 +215,15 @@ export function scoutReport(p: PlayerRef): ScoutReport {
 }
 
 export const round1 = (n: number) => Math.round(n * 10) / 10;
+
+/** Evidence-numeral door — populates the imprisoned set for the analysts. */
+export const addNumeral = (s: Set<string>, n: number): void => {
+  const v = Math.round(n);
+  s.add(String(v));
+  s.add(String(n));
+  s.add(String(round1(n)));
+  s.add(String(round2(n)));
+};
 
 export interface TemplateEdgeSummary {
   bestCategory: CategoryAverage["category"];

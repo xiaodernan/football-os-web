@@ -9,8 +9,8 @@
 
 import type { PulseFold } from "./pulse";
 import type { Prescription } from "./prescription";
-import { round2, addNumeral } from "@/lib/utils";
-import { round1 } from "@/domain/scouting";
+import { round2 } from "@/lib/utils";
+import { round1, addNumeral } from "@/domain/scouting";
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
