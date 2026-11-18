@@ -573,7 +573,8 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1169 The Grand Dispatch: 194 -> 195 (the new screen).
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
-const APP_SRC_PIN = 209; // M1181: +1 domain/librarian.ts (205 -> 206).
+// M1187: +1 domain/latch.ts (210 modules walked; the one-move strip filed beside its two siblings).
+const APP_SRC_PIN = 210; // M1187: +1 domain/latch.ts
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -666,7 +667,7 @@ const TSX_PIN = 110;
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 212; // M1181 The Librarian: +1 domain/librarian.ts (208 -> 209).
+const SRC_PIN = 213; // M1187 The Latch: +1 domain/latch.ts
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -819,6 +820,9 @@ const DYN_SITES = [
   { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.debrief.stage.", suffix: "" }, // M1186 The Debrief: the operator's month-end letter
   { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.debrief.note.", suffix: "" }, // M1186 The Debrief
   { path: "features/ops/Ops.tsx", expr: "v", prefix: "ops.debrief.violation.", suffix: "" }, // M1186 The Debrief
+  { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.latch.stage.", suffix: "" }, // M1187 The Latch: the one-move strip
+  { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.latch.note.", suffix: "" }, // M1187 The Latch
+  { path: "features/ops/Ops.tsx", expr: "v", prefix: "ops.latch.violation.", suffix: "" }, // M1187 The Latch // the refusal error names the latch violation code
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
   { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
@@ -1056,6 +1060,10 @@ const SPACES = new Map([
   ["ops.debrief.stage.|entry.stage", { name: "debrief trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused", "done"] }],
   ["ops.debrief.note.|entry.note", { name: "debrief trace notes", values: ["monthSealed", "envelopeSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["ops.debrief.violation.|v", { name: "debrief violation codes", values: ["offEvidence", "prediction", "tooManyNumbers"] }],
+  // M1187 The Latch: the one-move strip, keyed off its own note/stage enums.
+  ["ops.latch.stage.|entry.stage", { name: "latch trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused", "done"] }],
+  ["ops.latch.note.|entry.note", { name: "latch trace notes", values: ["latchOn", "evidenceSealed", "commitOk", "foldOk", "precommitRefused"] }],
+  ["ops.latch.violation.|v", { name: "latch violation codes", values: ["offEvidence", "prediction", "tooManyNumbers"] }],
   // M1185 The Analyst: the admin reasoning strip, keyed off its own note/stage enums.
   ["ops.analyst.stage.|entry.stage", { name: "analyst trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["ops.analyst.note.|entry.note", { name: "analyst trace notes", values: ["analystOn", "evidenceSealed", "commitOk", "foldOk", "precommitRefused"] }],
@@ -4896,7 +4904,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1178 The Consultation: +9 literal t() sites (the section's own chrome), +3 template sites
   // (the consult.stage/consult.note/violation trace chips), foldAnswer.intro adds its one more litVar.
   // M1176 The Ask-Desk StateGraph: +3 literals (label/verified/foldAnswer rail), +3 template sites (askTrace.stage, askTrace.note, askViolation).
-  shapeCounts.literal === 3484 && shapeCounts.template === 146 && shapeCounts.expression === 62
+  // M1187 The Latch: +11 literal t() sites (the section's chrome, the via.local branch twice), +3 template sites
+  // (the latch.stage/latch.note/violation trace chips), +4 expression sites (the LATCH_FOLD_ANSWER_KEY fold-backs).
+  shapeCounts.literal === 3495 && shapeCounts.template === 149 && shapeCounts.expression === 66
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5073,11 +5083,12 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1173 The Golden Hour: meta {fixtures}/{goals} + biggestShock's {delta} — litVar 551 -> 554.
   // M1175 The Wire Diary: meta {diaryCount}/{by} hands its variables at one literal site — litVar 554 -> 555.
   // M1178 The Consultation: foldAnswer.intro passes its variables at one more literal site �� 558 -> 559.
-  litVarSites === 568 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1187 The Latch: the model badge adds one more interpolating literal site (it names LLM_CONFIG.model) — 568 -> 569.
+  litVarSites === 569 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
-  exprWithObj.length === 0 && shapeCounts.expression === 62 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 66 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three

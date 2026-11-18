@@ -180,7 +180,9 @@ ok(`the top-level read names the app's directories and leaves out the neighbours
 // M1178 The Consultation: one domain module joins — domain/consult.ts — APP_MODULE_PIN 205 -> 206.
 // M1179 The Tutor: one domain module joins — domain/tutor.ts — APP_MODULE_PIN 206 -> 207.
 // M1180 The Deep Digest: one domain module joins — domain/deepDigest.ts — APP_MODULE_PIN 207 -> 208.
-const APP_MODULE_PIN = 212;
+// M1187 The Latch: measured on this gate's own line — the reader reaches 213 modules (214 walked,
+// the one ledger exception being src/vite-env.d.ts, which nothing imports).
+const APP_MODULE_PIN = 213;
 const treeExists = (p) => { try { return statSync(join(root, p)).isFile(); } catch { return false; } };
 const readTree = (p) => readFileSync(join(root, p), "utf8");
 const relOf = (p) => p.replace(root, "").replace(/\\/g, "/").replace(/^\//, "");

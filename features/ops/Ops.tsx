@@ -26,6 +26,12 @@ import {
   type AnalystTraceEntry, type AnalystViolation,
 } from "@/domain/analyst";
 import {
+  latchBuild, latchCommit, latchPrecommit,
+  latchPreflight, latchRefused, latchEnvelope, verifyLatchText,
+  LATCH_FOLD_ANSWER_KEY,
+  type LatchTraceEntry, type LatchViolation,
+} from "@/domain/latch";
+import {
   debriefBuild, debriefCommit, debriefPrecommit,
   debriefPreflight, debriefRefused, debriefEnvelope, verifyDebriefText,
   DEBRIEF_FOLD_ANSWER_KEY,
@@ -56,6 +62,10 @@ export function Ops() {
   const [debriefTrace, setDebriefTrace] = useState<readonly DebriefTraceEntry[] | null>(null);
   const [debriefViolations, setDebriefViolations] = useState<readonly DebriefViolation[] | null>(null);
   const [debriefAnswer, setDebriefAnswer] = useState("");
+  const [latchBusy, setLatchBusy] = useState(false);
+  const [latchTrace, setLatchTrace] = useState<readonly LatchTraceEntry[] | null>(null);
+  const [latchViolations, setLatchViolations] = useState<readonly LatchViolation[] | null>(null);
+  const [latchAnswer, setLatchAnswer] = useState("");
 
   const deviceFold = useMemo(() => {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
@@ -258,6 +268,50 @@ export function Ops() {
     setDebriefTrace(offline.trace);
     setDebriefAnswer(t(DEBRIEF_FOLD_ANSWER_KEY));
     setDebriefBusy(false);
+  };
+
+  // The latch: one sentence — the single instruction this fold supports. Tighter than the letter on purpose.
+  const latchSystem = (): string =>
+    withWorldBook(
+      `${latchEnvelope(fold, rx)}\n\nCOMMANDMENT: you will read the fold above and answer with EXACTLY ONE sentence — the single highest-leverage instruction the evidence supports, named with its metric and value from the envelope. No preamble, no list, no second sentence. Keep it in the visitor's language. Never invent a number absent from the envelope above; never predict; if you claim a number, it must already exist in the envelope above.`,
+    );
+
+  const askLatch = async () => {
+    if (latchBusy) return;
+    let desk = latchBuild(latchPreflight({ fold, locale, status: "preflight", trace: [], answer: "" }));
+    setLatchTrace(desk.trace);
+    setLatchViolations(null);
+    setLatchAnswer("");
+    if (!LLM_CONFIG.hasKey) { setLatchAnswer(t("ops.latch.via.local")); return; }
+    setLatchBusy(true);
+    const result = await callLlmStream(
+      "The latch: one sentence. What does the fold say the operator should do next, named with its metric and value.",
+      [],
+      (d) => setLatchAnswer((p) => p + d),
+      { system: latchSystem() },
+    );
+    if (result.ok) {
+      const refusals = verifyLatchText(result.text, desk.fold);
+      if (refusals.length === 0) {
+        const committed = latchCommit(latchPrecommit(desk, "pass"), result.text);
+        setLatchTrace(committed.trace);
+        setLatchViolations(null);
+        setLatchAnswer(result.text);
+        setLatchBusy(false);
+        return;
+      }
+      setLatchViolations(refusals);
+      const refused = latchRefused(latchPrecommit(desk, "refused"), t(LATCH_FOLD_ANSWER_KEY));
+      setLatchTrace(refused.trace);
+      setLatchAnswer(t(LATCH_FOLD_ANSWER_KEY));
+      setLatchBusy(false);
+      return;
+    }
+    setLatchViolations(null);
+    const offline = latchRefused(desk, t(LATCH_FOLD_ANSWER_KEY));
+    setLatchTrace(offline.trace);
+    setLatchAnswer(t(LATCH_FOLD_ANSWER_KEY));
+    setLatchBusy(false);
   };
 
   const rxBody = (r: Prescription): string => {
@@ -578,6 +632,62 @@ export function Ops() {
           </>
         ) : (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.debrief.via.local")}</p>
+        )}
+      </Panel>
+
+      {/* The latch — one sentence, the single instruction this fold supports (imprisoned to the same envelope) */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.latch.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.latch.title")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        {LLM_CONFIG.hasKey ? (
+          <>
+            <button
+              type="button"
+              onClick={askLatch}
+              disabled={latchBusy}
+              className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {latchBusy ? t("pressroom.answering") : t("ops.latch.ask")}
+            </button>
+            {latchAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{latchAnswer}</p>}
+            {latchViolations && latchViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+                {latchViolations.map((v) => t(`ops.latch.violation.${v}`)).join(" · ")}
+              </p>
+            )}
+            {latchTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.latch.trace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{latchTrace.some((e) => e.verdict === "refused") ? t("ops.latch.trace.refused") : t("ops.latch.trace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {latchTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`ops.latch.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`ops.latch.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.latch.via.local")}</p>
         )}
       </Panel>
 
