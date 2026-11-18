@@ -81,6 +81,9 @@ const CINEMATIC = [
   "The Moonshots — the uncashed ceilings",
 ];
 
+// The wiki count the IO page shows — one claim per locale, against i18n/dictionaries.ts.
+const LOCALES_COUNT = 3;
+
 mkdirSync(resolve(root, "docs"), { recursive: true });
 const out = {
   head,
@@ -90,6 +93,8 @@ const out = {
   pwa_kb: pwaKb,
   assets,
   screens,
+  screens_label: `${screens}+ screens`,
+  locales: LOCALES_COUNT,
   feature_surface: CINEMATIC,
   generated_at: new Date().toISOString(),
 };
