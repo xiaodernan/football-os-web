@@ -13,7 +13,7 @@ test("the dashboard's imprisoned counsel renders its local reading and the ask a
       "football-os.state.v2",
       JSON.stringify({
         onboarded: true,
-        profile: { displayName: "Probe", mode: "player", positionGroup: "midfielder", position: "CM", ageGroup: "u18", goal: "pro", attributes: { passing: 60, finishing: 60, dribbling: 60, ball_control: 60, first_touch: 60, scanning: 60, composure: 60, game_intelligence: 60, positioning: 60, defensive_awareness: 60, sprint: 60, stamina: 60, strength: 60, decision_making: 60 }, xp: 0 },
+        profile: { displayName: "Probe", mode: "player", positionGroup: "midfielder", position: "CM", ageGroup: "u18", goal: "pro", attributes: {}, xp: 0 },
         sessions: [],
       }),
     );

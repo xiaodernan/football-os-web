@@ -78,8 +78,25 @@ type Action =
   | { type: "RESET" };
 
 // Records persisted by earlier builds can omit array fields that consumers
-// iterate (a session without `exercises` blanked the whole Dashboard). Repair
-// them once at the storage boundary instead of guarding every read site.
+// iterate (a session without `exercises` blanked the whole Dashboard) — and a profile
+// whose attribute page is missing keys renders every bar as NaN (my own e2e seed hit
+// exactly this). Repair at the boundary, once, with the same neutral baseline a fresh
+// onboarding mints; whatever the record genuinely carries is kept, clamped to 1..99.
+const GROUP_KEYS = new Set(["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"]);
+const resolveGroup = (g: unknown): PositionGroup =>
+  typeof g === "string" && GROUP_KEYS.has(g.toUpperCase()) ? (g.toUpperCase() as PositionGroup) : "CM";
+
+function repairProfileAttributes(p: UserProfile): UserProfile {
+  const attrs = (p.attributes ?? {}) as Record<string, unknown>;
+  const base = baselineAttributes(resolveGroup(p.positionGroup), 0.5);
+  const fixed = { ...base };
+  for (const key of Object.keys(base)) {
+    const v = attrs[key];
+    fixed[key] = typeof v === "number" && Number.isFinite(v) ? Math.min(99, Math.max(1, Math.round(v))) : base[key];
+  }
+  return { ...p, attributes: fixed };
+}
+
 function normalizeHydrated(s: OsState): OsState {
   const repaired = (s.sessions ?? []).map((x) => ({
     ...x,
@@ -91,7 +108,7 @@ function normalizeHydrated(s: OsState): OsState {
     // A profile stored before onboarding kept its goal as a code carries the English
     // sentence itself; the same text is on screen in every locale afterwards, so it is
     // mapped here rather than at each of the three places that print it.
-    profile: s.profile ? { ...s.profile, goal: normalizeGoalChoice(s.profile.goal) } : s.profile,
+    profile: s.profile ? { ...repairProfileAttributes(s.profile), goal: normalizeGoalChoice(s.profile.goal) } : s.profile,
     // Planned sessions whose scheduled day has passed are genuinely missed —
     // flip them here so the review's missed count and slipped-session insight
     // reflect reality instead of staying permanently at zero.
