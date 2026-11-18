@@ -1,7 +1,7 @@
 import { fileURLToPath, URL } from "node:url";
 import { defineConfig, loadEnv, type Plugin } from "vite";
 import react from "@vitejs/plugin-react";
-import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware, cacheServiceMiddleware, springFleetMiddleware, messagingServiceMiddleware } from "./scripts/llm-proxy.mjs";
+import { llmProxyMiddleware, serverConfig, createLlmCache, cachePingMiddleware, cacheServiceMiddleware, springFleetMiddleware, messagingServiceMiddleware, attachWarmLane } from "./scripts/llm-proxy.mjs";
 
 const proxy = { "/functions/v1/app": "http://127.0.0.1:8000" };
 
@@ -27,6 +27,8 @@ export default defineConfig(({ mode }) => {
       server.middlewares.use(cacheServiceMiddleware(env));
       server.middlewares.use(springFleetMiddleware(env));
       server.middlewares.use(messagingServiceMiddleware(env));
+      // M1184: opt-in warm lane, server-only; a no-op unless LLM_KEEPWARM_SECONDS is set.
+      attachWarmLane(server, env, llmConfig, llmCache);
     },
     configurePreviewServer(server) {
       server.middlewares.use(llmProxyMiddleware(() => llmConfig, llmCache));
@@ -34,6 +36,7 @@ export default defineConfig(({ mode }) => {
       server.middlewares.use(cacheServiceMiddleware(env));
       server.middlewares.use(springFleetMiddleware(env));
       server.middlewares.use(messagingServiceMiddleware(env));
+      attachWarmLane(server, env, llmConfig, llmCache);
     },
   };
   return {

@@ -469,6 +469,62 @@ export function serverConfig(env = process.env) {
   };
 }
 
+// ── M1184 · The Warm Lane — dev-only, opt-in heartbeat for the World Book's warm KV lane ──
+// On the authoring machine, the provider keeps the prefix cache warm for ~5–10 min after the
+// last ask. A burst of traffic keeps it; a quiet interval lets it cool; the next ask pays full
+// prefill again. Codex-class clients hide this with shared state and long-lived streams.
+// Our answer: ONE read-only heartbeat ping, through the same proxy stack, with the same bytes,
+// on an explicit cadence the developer sets. Zero framework, zero bundle change, zero pages.
+// LLM_KEEPWARM_SECONDS (server-only, no VITE_ prefix) — unset/0 = OFF (the default).
+// MIN 30s / MAX 900s; every tick is one real minimal ask with the real book — no fake warmup.
+export const KEEPWARM_MIN = 30;
+export const KEEPWARM_MAX = 900;
+
+/** Clamp the operator's cadence; junk, negatives and sub-floor values all fold to OFF or MIN. */
+export function clampKeepWarm(raw) {
+  const n = Number.parseInt(String(raw ?? "").trim(), 10);
+  if (!Number.isFinite(n) || n <= 0) return 0;
+  return Math.max(KEEPWARM_MIN, Math.min(KEEPWARM_MAX, n));
+}
+
+/**
+ * Mount the warm lane. `server` is the Vite dev/preview server (or any object exposing middlewares
+ * and ssrLoadModule — verifier's own root supplies a stub for the live witness). Double-start is
+ * refused silently. Every tick is a degrade-not-throw read; failures log once per failure class.
+ */
+export function attachWarmLane(server, env, cfg, cache) {
+  const sec = clampKeepWarm(env?.LLM_KEEPWARM_SECONDS);
+  if (sec === 0) return null;                      // opt-in; absent means absent
+  if (!server || server.__fo_warm) return null;    // double-start refused
+  server.__fo_warm = true;
+  const tick = async () => {
+    try {
+      const brief = await server.ssrLoadModule("/data/llm.ts");
+      const ask = {
+        messages: [
+          { role: "system", content: brief.WORLD_BRIEFING },
+          { role: "user", content: "." },
+        ],
+        model: cfg?.model,
+        max_tokens: 1,
+      };
+      const r = await handleLlmRequest(cfg, ask, cache ?? null);
+      if (r.status === 200) {
+        const cached = r.body?.usage?.prompt_tokens_details?.cached_tokens;
+        console.log(`fo-warm: tick ok (cached_tokens=${cached ?? "null"})`);
+      } else {
+        console.warn(`fo-warm: tick degraded (status=${r.status})`);
+      }
+    } catch (e) {
+      console.warn(`fo-warm: tick failed (degrade, not throw): ${e?.message ?? e}`);
+    }
+  };
+  const id = setInterval(tick, sec * 1000);
+  id.unref?.();
+  setTimeout(tick, 1000).unref?.();
+  return id;
+}
+
 /**
  * A Connect-style middleware (works with Vite `configureServer` / `configurePreviewServer`).
  * `configFor` is a function so the env can be resolved once at server start, never per-request
