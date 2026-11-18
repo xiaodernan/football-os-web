@@ -10,10 +10,13 @@
 // WHAT IT DOES NOT PROVE: no load is driven into the live model beyond phase B's one cold call,
 // because this world is paid for in tokens and a burst that spends money tells you about the provider you pay,
 // not about this code. The report also honestly names Win32's per-process TCP ceiling where it lives.
+// phase D (the "撞库 signature") drives no model either — it only refuses garbage: oversized, malformed,
+// empty or over-cap bodies all answer 4xx here on purpose, and stage D-D5 re-proves the cache probe still
+// returns 200 afterwards. That is the honest shape of "hostile burst cannot crash or drain this thing".
 //
 // Run from the repo root:
 //   node scripts/load-test.mjs            # the full suite (phase B needs LLM_API_KEY in .env)
-//   node scripts/load-test.mjs --quick    # phases A + C only
+//   node scripts/load-test.mjs --quick    # phases A + C + D only (D spends nothing)
 //
 // Clean exit = every ask answered, no 5xx, the memo visibly did the work.
 import { createServer, request as httpRequest } from "node:http";
@@ -31,7 +34,7 @@ const BASE = `http://${HOST}:${PORT}`;
 const TIMEOUT_MS = 15000;
 const QUESTION = "Which club leads the Premier League table and how many points do they have?";
 
-console.log(`football-os load test · ${QUICK ? "quick mode (A+C)" : "full mode (A+B+C)"} · node ${process.version}`);
+console.log(`football-os load test · ${QUICK ? "quick mode (A+C+D)" : "full mode (A+B+C)"} · node ${process.version}`);
 
 function readServerEnv() {
   const env = { ...process.env };
@@ -146,6 +149,22 @@ if (!QUICK && cfg.key) {
 } else {
   console.log("skip  phase B — quick mode");
 }
+
+// -------- phase D · hostile-payload burst --------------------------------------------------
+// The "撞库 signature" run: the storms that smash real systems are not well-formed asks, they are
+// garbage — oversized, malformed, empty. Every one of these must refuse with a 4xx/503, keep the
+// process alive and never leak a 5xx, and afterwards the health check must still pass.
+console.log("phase D · hostile burst (oversized, malformed, empty, wrong route — every answer a refusal, never a crash)");
+const D1 = await runBurst("phase D1 · 200 oversized bodies (~1.1 MB) must refuse 413", 200, () => rawHttp("POST", PROXY_ROUTE, JSON.stringify({ messages: [{ role: "user", content: "x".repeat(1_100_000) }] })).then((r) => ({ ok: r.status === 413, status: r.status, wall: r.wall })).catch(() => ({ ok: false, status: 0, wall: 0 })));
+ok("phase D1: every oversized body refused with 413, zero 5xx, zero hangs", D1.ok);
+const D2 = await runBurst("phase D2 · 200 malformed JSON bodies must refuse 400", 200, () => rawHttp("POST", PROXY_ROUTE, "{not-json").then((r) => ({ ok: r.status === 400, status: r.status, wall: r.wall })).catch(() => ({ ok: false, status: 0, wall: 0 })));
+ok("phase D2: every malformed body refused with 400, zero 5xx", D2.ok);
+const D3 = await runBurst("phase D3 · 200 empty-message arrays must refuse 400", 200, () => rawHttp("POST", PROXY_ROUTE, JSON.stringify({ messages: [], stream: false })).then((r) => ({ ok: r.status === 400, status: r.status, wall: r.wall })).catch(() => ({ ok: false, status: 0, wall: 0 })));
+ok("phase D3: every empty-message request refused with 400", D3.ok);
+const D4 = await runBurst("phase D4 · 200 over-cap message lists (11 > MAX_MESSAGES=10) must refuse 400", 200, () => rawHttp("POST", PROXY_ROUTE, JSON.stringify({ messages: Array.from({ length: 11 }, (_, i) => ({ role: "user", content: "msg " + i })), stream: false })).then((r) => ({ ok: r.status === 400, status: r.status, wall: r.wall })).catch(() => ({ ok: false, status: 0, wall: 0 })));
+ok("phase D4: every over-cap message list refused with 400", D4.ok);
+const D5 = await runBurst("phase D5 · the cache probe still answers 200 after the hostile storm", 100, () => rawHttp("GET", CACHE_PROBE_ROUTE, null).then((r) => ({ ok: r.ok, status: r.status, wall: r.wall })).catch(() => ({ ok: false, status: 0, wall: 0 })));
+ok("phase D5: the server survived the hostile burst and keeps serving", D5.ok);
 
 server.close();
 console.log(`\nload ledger: ${pass} passed, ${fail} failed`);
