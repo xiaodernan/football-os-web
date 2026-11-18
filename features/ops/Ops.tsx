@@ -19,6 +19,12 @@ import {
   consultPreflight, consultRefused, verifyConsultText,
   type ConsultTraceEntry, type ConsultViolation,
 } from "@/domain/consult";
+import {
+  analystBuild, analystCommit, analystPrecommit,
+  analystPreflight, analystRefused, verifyAnalystText, analystEnvelope,
+  ANALYST_FOLD_ANSWER_KEY,
+  type AnalystTraceEntry, type AnalystViolation,
+} from "@/domain/analyst";
 import { foldTide, type TideReading } from "@/domain/tide";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
@@ -36,6 +42,10 @@ export function Ops() {
   const [consultTrace, setConsultTrace] = useState<readonly ConsultTraceEntry[] | null>(null);
   const [consultViolations, setConsultViolations] = useState<readonly ConsultViolation[] | null>(null);
   const [consultAnswer, setConsultAnswer] = useState("");
+  const [analystBusy, setAnalystBusy] = useState(false);
+  const [analystTrace, setAnalystTrace] = useState<readonly AnalystTraceEntry[] | null>(null);
+  const [analystViolations, setAnalystViolations] = useState<readonly AnalystViolation[] | null>(null);
+  const [analystAnswer, setAnalystAnswer] = useState("");
 
   const deviceFold = useMemo(() => {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
@@ -150,6 +160,50 @@ export function Ops() {
     setConsultTrace(offline.trace);
     setConsultAnswer(foldConsultText());
     setConsultBusy(false);
+  };
+
+  // The analyst: three structured answers, imprisoned to the fold's exact numbers, ranked by the tide's own verdict.
+  const analystSystem = (): string =>
+    withWorldBook(
+      `${analystEnvelope(fold, rx)}\n\nCOMMANDMENT: you will read the fold above and answer exactly three numbered actions, in the visitor's language. One: the single clearest signal in this fold (name the metric and its value). Two: the single worst door or abscess (name it and its number). Three: the next concrete move (one sentence). Never invent a number absent from the envelope above; never predict; if you claim a number, it must already exist in the envelope above.`,
+    );
+
+  const askAnalyst = async () => {
+    if (analystBusy) return;
+    let desk = analystBuild(analystPreflight({ fold, locale, status: "preflight", trace: [], answer: "" }));
+    setAnalystTrace(desk.trace);
+    setAnalystViolations(null);
+    setAnalystAnswer("");
+    if (!LLM_CONFIG.hasKey) { setAnalystAnswer(t("ops.analyst.via.local")); return; }
+    setAnalystBusy(true);
+    const result = await callLlmStream(
+      "Read the fold aloud: three numbered actions. One: the clearest signal. Two: the worst door. Three: the next move.",
+      [],
+      (d) => setAnalystAnswer((p) => p + d),
+      { system: analystSystem() },
+    );
+    if (result.ok) {
+      const refusals = verifyAnalystText(result.text, desk.fold);
+      if (refusals.length === 0) {
+        const committed = analystCommit(analystPrecommit(desk, "pass"), result.text);
+        setAnalystTrace(committed.trace);
+        setAnalystViolations(null);
+        setAnalystAnswer(result.text);
+        setAnalystBusy(false);
+        return;
+      }
+      setAnalystViolations(refusals);
+      const refused = analystRefused(analystPrecommit(desk, "refused"), t(ANALYST_FOLD_ANSWER_KEY));
+      setAnalystTrace(refused.trace);
+      setAnalystAnswer(t(ANALYST_FOLD_ANSWER_KEY));
+      setAnalystBusy(false);
+      return;
+    }
+    setAnalystViolations(null);
+    const offline = analystRefused(desk, t(ANALYST_FOLD_ANSWER_KEY));
+    setAnalystTrace(offline.trace);
+    setAnalystAnswer(t(ANALYST_FOLD_ANSWER_KEY));
+    setAnalystBusy(false);
   };
 
   const rxBody = (r: Prescription): string => {
@@ -358,6 +412,62 @@ export function Ops() {
           </>
         ) : (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.consult.via.local")}</p>
+        )}
+      </Panel>
+
+      {/* The analyst — the model reasons over this same fold (imprisoned to the envelope; refused otherwise) */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.analyst.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.analyst.title")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        {LLM_CONFIG.hasKey ? (
+          <>
+            <button
+              type="button"
+              onClick={askAnalyst}
+              disabled={analystBusy}
+              className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {analystBusy ? t("pressroom.answering") : t("ops.analyst.ask")}
+            </button>
+            {analystAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{analystAnswer}</p>}
+            {analystViolations && analystViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+                {analystViolations.map((v) => t(`ops.analyst.violation.${v}`)).join(" · ")}
+              </p>
+            )}
+            {analystTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <div className="mb-1 flex flex-wrap items-baseline justify-between gap-2">
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.analyst.trace.label")}</span>
+                  <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{analystTrace.some((e) => e.verdict === "refused") ? t("ops.analyst.trace.refused") : t("ops.analyst.trace.verified")}</span>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  {analystTrace.map((entry) => (
+                    <span
+                      key={entry.stage}
+                      title={t(`ops.analyst.note.${entry.note}`)}
+                      className={cn(
+                        "rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning,
+                      )}
+                    >
+                      {t(`ops.analyst.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        ) : (
+          <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.analyst.via.local")}</p>
         )}
       </Panel>
 
