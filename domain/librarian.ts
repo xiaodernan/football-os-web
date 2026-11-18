@@ -58,6 +58,8 @@ export const BOOK_CHAPTERS: readonly BookChapter[] = [
     keywordKey: "manual.librarian.keywords.honesty" },
   { id: "print", titleKey: "manual.printTitle", bodyKeys: ["manual.printTitle", "manual.printBody"],
     keywordKey: "manual.librarian.keywords.print" },
+  { id: "doors", titleKey: "manual.doorsTitle", bodyKeys: ["manual.doorsTitle", "manual.doorsBody"],
+    keywordKey: "manual.librarian.keywords.doors" },
 ] as const;
 
 /** Overlap score — every keyword that substring-matches the question counts. */
