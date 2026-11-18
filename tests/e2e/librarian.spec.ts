@@ -11,7 +11,9 @@ test("the embedded manual opens with its doors and the librarian's honest arm", 
   page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 240)}`));
 
   await page.goto("/#/manual", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { name: "Football OS Manual" }).first()).toBeVisible({ timeout: 20000 });
+  // The preview server cold-compiles the route on the first hit; CI's pre-built preview is fast,
+  // local dev servers are not — the assertions stay strict, only the budget grows.
+  await expect(page.getByRole("heading", { name: "Football OS Manual" }).first()).toBeVisible({ timeout: 45000 });
 
   // The chapter anchors are on the page's side-rail of contents.
   for (const id of ["welcome", "modes", "explore", "epics", "spring", "honesty", "gatelane", "print"]) {
