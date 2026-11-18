@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1191`（此前基线 `4f03351` M1191 didactic → `5cb94dd` M1190 evidence → `a0ae8bd` M1190n discover → `d4f800e` M1190 evidence live-doors → `86499b4` M1189 CI sweep）
-**总提交数**: 1667（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1192`（此前基线 `239cced` M1192 evidence wire-ask → `051e170` M1191 CI pin 812→814 → `ece0c29` M1191 ledger walk → `4f03351` M1191 didactic）
+**总提交数**: 1669（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
