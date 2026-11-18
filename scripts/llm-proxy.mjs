@@ -334,6 +334,21 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
     { "X-FootballOS-LLM-Cache": "miss", "X-FootballOS-LLM-Usage-Cached": String(cachedTokens ?? 0) });
 }
 
+/** One ndjson frame carrying the whole answer — the UI cannot tell this from a memo hit. */
+const singleFrameNdjson = (text, model) => {
+  const encoder = new TextEncoder();
+  const stream = new ReadableStream({
+    start(controller) {
+      // One ndjson frame with the whole memo answer — the UI renders it instantly and
+      // cannot tell the difference from live streaming. Same bytes, same order.
+      controller.enqueue(encoder.encode(JSON.stringify({ t: "delta", d: text }) + "\n"));
+      controller.enqueue(encoder.encode(JSON.stringify({ t: "end", cached: true, model }) + "\n"));
+      controller.close();
+    },
+  });
+  return { status: 200, stream, contentType: STREAM_CONTENT_TYPE, model };
+};
+
 // ─── M969b · the streaming path — the model's own SSE reaches the browser ──────────────────
 // M1096 proved the upstream must be streamed (stream + prompt_cache_key = the warm lane);
 // M1078's handler buffered that stream server-side and handed the browser one JSON blob, so the
@@ -367,20 +382,32 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
   const key = cacheKey(model, clean);
   if (cache && cache.policy.enabled) {
     const hit = cache.read(key, Date.now());
-    if (hit) {
-      const encoder = new TextEncoder();
-      const single = new ReadableStream({
-        start(controller) {
-          // One ndjson frame with the whole memo answer — the UI renders it instantly and
-          // cannot tell the difference from live streaming. Same bytes, same order.
-          controller.enqueue(encoder.encode(JSON.stringify({ t: "delta", d: hit.text }) + "\n"));
-          controller.enqueue(encoder.encode(JSON.stringify({ t: "end", cached: true, model: hit.model }) + "\n"));
-          controller.close();
-        },
-      });
-      return { status: 200, stream: single, contentType: STREAM_CONTENT_TYPE, model: hit.model };
+    if (hit) return singleFrameNdjson(hit.text, hit.model);
+    // M1189 single-flight: an identical concurrent ask already owns the cold load. The frames
+    // stream as they arrive for the owner — the sibling cannot tee a live SSE stream that is
+    // consumed by someone else, so it waits for the owner's assembled answer and re-emits it
+    // as one ndjson frame (exactly what a memo hit looks like to the UI). This is the same
+    // coalescing the non-streaming path already does; without it, N parallel identical asks on
+    // a cold lane cost N upstream calls and N back-to-back prefill round-trips.
+    if (cache.inFlight.has(key)) {
+      cache.stats.coalesced++;
+      const shared = await cache.inFlight.get(key).catch(() => null);
+      if (shared && shared.ok) return singleFrameNdjson(shared.text, shared.model);
+      if (shared && !shared.ok) return notStream(502, { ok: false, error: shared.error });
+      // shared === null (owner threw unexpectedly): fall through and become a fresh owner.
     }
   }
+
+  // The owner registers the cold-load resolution BEFORE the upstream call, so concurrent
+  // siblings on the same key coalesce instead of duplicating the model call. The promise is
+  // deleted in finally; siblings that arrived during the load get the one-frame answer.
+  let outerResolve = null;
+  const outer = cache && cache.policy.enabled
+    ? new Promise((res) => { outerResolve = res; })
+    : null;
+  // The owner alone counts a miss (misses == real upstream round-trips started); coalesced
+  // siblings are counted separately, exactly like the plain-JSON single-flight.
+  if (outer) { cache.stats.misses += 1; cache.inFlight.set(key, outer); }
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), TIMEOUT_MS);
@@ -401,11 +428,15 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
     }, cfg);
   } catch (err) {
     clearTimeout(timer);
-    return notStream(502, { ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" });
+    const error = err?.name === "AbortError" ? "model_timeout" : "model_unreachable";
+    if (outer) { outerResolve({ ok: false, error }); cache.inFlight.delete(key); }
+    return notStream(502, { ok: false, error });
   }
   if (!upstream.ok || !upstream.body) {
     clearTimeout(timer);
-    return notStream(502, { ok: false, error: `model_${upstream.status}` });
+    const error = `model_${upstream.status}`;
+    if (outer) { outerResolve({ ok: false, error }); cache.inFlight.delete(key); }
+    return notStream(502, { ok: false, error });
   }
 
   const decoder = new TextDecoder();
@@ -439,16 +470,20 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
           }
         }
         if (typeof text !== "string" || !text.trim()) {
+          if (outer) outerResolve({ ok: false, error: "empty_model_response" });
           send({ t: "end", ok: false, error: "empty_model_response" });
         } else {
+          if (outer) outerResolve({ ok: true, text: text.trim(), model });
           if (cache && cache.policy.enabled) {
             cache.write(key, { text: text.trim(), model, expiresAt: cache.expiresAt(key, Date.now()) }, Date.now());
           }
           send({ t: "end", ok: true, usage: usage ?? null, model });
         }
       } catch (err) {
+        if (outer) outerResolve({ ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" });
         send({ t: "end", ok: false, error: err?.name === "AbortError" ? "model_timeout" : "model_unreachable" });
       } finally {
+        if (outer) cache.inFlight.delete(key);
         clearTimeout(timer);
         controller.close();
       }
