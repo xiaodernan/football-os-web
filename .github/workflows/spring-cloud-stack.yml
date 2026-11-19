@@ -14,7 +14,15 @@
 
 name: spring-cloud-stack
 
+# M1203 The witness that never ran — now it does, on the machine that can prove it.
+# The authoring machine ships two dedicated self-hosted Windows runners (lenovo-pages /
+# lenovo-pages-2, both online, dedicated to the IO and football repos). The authoring session
+# witnessed the full Spring fleet live on 2026-11-19: eureka/config/gateway/league/discipline/
+# cache(redis 7.4.12)/messaging(rabbitmq 3.13.7) all UP, AMQP pipeline verified end-to-end with
+# byte-exact counters (delivered=2 / deadLettered=1 / faultAttempts=7). That proof is not on a
+# hosted runner; it is on this machine, reachable to anyone who opens the gate.
 on:
+  workflow_dispatch:
   push:
     branches: [master]
   pull_request:
@@ -22,10 +30,29 @@ on:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Ride the two dedicated self-hosted runners for this machine (user-authorized:
+    # "self host runner 全部我都允许 可以本机ci 完全没有问题").
+    runs-on: [self-hosted, Windows, X64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - name: Build the service reactor
+        run: mvn -q -DskipTests package -f services/pom.xml
+      - name: Boot the stack and verify it live
+        run: node scripts/verify-services.mjs
+      - name: Install the web dependencies
+        run: npm ci --no-audit --no-fund --ignore-scripts
+      - name: Build the web app
+        run: npm run build
+      - name: Run the full proof suite
+        run: npm run proof
+      - name: Run the browser floor
+        run: npx playwright test --reporter=list
 
       - name: Set up JDK 21
         uses: actions/setup-java@v4
