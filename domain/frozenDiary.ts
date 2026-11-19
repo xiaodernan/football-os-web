@@ -6,7 +6,6 @@
 import type { ReleaseVerdict } from "@/domain/releaseArtifact";
 
 export const FROZEN_BY_VALUES = ["model", "mixed", "fold"] as const;
-export type FrozenDiaryVerdict = ReleaseVerdict;
 export type FrozenDiaryOutcome = (typeof FROZEN_BY_VALUES)[number];
 
 export interface FrozenDiaryArticle {

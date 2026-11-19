@@ -29,6 +29,11 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup JDK (temurin 21)
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "21"
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
