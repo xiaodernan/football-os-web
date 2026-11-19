@@ -2,15 +2,17 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1207`（此前基线 `M1206` the load witness · `M1205` the ubuntu spring-cloud-stack gate red honestly repaired · `M1204` spring-cloud-stack honestly reverts to ubuntu-latest · `M1203` stripped duplicated JDK ladder · `M1202` the Spring Cloud witness · `M1201` The Frozen Diary）
-**总提交数**: 1728（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1209`（此前基线 `M1208` latest.json catches up to M1207 · `M1207` the frozen-diary second wind · `M1206` the load witness · `M1205` the ubuntu gate red honestly repaired）
+**总提交数**: 1730（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1208 · Latest ledger (newest first)
+## M1209–M1205 · Latest ledger (newest first)
 
-- **M1207 The frozen-diary workflow gets its second wind** — first dispatch 44573871792 reached the self-hosted runner and died honestly at `Rebuild the frozen fold` (`ERR_MODULE_NOT_FOUND`: build-frozen-fold.mjs boots Vite SSR, node_modules missing). Workflow now runs `npm ci --no-audit --no-fund --ignore-scripts` before the fold build (same install shape as pages.yml). Repo secrets `LLM_BASE_URL` / `LLM_MODEL` / `LLM_UPSTREAM_PROXY` are set on the repository, so the Sunday re-cut uses the real model through the CONNECT egress instead of the fold-fallback path. The `lenovo-football` runner had been offline since 16:37Z; it was started on this host (user authorizes local CI) and is online and busy on the re-dispatched run 44575342379.
-- **M1206/M1205** — see `PLAN-LONGTERM.md` rows; `docs/latest.json` head `2f1f0dc` / milestone M1206 / 1726 commits / 83 screens / 829 KB / 110 assets.
+- **M1209 The browser floor stopped honestly for a missing binary, not a defect** — the M1205/M1206 ubuntu-latest runs reached "Run the browser floor" red on every spec (`browserType.launch: Executable doesn't exist`); the workflow now installs the browsers it drives (`npx playwright install --with-deps chromium`, 99b1880). The proof suite passed on those runs, so the M1205 JDK/alias repairs hold. proof-workflows 14/14 locally.
+- **M1208 latest.json catches up to M1207 on the live wire** — docs/latest.json regenerated (head 81fd1dd, milestone M1207, 1728 commits); PLAN appends M1203/M1204/M1207 rows.
+- **M1207 The frozen-diary workflow gets its second wind** — first dispatch 44573871792 died honestly at `Rebuild the frozen fold` (`ERR_MODULE_NOT_FOUND`: build-frozen-fold.mjs boots Vite SSR, node_modules missing). Workflow now runs `npm ci --no-audit --no-fund --ignore-scripts` before the fold build; repo secrets `LLM_BASE_URL` / `LLM_MODEL` / `LLM_UPSTREAM_PROXY` are set on the repository. First re-dispatch (44575342379) reached the model and got HTTP 401 on all 15 competitions — the 2026-11-16 `LLM_API_KEY` repo secret was stale; re-set at 17:23Z to the byte-verified key (51 chars, same value as the authoring .env) and re-dispatched (44576739077).
+- **M1206/M1205** — see PLAN rows; `docs/latest.json` head `2f1f0dc` / milestone M1206 / 1726 commits / 83 screens / 829 KB / 110 assets.
 
 ## M1205–M1206 · Latest ledger (newest first)
 
