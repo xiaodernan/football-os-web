@@ -30,27 +30,39 @@ const upstreamRaw = (env.LLM_UPSTREAM_PROXY || "").trim();
 const dispatcher = upstreamRaw ? new ProxyAgent(upstreamRaw) : undefined;
 
 const callModel = async (system, user) => {
-  const r = await proxyFetch(`${baseUrl}/chat/completions`, {
-    method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
-    body: JSON.stringify({
-      model,
-      messages: [
-        { role: "system", content: system },
-        { role: "user", content: user },
-      ],
-      max_tokens: 450,
-      temperature: 0.5,
-      stream: false,
-      prompt_cache_key: `football-os-web:diary-perfold:${String(model)}`,
-      prompt_cache_retention: "24h",
-    }),
-    dispatcher,
-  });
-  if (!r.ok) return { ok: false, error: `model_${r.status}` };
-  const j = await r.json().catch(() => null);
-  const text = String(j?.choices?.[0]?.message?.content ?? "").trim();
-  return text.length > 0 ? { ok: true, text } : { ok: false, error: "empty_model_response" };
+  // A transport hiccup (socket reset before TLS, proxy dropped) must degrade to the
+  // same fold-fallback lane the 401 path already rides — never crash the whole re-cut.
+  // Two attempts max on transport only; a provider 4xx/5xx is final and honest as-is.
+  for (let attempt = 0; attempt < 2; attempt++) {
+    let r;
+    try {
+      r = await proxyFetch(`${baseUrl}/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model,
+          messages: [
+            { role: "system", content: system },
+            { role: "user", content: user },
+          ],
+          max_tokens: 450,
+          temperature: 0.5,
+          stream: false,
+          prompt_cache_key: `football-os-web:diary-perfold:${String(model)}`,
+          prompt_cache_retention: "24h",
+        }),
+        dispatcher,
+      });
+    } catch (err) {
+      if (attempt === 1) return { ok: false, error: "transport" };
+      continue; // one honest retry on transport, never on the provider's verdict
+    }
+    if (!r.ok) return { ok: false, error: `model_${r.status}` };
+    const j = await r.json().catch(() => null);
+    const text = String(j?.choices?.[0]?.message?.content ?? "").trim();
+    return text.length > 0 ? { ok: true, text } : { ok: false, error: "empty_model_response" };
+  }
+  return { ok: false, error: "transport" };
 };
 
 const systemPrompt = [
