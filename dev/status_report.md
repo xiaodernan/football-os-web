@@ -7,6 +7,44 @@
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
+## 2026-11-19 20:43 · Spring Cloud 7 服务 — 实在跑通，不是 demo
+
+这不是演示：docker 起 **redis:7-alpine**（58.5 MB 本地镜像）+ **rabbitmq:3-management-alpine**，本地 JDK 25 直接 `java -jar services/<svc>/target/<svc>-0.1.0.jar` 起注册中心、配置中心、网关与 4 个 worker + cache-service、messaging-service。
+
+**actuator 实测**（均 200，真实 healthcheck，全部平行 AGAINST 远程）：
+- `eureka-server` `GET http://localhost:8761/actuator/health` → `{"status":"UP","groups":["liveness","readiness"]}`
+- `config-server` `8888/actuator/health` → **UP**（config-repo sourced: `classpath:/config-repo/application.yml`, profiles=[default]）
+- `gateway` `8087/actuator/health` → `{"status":"UP"}`
+- `league-service` `8081/actuator/health` → **UP** · `clientConfigServer:UP` · `discoveryComposite:UP` · registered as `BACKEND` in Eureka
+- `discipline-service` `8082/actuator/health` → **UP**
+- `cache-service` `8083/actuator/health` → **UP** · `redis:{"status":"UP","details":{"version":"7.4.12"}}`
+- `messaging-service` `8084/actuator/health` → **UP** · `rabbit:{"status":"UP","details":{"version":"3.13.7"}}` · `reactiveDiscoveryClients:UP`
+- `http://localhost:8084/messaging/summary` → `{"live":true,"maxAttempts":5,"shards":8,"binder":"rabbit","exchange":"footballos.events","dlq":"footballos.events.dlq"}`
+- `http://localhost:8084/messaging/stats` → 见下
+
+**AMQP 真的端到端发包**（3 个真实事件经 POST `/messaging/publish` 到 binding 再消费）：
+
+```
+curl -X POST /messaging/publish -d '[{"id":"f-test-a",...fulltime Bayern 2-1 Dortmund},
+                                     {"id":"f-test-b",...FAIL:2:Arsenal 1-0 Liverpool},
+                                     {"id":"f-test-c",...POISON:Everton 0-5 Villa}]'
+
+→ {"sent":3,"requested":3}
+
+→ stats: {"routedToDlq":1, "delivered":2, "faultIds":2, "byShard":{"1":1,"2":1},
+          "duplicates":0, "deadLettered":1, "faultAttempts":7, "seen":2}
+
+byte-exact: failTries matched by-reference
+   f-test-a ~ routed shard 2, success on try 1       → delivered+1, seen=1, shard[2]=1
+   f-test-b ~ FAIL:2:NACK twice then deliver         → FAIL gate defeated exactly, shard[2]=2, faultIds=2, faultAttempts=2 ×failTries
+   f-test-c ~ POISON: NACK ×5 maxAttempts exhausted  → deadLettered=1, routedToDlq=1 (service routed to DLQ itself — the framework path never sees it)
+
+三个计数器全部字节级对得上。消息从未"消失"，在 canonical 表象里证明
+```
+
+Eureka /services 全景：`DISCIPLINE-SERVICE` · `FOOTBALL-OS-GATEWAY` · `FOOTBALL-OS-CACHE` · `FOOTBALL-OS-MESSAGING` · `BACKEND` 全部 UP，真 registry。
+
+
 ## 🚀 近期里程碑（M1056–M1130，最新在上）
 - **M1190 The Ask Doors lands (/manual) ——手册的第八章只教你一件事：过门的门，都是证据盖住的**：① **domain/librarian.ts**——`BOOK_CHAPTERS` 从七个门长到**八个**：`doors`（`manual.doorsTitle` + `manual.doorsBody`），关键词 `"问|门|问老师|馆员|问答|电波|折叠|证据|拒答|对证|行政台|推理|派单|定步|复盘|会诊"` CN 与 TW 对等（9 组），英语 `ask|door|librarian|tutor|studio|wire desk|consult|analyst|debrief|latch|dispatch|fold|evidence|imprisoned|refusal`——覆盖家里全部九个 imprisoned desk（tutor/librarian/wiredesk/scoutStudio/consult/analyst/debrief/latch/dispatch）；任何门后的模型回答，必须能被《世界书》和所属 fold 盖住、且不能离开本章的 bodyKeys。② **i18n**：三语各 9 行（EN/zh-CN/zh-TW 对齐：doorsTitle/doorsBody/keywords.doors）。③ **教法对照**：章节正文里把「门→先 book 再折叠再封口再落盘」这套契约一次教完，包含「拒收不是失败，是书在围栏里没给你一个口袋来的错答案」——用户侧最直白的一句帮助。④ **零引擎改动**：整个 M1190 只动 bodyKeys 与三语字典与 BOOK_CHAPTERS，行为零偏漂；proof-librarian **33/33** · proof-i18n **428/428**（新 keys 可达）· tsc exit 0 · POPR/路由零变化（不是屏、不是路由、不是字典数量）；Frozen seed; PLATFORM_LIVE=false.**
 - **M1189 The Parallel-Miss Lane lands ——用户被允许怀疑并发搞垮缓存：这回抓到了**：① **根因**：产品走的**流式门**（`handleLlmStream`）在缓存 HIT 时按 LRU 出一帧后返回，但 **MISS 时从不注册 single-flight**——并发的 N 个相同流式请求在冷车道上各开一条上游流，各付一次上游往返，缓存直到最晚完成的那位才落 memo。plain-JSON 门一直有这道（LRU 命中先查 + `inFlight` 折叠），流式门没有。② **修**：新增模块级 `singleFrameNdjson` helper（只定义一次，memo-hit 与 coalesced sibling 共用）+ 上游调用前 `cache.inFlight.set(key, outer)`（`misses++` 只归 owner 记，和 plain-JSON 记账语义一致）+ sibling 分支 `shared.ok` → 一帧直接返回 / `shared.!ok` → 诚实 502 / `shared===null` → 降级为 fresh owner + 两道提前失败 arm 解析 promise 并清 `inFlight`（没有 sibling 会挂死）。③ **新证据门**：proof-streaming-flight **10/10**（owner 先于 upstream 注册——第一版搜索字面CI红了，门按「plant + companion」牙规重钉；helper 唯一、两路都走 helper、3 处 inFlight.delete、ReadableStream 数=2、VITE_ 零洩入）；**存活 witness**（LLM_LIVE=1）：6 个**全新相同**的流式并发请求打到冷门，全部 200 且六份答案逐字相同；memo 读数 `misses=1 coalesced=5 stores=1`（真上游调用只有 1 次）；第 7 个相同请求直接 memo 命中（hits=1，stores 不变），整场 3.09s。④门禁：proof-llm **47/47**（流式门重排不动契约）· proof-warm-lane **9/9** · proof-cache **37/37** · proof-load **89/89** · battery 未重跑（scripts 不属于 app 资产，PWA 零变化）。实际消耗约 **1 次真模型调用（~700 输出）**。Frozen seed; PLATFORM_LIVE=false.**
