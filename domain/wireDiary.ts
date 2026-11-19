@@ -1,6 +1,7 @@
 // M1175 · The Wire Diary — the model spoke; the file proved every sentence; nothing outside it survived.
 // The diary is written once per release by scripts/update-wire-diary.mjs (the real model, imprisoned to the fold),
 // verified against the artifact, and committed as public/wire-diary.json. The screen reads it; nothing else writes it.
+// M1201: the read mechanics live behind domain/releaseArtifact.ts — the screens call it directly.
 
 export type WireDiaryVerdict = "model" | "fold";
 
@@ -16,16 +17,6 @@ export interface WireDiaryPayload {
   generatedAt: string;
   by: WireDiaryVerdict;
   diary: DiaryArticle[];
-}
-
-let cached: Promise<WireDiaryPayload | null> | null = null;
-
-export async function fetchWireDiary(): Promise<WireDiaryPayload | null> {
-  if (cached) return cached;
-  cached = fetch(`${import.meta.env.BASE_URL}wire-diary.json`, { cache: "no-cache" })
-    .then((r) => (r.ok ? (r.json() as Promise<WireDiaryPayload>) : null))
-    .catch(() => null);
-  return cached;
 }
 
 /** A reader could hand-edit the file in their browser — this guard refuses anything malformed. */

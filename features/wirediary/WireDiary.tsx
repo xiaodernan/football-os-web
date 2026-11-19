@@ -6,7 +6,8 @@ import { PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { fetchWireDiary, isWireDiaryPayload, type WireDiaryPayload } from "@/domain/wireDiary";
+import { fetchReleaseArtifact } from "@/domain/releaseArtifact";
+import { isWireDiaryPayload, type WireDiaryPayload } from "@/domain/wireDiary";
 import { PrinterIcon } from "lucide-react";
 
 export function WireDiary() {
@@ -18,7 +19,7 @@ export function WireDiary() {
   useEffect(() => {
     let cancelled = false;
     setStatus("loading");
-    fetchWireDiary()
+    fetchReleaseArtifact(`${import.meta.env.BASE_URL}wire-diary.json`, isWireDiaryPayload)
       .then((p) => {
         if (cancelled) return;
         if (p && isWireDiaryPayload(p)) { setPayload(p); setStatus("ready"); }

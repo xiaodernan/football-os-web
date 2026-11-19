@@ -18,6 +18,7 @@ import { last } from "@/domain/attributes";
 const Journey = lazy(() => import("@/features/journey/Journey").then((m) => ({ default: m.Journey })));
 const Library = lazy(() => import("@/features/library/Library").then((m) => ({ default: m.Library })));
 const FrozenDispatch = lazy(() => import("@/features/wirediary/FrozenDispatch").then((m) => ({ default: m.FrozenDispatch })));
+const FrozenDiary = lazy(() => import("@/features/wirediary/FrozenDiary").then((m) => ({ default: m.FrozenDiary })));
 const LiveWire = lazy(() => import("@/features/livewire/LiveWire").then((m) => ({ default: m.LiveWire })));
 const GrandTour = lazy(() => import("@/features/grandtour/GrandTour").then((m) => ({ default: m.GrandTour })));
 const Dispatch = lazy(() => import("@/features/dispatch/Dispatch").then((m) => ({ default: m.Dispatch })));
@@ -202,6 +203,7 @@ function Routes() {
   else if (path === "/journey") inner = <Journey />;
   else if (path === "/library") inner = <Library />;
   else if (path === "/frozen-dispatch") inner = <FrozenDispatch />;
+  else if (path === "/frozen-diary") inner = <FrozenDiary />;
   else if (path === "/live-wire") inner = <LiveWire />;
   else if (path === "/grand-tour") inner = <GrandTour />;
   else if (path === "/dispatch") inner = <Dispatch />;

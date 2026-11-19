@@ -1,0 +1,58 @@
+name: Frozen diary
+
+# M1201 — weekly, on a self-hosted Windows runner (never the ubuntu queue): regenerates the
+# frozen diary from the committed frozen fold + the model on the configured machine, re-proves
+# every numeral against the fold, and commits the artifact. Never publishes unverified prose;
+# any drift writes a fold-verified paragraph instead, honestly labelled.
+# SECRETS REQUIRED (repo → Settings → Secrets → Actions):
+#   LLM_API_KEY — the aizzz/gpt-6.2-sol key (server-only, never shipped)
+#   LLM_BASE_URL — https://api.aizzz.xyz/v1
+#   LLM_MODEL — gpt-6.2-sol
+#   LLM_UPSTREAM_PROXY — http://127.0.0.1:7897 (the author's CONNECT egress; leave empty for direct fetch)
+
+on:
+  schedule:
+    # Sundays 05:30 UTC — half an hour after the live-wire re-cut
+    - cron: "30 5 * * 0"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  frozen-diary:
+    runs-on: [self-hosted, Windows, X64]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Rebuild the frozen fold (deterministic)
+        run: node scripts/build-frozen-fold.mjs
+      - name: Rebuild the frozen diary (model imprisoned to the fold)
+        env:
+          LLM_API_KEY: ${{ secrets.LLM_API_KEY }}
+          LLM_BASE_URL: ${{ secrets.LLM_BASE_URL }}
+          LLM_MODEL: ${{ secrets.LLM_MODEL }}
+          LLM_UPSTREAM_PROXY: ${{ secrets.LLM_UPSTREAM_PROXY }}
+          # Explicitly leave the warm-lane heartbeat OFF in CI — every call comes from the committed fold
+          LLM_KEEPWARM_SECONDS: "0"
+        run: node scripts/update-frozen-diary.mjs
+      - name: Proof the diary before any commit (never pushes drift)
+        run: node scripts/proof-frozen-diary.mjs
+      - name: Commit the diary if it moved
+        shell: pwsh
+        run: |
+          git config user.name "football-os-bot"
+          git config user.email "bot@football-os.web"
+          git add public/frozen-fold.json public/frozen-diary.json
+          if (-not (git -c core.pager=cat diff --staged --quiet)) {
+            git commit -m "frozen diary re-cut: deterministic fold + model re-proved on every numeral"
+            git pull --rebase origin master
+            git push
+            Write-Output "frozen diary committed"
+          } else {
+            Write-Output "frozen diary unchanged — nothing to commit"
+          }

@@ -1,0 +1,162 @@
+{
+  "version": "frozen-diary/v1",
+  "generatedAt": "2026-11-19T13:21:27.756Z",
+  "diary": [
+    {
+      "competitionId": "pl",
+      "competition": "Premier League",
+      "nation": "England",
+      "tier": 1,
+      "paragraphs": [
+        "Manchester City lead the Premier League with 37 pts from 15 played, while Chelsea sit second on 27 pts after 21 pl. Liverpool and Newcastle United are level on 26 pts, and Manchester United follow on 25. At the foot of the table, West Ham United have 5 pts, with 0 wins from 17 pl. The snapshot records 80 goals folded so far across 10 clubs."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "liga",
+      "competition": "La Liga",
+      "nation": "Spain",
+      "tier": 1,
+      "paragraphs": [
+        "Barcelona lead La Liga on 36 points after 16 matches, level with Real Madrid, who have played 15. Atlético Madrid are third on 32 points, still unbeaten after 14 matches. Barcelona have the strongest goal difference among the leaders at 17; Real Madrid are at 16. Real Betis sit bottom on 8 points. Across the competition, 16 of 108 fixtures are listed as played, 66 are finished, and 69 goals have been folded so far."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "seriea",
+      "competition": "Serie A",
+      "nation": "Italy",
+      "tier": 1,
+      "paragraphs": [
+        "Inter lead Serie A with 41 points from 17 matches, unbeaten on 12 wins and 5 draws, and a goal difference of 19. Juventus are second on 29 points after 20 played, with Napoli close behind on 28 from 16. Torino sit last with 7 points from 15 matches. The table remains unevenly played, while 76 of 108 fixtures are finished and 68 goals have been folded so far."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "bundes",
+      "competition": "Bundesliga",
+      "nation": "Germany",
+      "tier": 1,
+      "paragraphs": [
+        "Bayern München lead the Bundesliga with 42 points from 16 matches, unbeaten on 13 wins and 3 draws, and a goal difference of 17. Borussia Dortmund sit second on 31 points after 18 matches, 11 points behind, with Bayer Leverkusen third on 24. At the foot of the table, Borussia Mönchengladbach have 5 points from 14 matches. The snapshot lists 9 clubs, 16 played of 108 fixtures, 69 finished and 63 goals folded so far."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "ligue1",
+      "competition": "Ligue 1",
+      "nation": "France",
+      "tier": 1,
+      "paragraphs": [
+        "Paris Saint-Germain lead Ligue 1 with 34 points from 12 matches, unbeaten on 11 wins and 1 draw, with a goal difference of 17. AS Monaco are one point behind on 33, despite having played 17 matches. Lyon sit third on 26 points. Lens are bottom with 10 points from 15 matches. Across the competition, 12 of 108 fixtures are played, 68 are finished, and 70 goals have been recorded."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "eredivisie",
+      "competition": "Eredivisie",
+      "nation": "Netherlands",
+      "tier": 1,
+      "paragraphs": [
+        "De Eredivisie telt drie clubs; twee hebben van de negen wedstrijden gespeeld, terwijl vier duels zijn afgerond en er in totaal drie goals vielen. PSV leidt met vier punten uit twee wedstrijden en een doelsaldo van één. Feyenoord heeft eveneens vier punten, maar speelde drie wedstrijden en heeft doelsaldo nul. Ajax staat derde met drie punten uit drie wedstrijden."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "liga1",
+      "competition": "Primeira Liga",
+      "nation": "Portugal",
+      "tier": 1,
+      "paragraphs": [
+        "Na Primeira Liga portuguesa, foram disputados 4 de 9 jogos, com 5 concluídos e 4 golos marcados. O Sporting CP lidera com 7 pontos, após 2 vitórias, 1 empate e 1 derrota, e saldo de golos 0. O Benfica segue com 4 pontos em 3 jogos, enquanto o Porto soma 2 pontos, também em 3 jogos."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "spl",
+      "competition": "Saudi Pro League",
+      "nation": "Saudi Arabia",
+      "tier": 1,
+      "paragraphs": [
+        "The Saudi Pro League has 3 clubs, with 2 played of 9 fixtures and 3 finished, producing 3 goals so far. Al-Hilal lead on 6 pts from 2W 0D 0L, with a gd of 3. Al-Ahli have 1 pts from 1 pl and a gd of 0, while Al-Nassr are bottom on 1 pts from 3 pl, with 0 gf, 3 ga and a gd of -3."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "mls",
+      "competition": "Major League Soccer",
+      "nation": "USA",
+      "tier": 1,
+      "paragraphs": [
+        "Major League Soccer’s season snapshot covers 5 clubs, with 6 played of 30 fixtures and 17 finished, producing 10 goals. Inter Miami leads on 12 pts with 3W 3D 0L and gd 3, ahead of Seattle Sounders on 12 pts after 9 pl with gd 2. Atlanta United has 7 pts, New York Red Bulls 6, and LA Galaxy sits at the tail with 4 pts from 4 pl."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "brasileirao",
+      "competition": "Brasileirão Série A",
+      "nation": "Brazil",
+      "tier": 1,
+      "paragraphs": [
+        "No Brasileirão Série A, com 5 clubes, 7 jogos disputados de 30 e 16 partidas concluídas, foram marcados 11 gols. O Palmeiras lidera com 14 pontos, em 7 jogos, com 4 vitórias, 2 empates, 1 derrota e saldo 4. O São Paulo é o perseguidor, com 13 pontos em 8 jogos e saldo 2. Santos tem 6 pontos, Corinthians 5, e o Flamengo aparece na última posição, com 3 pontos em 3 jogos."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "jleague",
+      "competition": "J1 League",
+      "nation": "Japan",
+      "tier": 1,
+      "paragraphs": [
+        "In Japan’s J1 League, Kawasaki Frontale lead on 13 pts after 6 played, with 4W 1D 1L and a gd of 5. Yokohama F. Marinos are second on 10 pts from 6 pl, with a gd of 0. Vissel Kobe have 6 pts from 7 pl, while Urawa Red Diamonds sit at the tail on 3 pts from 5 pl. Across the 4-club competition, 12 fixtures are finished and 10 goals have been folded so far."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "superlig",
+      "competition": "Süper Lig",
+      "nation": "Türkiye",
+      "tier": 1,
+      "paragraphs": [
+        "Süper Lig’de 4 kulüp, 18 fikstürün 10’u tamamlanmışken 6 gol kaydetti. Lider Fenerbahçe, 5 maçta 1 galibiyet, 4 beraberlik ve 0 mağlubiyetle 7 puanda; Beşiktaş 4 maçta 6 puan ve 2 averajla takipte. Galatasaray 5 maçta 6 puan topladı. Trabzonspor ise 6 maçta 0 galibiyet, 4 beraberlik ve 2 mağlubiyetle 4 puanda son sırada."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "ucl",
+      "competition": "UEFA Champions League",
+      "nation": "Europe",
+      "tier": 0,
+      "paragraphs": [
+        "UEFA Champions League action covers 22 clubs, with 50 played of 693 fixtures, 465 finished and 409 goals folded so far. Manchester City lead on 100 pts from 28W 16D 6L, with a gd of 39, ahead of Liverpool on 86 pts from 46 pl and a gd of 26. Inter and Real Madrid follow on 79 and 78 pts, while Lille sit last on 22 pts from 38 pl."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "uel",
+      "competition": "UEFA Europa League",
+      "nation": "Europe",
+      "tier": 0,
+      "paragraphs": [
+        "The UEFA Europa League features 11 clubs, with 21 played of 165 fixtures, 105 finished, and 94 goals so far. Manchester United lead on 39 points from 10W 9D 2L, ahead of Tottenham Hotspur on 35 and Rennes on 32. Roma sit fourth on 29, while Atalanta have 28. Villarreal and Lyon both have 23 points. Eintracht Frankfurt are last on 12 points from 14 played."
+      ],
+      "by": "model"
+    },
+    {
+      "competitionId": "libertadores",
+      "competition": "Copa Libertadores",
+      "nation": "South America",
+      "tier": 0,
+      "paragraphs": [
+        "Copa Libertadores has 4 clubs, with 9 of 18 fixtures played and 16 finished, producing 13 goals. Flamengo lead on 15 points from 9 matches, with 4 wins, 3 draws, 2 losses and a goal difference of 4. São Paulo follow on 12 points from 8 matches, while Palmeiras have 11 points from 7 matches and remain unbeaten. Corinthians are bottom on 3 points from 8 matches, with 0 wins and a goal difference of -8."
+      ],
+      "by": "model"
+    }
+  ],
+  "summary": {
+    "competitionsFrozen": 15,
+    "byModel": 15,
+    "byFold": 0
+  },
+  "by": "model"
+}
