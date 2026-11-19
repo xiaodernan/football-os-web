@@ -8,8 +8,8 @@
 - 三模式共一世界数据集：FAN / PLAYER / MANAGER
 - 已有页面：着陆、引导、指挥中心、足球世界（39 俱乐部、18 球员、赛事）、球员 OS（训练循环）、经理 OS、AI 足球（RAG 问答）、知识图谱、战术工作室、模拟实验室、知识学院、社区、球探、动态世界
 - 全站 Demo 模式运行，无需 API 密钥；全部数据为确定性合成数据，UI 标注 `🧪 DEMO DATA · synthetic`。
-- 当前远端 HEAD：`48bde35 M1195`（fact-pack 账本跟进 f058d06 · Counselor 见证 + 电波日志刷新；HEAD 向前滚动，每提交走 Actions fact pack + git push）。
-- 已完成里程碑：M451–M499 · M500–M1195（两轮；M1150 起进入“无尽开放世界 + LLM 深度嵌入”阶段；M1195 起 fact pack / IO 数据逐仓实测）。
+- 当前远端 HEAD：`9171878`（M1202 truth run · pages.yml self-hosted on lenovo-pages/-2）
+- 已完成里程碑：M451–M499 · M500–M1195（两轮；M1150 起进入“无尽开放世界 + LLM 深度嵌入”阶段；M1195 起 fact pack / IO 数据逐仓实测 · M1197 The World Desk · M1198 The Palette re-sync · M1199 The Frozen Dispatch · M1200 The Warm Lane · M1201 The Frozen Diary · M1202 Spring Cloud 7-service live witness）。
 
 ## 交付节奏（长期铁律）
 
@@ -1268,3 +1268,7 @@ M1149: The Pulse lands (/ops) — the operator console: how this world behaves w
 
 
 - M1200 The Warm Lane keeps its day (cache the input means cache lives) — the provider accepts `prompt_cache_retention: "24h"` (live-probed end-to-end through the CONNECT proxy, HTTP 200, ~5 tokens): both upstream call sites pin the lane with it beside `prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean))` (content-derived shared lane for every demo door, FNV-1a of the first 4 KiB of the World Book). Before: the lane cooled after a burst and parallel sessions re-paid prefill every quiet hour. After: the lane persists for a day; adding LLM_KEEPWARM_SECONDS=300 on the authoring machine (half the floor) keeps it warm in dev for ~1 token per tick. proof-llm 48/48 with the new M1200 check; the change is server-side only; the live witness measure-llm-cache earlier printed 104,470 cached of 117,491 prompt tokens on the warm lane (~89%) — right in the codex band. .env untracked; nothing else moved.
+
+
+- M1201 The Frozen Diary lands (/frozen-diary) — the frozen century's own newspaper. 15 competitions × 1 paragraph each, every numeral re-proved against the committed fold artifact (public/frozen-fold.json, 73 clubs across 15 leagues), every paragraph sealed at release time by aizzz/gpt-6.2-sol under the same imprisonment contract; drifted → fold answered instead (honestly labelled). 15/15 paragraphs model-written, zero drift, by:model in full. PWA budget bumped to 829 KB honestly (transaction of ~+3 KB for the door; baseline.json re-recorded; never bypassed). Ledgers updated (latest.json: head c9e455a, milestone M1201, commits 1712).
+- M1202 The Spring Cloud witness — every actuator honest; no demo theatre. Local run 2026-11-19T~22:00: redis:7-alpine (7.4.12) + rabbitmq:3-management-alpine (3.13.7) UP in Docker; JDK 25 boot of eureka→config→gateway→league→discipline→cache→messaging in strict topological order; Eureka registry: DISCIPLINE-SERVICE + FOOTBALL-OS-GATEWAY + FOOTBALL-OS-CACHE + FOOTBALL-OS-MESSAGING + BACKEND all UP; /actuator/health UP on every single service (cache-service carriage: redis:{"status":"UP","version":"7.4.12"}); AMQP pipeline smoke-test — 3 synthetic fixture-events posted to /messaging/publish, result byte-exact: delivered=2 / duplicates=0 / deadLettered=1 / seen=2 / byShard={"1":1,"2":1} / faultAttempts=7 (expected: f-test-a delivered try 1, f-test-b FAIL:2 + deliver 3rd try, f-test-c POISON maxAttempts exhausted → dead-lettered=1, routedToDlq=1 from this service). Containers torn down after proof; this machine left as found.
