@@ -17,8 +17,8 @@ test("the World Desk answers from the shelves, streaming honestly into the page"
   await expect(page.getByRole("heading", { level: 1 }).first()).toBeVisible({ timeout: 20000 });
 
   // the desk renders its own section and its witness chip (live path armed)
-  const desk = page.locator("#world-desk");
-  await expect(desk).toBeAttached({ timeout: 10000 });
+  const desk = page.getByRole("region", { name: /THE WORLD DESK|世界问答台|世界問答台/i });
+  await expect(desk).toBeVisible({ timeout: 10000 });
 
   const input = page.locator("#world-desk-ask");
   await expect(input).toBeVisible({ timeout: 10000 });
