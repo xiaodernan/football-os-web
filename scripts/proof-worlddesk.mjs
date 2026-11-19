@@ -42,8 +42,8 @@ ok("the no-key arm prints an honest note, never a fake live badge", /\{LLM_CONFI
 ok("aria-live polite keeps the streaming readable", /aria-live="polite"/.test(lib));
 ok("the trace rail renders chips keyed through t() with title notes", /library\.door\.note\.\$\{entry\.note\}/.test(lib) && /manual\.librarian\.stage\.\$\{entry\.stage\}/.test(lib));
 ok("the opened passage count is printed — the shelves own the last word", /library\.door\.cites/.test(lib) && /openedCount/.test(lib));
-ok("badge honesty — verified / folded / offline are three different chips",
-  /library\.door\.badge\.verified/.test(lib) && /library\.door\.badge\.folded/.test(lib) && /library\.door\.badge\.offline/.test(lib));
+ok("badge honesty — verified / folded / fallback are three different chips",
+  /library\.door\.badge\.verified/.test(lib) && /library\.door\.badge\.folded/.test(lib) && /library\.door\.badge\.fallback/.test(lib));
 
 // dictionary — every key coined in all three locales
 for (const key of [
