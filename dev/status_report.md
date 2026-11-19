@@ -2,13 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1215`（此前基线 `M1214` frozen diary green end to end and self-committed · `M1213` commit step repaired · `M1212` battery 217/218 · `M1211` transport-retry · `M1209` browser floor repaired）
-**总提交数**: 1736（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1217`（此前基线 `M1216` ledger walk and ubuntu verify green · `M1215` browser-floor keyless assertion repaired · `M1214` frozen diary green end to end and self-committed · `M1213` commit step repaired · `M1212` battery 217/218 · `M1211` transport-retry · `M1209` browser floor repaired）
+**总提交数**: 1738（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1215–M1205 · Latest ledger (newest first)
+## M1217–M1205 · Latest ledger (newest first)
 
+- **M1217 The Witness Bench — the thirteenth imprisoned door, and the first whose model drives the graph** — `domain/witnessBench.ts` + `features/wirediary/WitnessBench.tsx`: one `callLlmStream` over a sealed frozen envelope; the model's opening word `ABSTAIN` is read as a graph edge that walks the shared FSM into the refused arm (the fold answers honestly), while any other answer must survive the frozen numeral verifier before the graph may commit. Wired into the lazy router, shell nav, command palette and in-app manual; 51 trilingual keys across all three locales. Pins re-measured honestly (app-tree 224, coverage POP 225 / domain 88 / features 91 / deep 107, storage 219, router 216, i18n 436/436); proof-witness 39/39, proof-rules 7/7, tsc clean, all structural gates green. No gate weakened. The budget moved only on fresh-build evidence (829 -> 833 KB gzip / 113 assets; baseline re-recorded, proof-pwa 4/4 and perf-baseline 5/5) — never waved to pass.
+- **M1216 latest.json caught up and the ubuntu verify lane went green** — `docs/latest.json` regenerated to head `7edcabe` / milestone M1215 / 1736 commits; both spring-cloud-stack runs carrying M1215 (`44592690959`) and the ledger walk (`44592988636`) concluded `success`.
 - **M1215 the browser floor's keyless World Desk assertion was stale, not the UI** — with browsers actually installed (M1209), `tests/e2e/library-desk.spec.ts` went red because it looked for "the model is not reachable" while the honest shipped copy is `manual.librarian.via.local` ("the model is asleep in this build" / "这个版本里模型没醒" / "這個版本裡模型沒醒"). The matcher now accepts the real trilingual copy; a fake live badge still fails the gate. Local run: 1 passed. The ubuntu proof suite itself passed on that run; no gate weakened, no pin moved.
 - **M1214 the frozen-diary weekly automation ran GREEN end to end and self-committed** (2026-11-20 02:03 +0800, run `44581548010`): checkout → npm ci → deterministic fold rebuilt → **all 15 paragraphs re-written by the model, fold-proved zero drift** → proof gate kept its word → the runner committed and pushed `331cf37` to master as `football-os-bot` (public/frozen-diary.json, 16 lines re-cut, generatedAt 2026-11-19T18:02:56.633Z, **by:{model:15}**). The last failure chain is closed: stale repo LLM_API_KEY re-set byte-true (17:23Z) → transport-hiccup retry (c358178) → missing npm ci (repaired) → pwsh not on host → `shell: powershell` (7765891, M1213). Sunday 05:30 UTC cron now owns a witnessed path.
 - **M1213 the frozen-diary commit step fell on a missing binary** — "Commit the diary if it moved" requested pwsh; this machine carries Windows PowerShell 5.1; `shell: pwsh` → `shell: powershell` (7765891). proof-workflows 14/14 locally. The model re-cut itself had already passed its gate by then.
