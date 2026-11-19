@@ -1,8 +1,8 @@
 {
-  "head": "c358178",
-  "total_commits": 1732,
-  "milestone": "M1211",
-  "milestone_full": "本提交落地后 M1211",
+  "head": "7edcabe",
+  "total_commits": 1736,
+  "milestone": "M1215",
+  "milestone_full": "本提交落地后 M1215",
   "pwa_kb": 829,
   "assets": 110,
   "screens": 83,
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-19T17:43:57.650Z"
+  "generated_at": "2026-11-19T18:54:45.664Z"
 }
