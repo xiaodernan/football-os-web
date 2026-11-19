@@ -2,14 +2,16 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1211`（此前基线 `M1210` latest.json catches up to M1209 · `M1209` the browser floor repaired · `M1208` latest.json catches up to M1207 · `M1207` the frozen-diary second wind · `M1206` the load witness · `M1205` the ubuntu gate red honestly repaired）
-**总提交数**: 1732（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1215`（此前基线 `M1214` frozen diary green end to end and self-committed · `M1213` commit step repaired · `M1212` battery 217/218 · `M1211` transport-retry · `M1209` browser floor repaired）
+**总提交数**: 1736（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1211–M1205 · Latest ledger (newest first)
+## M1215–M1205 · Latest ledger (newest first)
 
-- **M1211 the frozen-diary CI no longer crashes on a transport hiccup** — the 17:30 re-dispatch (44576739077) died at `Rebuild the frozen diary` with an uncaught `TypeError: fetch failed` (socket disconnected before secure TLS). callModel now retries one honest transport retry (never a provider 4xx/5xx), then returns `{ ok: false, error: "transport" }`; the per-competition fold fallback engages exactly as the 401 path does. `scripts/update-frozen-diary.mjs` syntax-checked; no gate moved.
+- **M1215 the browser floor's keyless World Desk assertion was stale, not the UI** — with browsers actually installed (M1209), `tests/e2e/library-desk.spec.ts` went red because it looked for "the model is not reachable" while the honest shipped copy is `manual.librarian.via.local` ("the model is asleep in this build" / "这个版本里模型没醒" / "這個版本裡模型沒醒"). The matcher now accepts the real trilingual copy; a fake live badge still fails the gate. Local run: 1 passed. The ubuntu proof suite itself passed on that run; no gate weakened, no pin moved.
+- **M1214 the frozen-diary weekly automation ran GREEN end to end and self-committed** (2026-11-20 02:03 +0800, run `44581548010`): checkout → npm ci → deterministic fold rebuilt → **all 15 paragraphs re-written by the model, fold-proved zero drift** → proof gate kept its word → the runner committed and pushed `331cf37` to master as `football-os-bot` (public/frozen-diary.json, 16 lines re-cut, generatedAt 2026-11-19T18:02:56.633Z, **by:{model:15}**). The last failure chain is closed: stale repo LLM_API_KEY re-set byte-true (17:23Z) → transport-hiccup retry (c358178) → missing npm ci (repaired) → pwsh not on host → `shell: powershell` (7765891, M1213). Sunday 05:30 UTC cron now owns a witnessed path.
+- **M1213 the frozen-diary commit step fell on a missing binary** — "Commit the diary if it moved" requested pwsh; this machine carries Windows PowerShell 5.1; `shell: pwsh` → `shell: powershell` (7765891). proof-workflows 14/14 locally. The model re-cut itself had already passed its gate by then.
 - **M1210 latest.json catches up to M1209 on the live wire** — docs/latest.json regenerated (head 99b1880, milestone M1209, 1730 commits); PLAN appends M1207/M1209 rows.
 - **M1209 The browser floor stopped honestly for a missing binary, not a defect** — the M1205/M1206 ubuntu-latest runs reached "Run the browser floor" red on every spec (`browserType.launch: Executable doesn't exist`); the workflow now installs the browsers it drives (`npx playwright install --with-deps chromium`, 99b1880). The proof suite passed on those runs, so the M1205 JDK/alias repairs hold. proof-workflows 14/14 locally.
 - **M1208 latest.json catches up to M1207 on the live wire** — docs/latest.json regenerated (head 81fd1dd, milestone M1207, 1728 commits); PLAN appends M1203/M1204/M1207 rows.

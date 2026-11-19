@@ -17,7 +17,10 @@ test("/library renders the World Desk door beside the corpus", async ({ page }) 
 
   // the ask affordance exists — or, offline, the honest via-local note; either way, no fake live badge
   const askButton = page.getByRole("button", { name: /ask the world|请世界作答|請世界作答/i });
-  const viaLocal = page.getByText(/the model is not reachable|未接.*模型|模型.*不可達|model is not/i);
+  // The honest keyless copy is `manual.librarian.via.local` in all three dictionaries —
+  // "the model is asleep in this build" / "这个版本里模型没醒" / "這個版本裡模型沒醒".
+  // Match what the shipped UI actually says; a fake "live" badge must still fail this gate.
+  const viaLocal = page.getByText(/asleep in this build|这个版本里模型没醒|這個版本裡模型沒醒|the model is not reachable/i);
   const buttonVisible = await askButton.first().isVisible().catch(() => false);
   if (buttonVisible) {
     await expect(askButton.first()).toBeDisabled();
