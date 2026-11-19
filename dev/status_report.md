@@ -2,8 +2,8 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1195`（此前基线 `78cd33b` M1195 gates proof-counsel rides the commit → `fda8600` M1195 ledger walk → `f7e1a5b` M1195 gates six contract fixes → `df70a76` M1195 live evidence → `effe651` M1195 witness hardening）
-**总提交数**: 1693（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1195`（此前基线 `c1422ef` M1195 ledger walk · `4bc0787` M1195 provider swap gpt-6.2-sol · `fda8600` M1195 ledger walk · `f7e1a5b` M1195 gates six contract fixes · `effe651` M1195 witness hardening）
+**总提交数**: 1697（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
