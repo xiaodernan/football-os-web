@@ -26,5 +26,9 @@ test("the palette lists the new cinematic destinations in its goto group", async
   await expect(modal.getByText(/the library|reading hall|读书室|讀書室/i).first()).toBeVisible();
   await expect(modal.getByText(/live wire|实时之线|即時之線/i).first()).toBeVisible();
   await expect(modal.getByText(/pulse|脉搏|脈搏/i).first()).toBeVisible();
+  // M1198 The Palette re-sync — the twenty-seven studios the sidebar always showed, the palette now knows too
+  for (const target of ["Balance Sheet", "League Rules", "Youth Academy", "Coach CV", "Squad Planning", "Tactical Notebook", "Value Board", "Community Poll", "Availability", "Club Compare", "League Leaders", "Growth Projection", "Run-in", "Points scenarios", "Title race", "Head to head", "Home / away", "Goal timing", "Discipline", "Event clock", "Leads kept", "Runs", "Form table", "Briefing", "Platform Atlas", "Message Pipeline", "Cache Tier"]) {
+    await expect(modal.getByText(target, { exact: true }).first()).toBeVisible({ timeout: 5000 });
+  }
   await page.keyboard.press("Escape");
 });

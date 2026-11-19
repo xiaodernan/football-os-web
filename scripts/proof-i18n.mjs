@@ -4938,7 +4938,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // toggle (7), and the six literal branches of localLine() (live, soon, emptyPlan, noFilm, emptyWatchlist, nothing) —
 // 3525 -> 3539 measured on this tree. The fold-answer indirection moved from an expression-key call to six literal
 // branches, so expression returns to 70 and localSoon carries {n} (litVarSites 570 -> 571).
-  shapeCounts.literal === 3560 && shapeCounts.template === 155 && shapeCounts.expression === 70
+  shapeCounts.literal === 3587 && shapeCounts.template === 155 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -6601,6 +6601,7 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
 // M1179 The Tutor: the ask input names itself through t() — 36 -> 37.
 // M1181 The Librarian: the manual's ask input names itself through t() — 37 -> 38.
 // M1197 The World Desk: the desk's ask input names itself through t() — 40 -> 41.
+// M1198 The Palette re-sync: 27 new goto islands in the palette — 3560 -> 3587, litVar unchanged.
 ariaKeyed === 41 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
