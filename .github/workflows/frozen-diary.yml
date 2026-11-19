@@ -46,7 +46,7 @@ jobs:
       - name: Proof the diary before any commit (never pushes drift)
         run: node scripts/proof-frozen-diary.mjs
       - name: Commit the diary if it moved
-        shell: pwsh
+        shell: powershell
         run: |
           git config user.name "football-os-bot"
           git config user.email "bot@football-os.web"
