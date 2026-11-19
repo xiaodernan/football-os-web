@@ -2,10 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1204`（此前基线 `M1203` spring-cloud-stack honestly reverts to ubuntu-latest · `M1202` the Spring Cloud witness · `M1201` The Frozen Diary lands and is live at release-time · `M1200` The Warm Lane · `M1199` The Frozen Dispatch · `M1198` The Palette re-sync · `M1197` The World Desk）
-**总提交数**: 1724（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1206`（此前基线 `M1205` the ubuntu spring-cloud-stack gate red honestly repaired · `M1204` spring-cloud-stack honestly reverts to ubuntu-latest · `M1203` stripped duplicated JDK ladder · `M1202` the Spring Cloud witness · `M1201` The Frozen Diary）
+**总提交数**: 1726（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
+
+## M1205–M1206 · Latest ledger (newest first)
+
+- **M1206 The Load Witness — the pressure test, actually run, honestly printed** (2026-11-20): `node scripts/load-test.mjs` (full mode, real aizzz cold call). Phase A burst 200/200 200s in 132ms (p50 104ms p95 117ms). Phase B one real cold model call over the same-origin proxy (200, 5376ms) consumed nothing downstream — the identical-ask 200-burst was served from the in-process memo (`hits=200 stores=1 coalesced=0`), zero further tokens. Phase C fleet probe 200/200 answered (200 armed / 503 degraded, both honest). Phase D hostile burst: 200 oversized bodies → all `413`, 200 malformed JSON → all `400`, 200 empty-message arrays → all `400`, 200 over-cap lists (11 > MAX_MESSAGES=10) → all `400`, zero 5xx, zero hangs, and the health probe still answered 200 afterwards. **load ledger 9/9 passed.** Quick mode (A+C+D, no spend): 7/7.
+- **M1205 the ubuntu spring-cloud-stack gate red — honestly repaired, never weakened**: the first two ubuntu-latest runs of `.github/workflows/spring-cloud-stack.yml` (44569475647 / 44568698335) reached the proof suite and went red on exactly two checks, both real and both fixed in commit `2f1f0dc`: (1) `proof-workflows` requires both workflows to pin JDK 21 (`actions/setup-java@v4` + `distribution: temurin` + `java-version: "21"`) — the M1203 strip had removed the JDK step, so the reactor had no pinned toolchain; re-pinned, nothing skipped. (2) `proof-dead-exports` named `domain/frozenDiary.ts:FrozenDiaryVerdict` — a `ReleaseVerdict` alias with zero readers, removed. Local re-measure: workflows 14/14, dead-exports 4/4; the workflow re-queued on push (44572183104). No gate was re-pinned, no budget was moved, no exemption was added.
 
 ## M1201–M1204 · Latest ledger (newest first)
 
