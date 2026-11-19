@@ -244,6 +244,10 @@ ok(`M1096 PROMPT_CACHE_KEY is exported, STABLE at the "football-os-web" family c
   PROXY.includes("prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean))") &&
   !/stream_options/.test(PROXY));
 
+ok(`M1200 PROMPT_CACHE_RETENTION is the live-probed "24h" and every upstream call pins it — the lane survives a quiet day instead of cooling out after a burst`,
+  PROXY_MOD.PROMPT_CACHE_RETENTION === "24h" &&
+  PROXY.includes("prompt_cache_retention: PROMPT_CACHE_RETENTION"));
+
 ok(`M1079 the middleware owns a single cache for the server lifetime and the handler takes it as a 3rd arg`,
   /llmProxyMiddleware\(configFor = \(\) => serverConfig\(\), cache = createLlmCache\(\)\)/.test(PROXY) &&
   /handleLlmRequest\(cfg, requestBody, cache = null\)/.test(PROXY) &&

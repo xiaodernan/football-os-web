@@ -234,6 +234,12 @@ export function normaliseBase(raw) {
 // family thrash, and unbriefed asks degrade to the family constant (cold once, never viral).
 // `include_usage` stays ABSENT — it forces a lane hop that reports cached=null.
 export const PROMPT_CACHE_KEY = "football-os-web";
+// M1200 · the Warm Lane, 24h — the provider accepted `prompt_cache_retention: "24h"` on the
+// live probe (HTTP 200 against aizzz/gpt-6.2-sol through the CONNECT proxy), so every ask in this
+// app now pins the lane with a 24-hour retention window, not the fleeting default. Repeat prefix
+// reads stay warm for a day; the keep-warm heartbeat (LLM_KEEPWARM_SECONDS) refreshes inside the
+// window at zero additional cost. One constant, both call sites, honestly measured.
+export const PROMPT_CACHE_RETENTION = "24h";
 
 /** The lane this briefing asks the provider to keep warm. Content-derived, byte-deterministic. */
 export function laneKey(briefing, family = PROMPT_CACHE_KEY) {
@@ -319,6 +325,7 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
           temperature: 0.55,
           stream: true,
           prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean)),
+          prompt_cache_retention: PROMPT_CACHE_RETENTION,
         }),
         signal: controller.signal,
       }, cfg);
@@ -458,6 +465,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
         temperature: 0.55,
         stream: true,
         prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean)),
+        prompt_cache_retention: PROMPT_CACHE_RETENTION,
       }),
       signal: controller.signal,
     }, cfg);
