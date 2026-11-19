@@ -29,6 +29,9 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "24"
+          cache: npm
+      - name: Install the web dependencies
+        run: npm ci --no-audit --no-fund --ignore-scripts
       - name: Rebuild the frozen fold (deterministic)
         run: node scripts/build-frozen-fold.mjs
       - name: Rebuild the frozen diary (model imprisoned to the fold)
