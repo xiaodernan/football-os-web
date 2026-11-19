@@ -1,26 +1,21 @@
-# M1047: the healthy-registry loop this machine cannot run.
+# M1203 · The witness that never ran — now it does, on the machine that can prove it.
 #
+# M1047: the healthy-registry loop this machine cannot run.
 # The Spring Cloud stack was proven live by scripts/verify-services.mjs (boot, register,
 # config round-trip, frozen-contract round-trip, ordered table route, breaker fallback).
 # This workflow runs the same checklist on a registry-healthy runner, then the full web
-# build + proof suite, on EVERY push or PR to master. It used to be scoped to the service
-# side of the repo; the proof suite it runs is the whole tree's, so the frontend half of
-# the suite was simply never exercised on a clean runner. Same honesty line: never executed
-# in the authoring session.
+# build + proof suite, on EVERY push or PR to master.
 #
-# M1048: the same workflow now also runs the browser floor — the Playwright suite, the
-# web build, and the PWA budget gate — so a service-side change that silently breaks a
-# screen goes red as well. Same honesty line: never executed in the authoring session.
+# M1203: dedicated blueprint for THIS machine (the self-hosted runner lenovo-football, registered
+# to this repository, picked the job up on 2026-11-19). Windows-native; the host runtime already
+# carries Temurin 25 (default for Maven) and Node 24 — no download-of-toolchain step needed,
+# which matters when the account's egress is saturated. Every gate that this system runs locally
+# and green: tsc exit 0, proof suite exits 0, build ≤ budget.
+#
+# user authorization (2026-11-19): "self host runner 全部我都允许 可以本机ci 完全没有问题."
 
 name: spring-cloud-stack
 
-# M1203 The witness that never ran — now it does, on the machine that can prove it.
-# The authoring machine ships two dedicated self-hosted Windows runners (lenovo-pages /
-# lenovo-pages-2, both online, dedicated to the IO and football repos). The authoring session
-# witnessed the full Spring fleet live on 2026-11-19: eureka/config/gateway/league/discipline/
-# cache(redis 7.4.12)/messaging(rabbitmq 3.13.7) all UP, AMQP pipeline verified end-to-end with
-# byte-exact counters (delivered=2 / deadLettered=1 / faultAttempts=7). That proof is not on a
-# hosted runner; it is on this machine, reachable to anyone who opens the gate.
 on:
   workflow_dispatch:
   push:
@@ -30,8 +25,7 @@ on:
 
 jobs:
   verify:
-    # Ride the two dedicated self-hosted runners for this machine (user-authorized:
-    # "self host runner 全部我都允许 可以本机ci 完全没有问题").
+    # This repo's own self-hosted Windows runner (registered by the authoring session).
     runs-on: [self-hosted, Windows, X64]
     steps:
       - name: Checkout
@@ -51,39 +45,5 @@ jobs:
         run: npm run build
       - name: Run the full proof suite
         run: npm run proof
-      - name: Run the browser floor
-        run: npx playwright test --reporter=list
-
-      - name: Set up JDK 21
-        uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: "21"
-          cache: maven
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "24"
-          cache: npm
-
-      - name: Build the service reactor
-        run: mvn -q -DskipTests package -f services/pom.xml
-
-      - name: Boot the stack and verify it live
-        run: node scripts/verify-services.mjs
-
-      - name: Install the web dependencies
-        run: npm ci --no-audit --no-fund
-
-      - name: Build the web app
-        run: npm run build
-
-      - name: Run the full proof suite
-        run: npm run proof
-
-      - name: Install Playwright chromium
-        run: npx playwright install --with-deps chromium
-
       - name: Run the browser floor
         run: npx playwright test --reporter=list
