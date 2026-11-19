@@ -159,7 +159,7 @@ const UNREACHED_SCOPE = TREE_FILES.filter((f) => STORAGE_SCOPE.has(f.split("/")[
 // M1173 The Golden Hour: goldenHour.ts + GoldenHour.tsx.
 // M1175 The Wire Diary: the reader reaches the fold + the screen — 195 -> 197.
 // M1179 The Tutor: domain/tutor.ts joins — the reader now reaches 202.
-const APP_FILES_PIN = 211; // M1188 The Dispatch: 208 -> 209, domain/dispatch.ts rides the /ops rail. // M1187 The Latch: 207 -> 208, domain/latch.ts rides the /ops rail. // M1195 The Counselor: 209 -> 211 — domain/counsel.ts and features/dashboard/Counselor.tsx both walk the tree.
+const APP_FILES_PIN = 212; // M1188 The Dispatch: 208 -> 209, domain/dispatch.ts rides the /ops rail. // M1187 The Latch: 207 -> 208, domain/latch.ts rides the /ops rail. // M1195 The Counselor: 209 -> 211 — domain/counsel.ts and features/dashboard/Counselor.tsx both walk the tree. // M1197 The World Desk: 211 -> 212 — domain/worldLibrarian.ts rides the Library.
 
 // The filter itself is armed, both ways: a planted tree where `a.ts` imports `b.ts` and `c.ts`
 // stands alone must keep the two a reader reaches and drop the third. The planted files are
