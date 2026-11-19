@@ -2,10 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1206`（此前基线 `M1205` the ubuntu spring-cloud-stack gate red honestly repaired · `M1204` spring-cloud-stack honestly reverts to ubuntu-latest · `M1203` stripped duplicated JDK ladder · `M1202` the Spring Cloud witness · `M1201` The Frozen Diary）
-**总提交数**: 1726（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1207`（此前基线 `M1206` the load witness · `M1205` the ubuntu spring-cloud-stack gate red honestly repaired · `M1204` spring-cloud-stack honestly reverts to ubuntu-latest · `M1203` stripped duplicated JDK ladder · `M1202` the Spring Cloud witness · `M1201` The Frozen Diary）
+**总提交数**: 1728（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
+
+## M1208 · Latest ledger (newest first)
+
+- **M1207 The frozen-diary workflow gets its second wind** — first dispatch 44573871792 reached the self-hosted runner and died honestly at `Rebuild the frozen fold` (`ERR_MODULE_NOT_FOUND`: build-frozen-fold.mjs boots Vite SSR, node_modules missing). Workflow now runs `npm ci --no-audit --no-fund --ignore-scripts` before the fold build (same install shape as pages.yml). Repo secrets `LLM_BASE_URL` / `LLM_MODEL` / `LLM_UPSTREAM_PROXY` are set on the repository, so the Sunday re-cut uses the real model through the CONNECT egress instead of the fold-fallback path. The `lenovo-football` runner had been offline since 16:37Z; it was started on this host (user authorizes local CI) and is online and busy on the re-dispatched run 44575342379.
+- **M1206/M1205** — see `PLAN-LONGTERM.md` rows; `docs/latest.json` head `2f1f0dc` / milestone M1206 / 1726 commits / 83 screens / 829 KB / 110 assets.
 
 ## M1205–M1206 · Latest ledger (newest first)
 
