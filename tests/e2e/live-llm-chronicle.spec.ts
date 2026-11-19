@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 // M1118 · the live witness. This spec exists to prove the full loop in a real browser:
 //   click "Ask the chronicler for the tale" → vite proxies through /api/llm/chat → the provider
 //   streams NDJSON → the screen grows token by token with NO typing simulation → console clean.
-// It dials the real model (aizzz.xyz / gpt-6.1-terra) with the real key, so it is armed only with:
+// It dials the real model (aizzz.xyz / gpt-6.2-sol) with the real key, so it is armed only with:
 //   LLM_LIVE=1 npx playwright test tests/e2e/live-llm-chronicle.spec.ts
 // The default suite (CI included) skips it — no key, no spend, no flake.
 const LIVE = process.env.LLM_LIVE === "1";

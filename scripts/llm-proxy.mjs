@@ -85,7 +85,7 @@ const callUpstreamFetch = (url, init, cfg) => {
   return dispatcher ? proxyFetch(url, { ...init, dispatcher }) : fetch(url, init);
 };
 const DEFAULT_BASE = "https://api.aizzz.xyz/v1";
-const DEFAULT_MODEL = "gpt-6.1-terra";
+const DEFAULT_MODEL = "gpt-6.2-sol";
 const MAX_MESSAGES = 10;
 // M1183 The World Book: 8000 → 327_680. Every ask in this app shares ONE byte-stable prefix
 // (THE WORLD BOOK, ~116 KB) — the old clamp silently amputated 75% of it on the way upstream,

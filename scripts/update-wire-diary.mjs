@@ -101,7 +101,7 @@ async function askOne(key, id, facts) {
     `Output ONLY a JSON object, no prose around it: {"leagueId":"${id}","league":"${facts.league}","season":"${facts.season}","verdict":"model","paragraphs":["...","...","...","..."]}`,
   ].join("\n");
   const body = {
-    model: "gpt-6.1-terra",
+    model: "gpt-6.2-sol",
     messages: [
       { role: "system", content: system },
       { role: "user", content: `FOLD:\n${JSON.stringify(facts)}` },

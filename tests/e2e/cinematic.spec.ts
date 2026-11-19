@@ -12,7 +12,7 @@ mkdirSync(SCREENSHOT_DIR, { recursive: true });
 
 const DECORATED = [
   // [route, heading matcher, expected detail]
-  ["/ai", /live·gpt-6.1-terra/i, "/ai cinematic glass + LIVE chip"],
+  ["/ai", /live·gpt-6\.2-sol/i, "/ai cinematic glass + LIVE chip"],
   ["/records", /the cabinet of records/i, "/records museum hero"],
   ["/season-room", /the season, commanded/i, "/season-room champion cards glass"],
   ["/world", /dynamic world cinema|dynamic world/i, "/world cinematic hero"],
