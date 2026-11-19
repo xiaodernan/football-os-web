@@ -32,7 +32,7 @@ const ok = (name, cond) => {
 };
 
 const {
-  createCounsel, counselPreflight, counselBuild, counselPrecommit, counselCommit, counselRefused,
+  counselPreflight, counselBuild, counselPrecommit, counselCommit, counselRefused,
   verifyCounselText, COUNSEL_LOCAL_KEY, COUNSEL_FOLD_ANSWER_KEY, counselEvidence, counselEnvelope,
 } = counsel;
 
@@ -40,15 +40,15 @@ const NOW = { liveMatchId: null, nextMatchId: "fx-1", nextMatchInMinutes: 90, pl
 const EMPTY = { liveMatchId: null, nextMatchId: null, nextMatchInMinutes: null, plannedSessions: 0, filmClips: 0, badgeWaiting: false, watchlist: 0 };
 
 // 1 · the door opens on a fold that carries something
-let s = counselPreflight(createCounsel(NOW, "en"));
+let s = counselPreflight(NOW, "en");
 ok("preflight passes on a live fact set (stage preflight, trace notes factsSealed)", s.status === "build" && s.trace.at(-1)?.stage === "preflight" && s.trace.at(-1)?.verdict === "pass");
 
 // plant: the empty fold is refused at the door and nothing is written
-const emptyWalk = counselPreflight(createCounsel(EMPTY, "zh-CN"));
+const emptyWalk = counselPreflight(EMPTY, "zh-CN");
 ok("the empty fold is refused at the door and the answer stays sealed (plant)", emptyWalk.status === "refused" && emptyWalk.answer === "" && emptyWalk.trace.at(-1)?.verdict === "refused");
 
 // 2 · build seals the envelope and moves to the model
-s = counselBuild(counselPreflight(createCounsel(NOW, "en")));
+s = counselBuild(counselPreflight(NOW, "en"));
 ok("build advances preflight → model and seals the envelope entry", s.status === "model" && s.trace.map((e) => e.stage).join(",") === "preflight,build");
 
 // 3 · the precommit is the fold's word, not the model's
