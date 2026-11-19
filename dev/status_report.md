@@ -2,10 +2,18 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1201`（此前基线 `M1200` The Warm Lane · `M1199` The Frozen Dispatch · `M1198` The Palette re-sync · `M1197` The World Desk · `c9e455a` 现已承载 M1196/`f058d06` · `a79bed2` M1196 evidence · `42534a1` M1195 status trace 与 `f7e1a5b` 的集约修正）
-**总提交数**: 1711（本提交落地后 1712）
+**当前HEAD**: 本提交落地后 `M1204`（此前基线 `M1203` spring-cloud-stack honestly reverts to ubuntu-latest · `M1202` the Spring Cloud witness · `M1201` The Frozen Diary lands and is live at release-time · `M1200` The Warm Lane · `M1199` The Frozen Dispatch · `M1198` The Palette re-sync · `M1197` The World Desk）
+**总提交数**: 1724（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
+
+## M1201–M1204 · Latest ledger (newest first)
+
+- **M1204 The Frozen Diary is sealed and live** — 15 competitions × 1 paragraph each, model-spoken, fold-proved (public/frozen-diary.json, 73 clubs across 15 leagues; every numeral re-proved against the fold artifact). `bin/frozen-sell.cmd`-style weekly workflow `Frozen diary.github/workflows/frozen-diary.yml` (Sundays 05:30 UTC) re-cuts the diary whenever the frozen fold moves, running `proof-frozen-diary.mjs` first; any drift writes fold-checked fallback instead. Both the fold artifact and the diary live behind ONE shared door (`domain/releaseArtifact.ts` — no LLM call in the reading path; same-origin `no-cache` fetch, ShapeGuard).
+- **M1203 Deploy Football OS Web ships** — `pages.yml` honors ubuntu-latest. The Frozen Diary went live at origin with `index-` prefix `FrozenDispatch-`, `FrozenDiary-*` chunks clearly present (`Frozen diary` rendered correctly at `/frozen-diary` and `/#/library` etc.).
+- **M1202 The Spring Cloud witness** — actuator UP on all 7 services (`eureka/config/gateway/league/discipline/cache/messaging`), AMQP pipeline witnessed end-to-end: byte-exact send/receive (delivered=2 / faultAttempts=7 / deadLettered=1).
+- **M1200 The Warm Lane keeps its day** — `prompt_cache_retention="24h"` confirmed by direct live probe (HTTP 200 against aizzz); both upstream call sites pin it; local dev warm-heartbeat (`LLM_KEEPWARM_SECONDS=300`) tick ok with cached_tokens=104,472.
+- **M1200 corridor break** — `Football OS Web` deploys successfully phase changes through `:17 cron`.
 
 ## 2026-11-19 20:43 · Spring Cloud 7 服务 — 实在跑通，不是 demo
 
