@@ -9,6 +9,8 @@ import type { NextStepFacts } from "./nextStep";
 import { NEXT_MATCH_SOON_MINUTES } from "./nextStep";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import type { AnalystViolation as CounselViolation } from "./analyst";
+export type { CounselViolation };
 
 export type CounselStage = FsmStage;
 export type CounselNote = "factsSealed" | "envelopeSealed" | "commitOk" | "foldOk" | "precommitRefused";
@@ -41,18 +43,13 @@ export const COUNSEL_LOCAL_KEY = (facts: NextStepFacts): { key: string; params?:
   return { key: "counsel.localNothing" };
 };
 
-export const createCounsel = (facts: NextStepFacts, locale: Locale): CounselState => ({
-  facts,
-  locale,
-  status: "preflight",
-  trace: [],
-  answer: "",
+const freshCounsel = (facts: NextStepFacts, locale: Locale): CounselState => ({
+  facts, locale, status: "preflight", trace: [], answer: "",
 });
-
-export const counselPreflight = (s: CounselState): CounselState =>
-  factsHaveContent(s.facts)
-    ? step(s, { stage: "preflight", verdict: "pass", note: "factsSealed" }, "build")
-    : step({ ...s, answer: "" }, { stage: "preflight", verdict: "refused", note: "factsSealed" }, "refused");
+export const counselPreflight = (facts: NextStepFacts, locale: Locale): CounselState =>
+  factsHaveContent(facts)
+    ? step(freshCounsel(facts, locale), { stage: "preflight", verdict: "pass", note: "factsSealed" }, "build")
+    : step(freshCounsel(facts, locale), { stage: "preflight", verdict: "refused", note: "factsSealed" }, "refused");
 
 const factsHaveContent = (f: NextStepFacts): boolean =>
   f.liveMatchId !== null || f.nextMatchId !== null || f.nextMatchInMinutes !== null
@@ -82,11 +79,6 @@ export const counselEnvelope = (facts: NextStepFacts): string =>
     watchlistCount: facts.watchlist,
   });
 
-export const COUNSEL_NUMBER = (raw: string): number | null => {
-  const n = Number(raw.replace(/,/g, ""));
-  return Number.isFinite(n) ? n : null;
-};
-
 const BASE_EVIDENCE: ReadonlySet<string> = new Set(["0", "1", "2", "3"]);
 
 export const counselEvidence = (facts: NextStepFacts): ReadonlySet<string> => {
@@ -99,8 +91,6 @@ export const counselEvidence = (facts: NextStepFacts): ReadonlySet<string> => {
   return out;
 };
 
-export type CounselViolation = "offEvidence" | "tooManyNumbers" | "prediction";
-
 export function verifyCounselText(text: string, facts: NextStepFacts): CounselViolation[] {
   const out = new Set<CounselViolation>();
   const ev = counselEvidence(facts);
@@ -108,8 +98,8 @@ export function verifyCounselText(text: string, facts: NextStepFacts): CounselVi
   for (const m of text.matchAll(/\d+(?:[\d,.]*\d)?/g)) {
     digitCount += 1;
     const raw = m[0].replace(/,/g, "");
-    const n = COUNSEL_NUMBER(raw);
-    if (n === null) continue;
+    const n = Number(raw);
+    if (!Number.isFinite(n)) continue;
     if (!ev.has(raw) && !ev.has(String(Math.round(n)))) out.add("offEvidence");
   }
   if (digitCount > 12) out.add("tooManyNumbers");

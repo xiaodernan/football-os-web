@@ -6,12 +6,12 @@ import { useState } from "react";
 import type { NextStepFacts } from "@/domain/nextStep";
 import {
   counselBuild, counselCommit, counselEnvelope, counselPreflight, counselPrecommit,
-  counselRefused, createCounsel, verifyCounselText, COUNSEL_LOCAL_KEY, type CounselTraceEntry,
+  counselRefused, verifyCounselText, COUNSEL_LOCAL_KEY, type CounselTraceEntry,
 } from "@/domain/counsel";
 import { LLM_CONFIG, callLlmStream, withWorldBook } from "@/data/llm";
 import { useI18n } from "@/i18n";
 import { cn } from "@/lib/utils";
-import { CHIP_CLASS } from "@/ui/primitives";
+import { CHIP_CLASS, PANEL_CLASS } from "@/ui/primitives";
 
 export default function Counselor({ facts }: { facts: NextStepFacts }) {
   const { t, locale } = useI18n();
@@ -38,7 +38,7 @@ export default function Counselor({ facts }: { facts: NextStepFacts }) {
 
   const ask = async () => {
     if (busy) return;
-    let desk = counselBuild(counselPreflight(createCounsel(facts, locale)));
+    let desk = counselBuild(counselPreflight(facts, locale));
     setTrace(desk.trace);
     setVerdict("none");
     setAnswer("");
@@ -77,7 +77,7 @@ export default function Counselor({ facts }: { facts: NextStepFacts }) {
   };
 
   return (
-    <div className="mt-3 rounded-xl border border-border/70 bg-secondary/30 p-3">
+    <div className={cn("mt-3 rounded-xl p-3", PANEL_CLASS.panelGhost)}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-muted-foreground">{t("counsel.kicker")}</span>
         <div className="flex items-center gap-2">
@@ -85,7 +85,7 @@ export default function Counselor({ facts }: { facts: NextStepFacts }) {
           {verdict === "folded" && <span className={cn("rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-widest", CHIP_CLASS.warning)}>{t("counsel.rejected")}</span>}
           {LLM_CONFIG.hasKey && (
             <button type="button" onClick={() => void ask()} disabled={busy} aria-busy={busy}
-              className="rounded-md border border-primary/40 px-2.5 py-1 text-[11px] font-semibold text-primary transition-colors hover:border-primary hover:bg-primary/10 disabled:opacity-60">
+              className={cn("rounded-md border px-2.5 py-1 text-[11px] font-semibold transition-colors disabled:opacity-60", CHIP_CLASS.primary, "hover:border-primary")}>
               {busy ? t("counsel.answering") : t("counsel.ask")}
             </button>
           )}

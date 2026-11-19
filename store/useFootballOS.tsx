@@ -21,6 +21,7 @@ import {
   baselineAttributes,
   overallRating,
   POSITION_BY_GROUP,
+  POSITION_GROUPS,
 } from "@/domain/attributes";
 import { levelFromXp, levelInfo, xpForSession, streakBonus } from "@/domain/xp";
 import { applyFocusGrowth, repairSessionTitles, sessionIntensity, sweepOverdueSessions, type GrowthDelta } from "@/domain/training";
@@ -82,7 +83,9 @@ type Action =
 // whose attribute page is missing keys renders every bar as NaN (my own e2e seed hit
 // exactly this). Repair at the boundary, once, with the same neutral baseline a fresh
 // onboarding mints; whatever the record genuinely carries is kept, clamped to 1..99.
-const GROUP_KEYS = new Set(["GK", "CB", "FB", "DM", "CM", "AM", "W", "ST"]);
+// Derived from the one source the world already owns — the eight groups and their labels —
+// so this repair cannot drift from the type that names them (the vocab census reads both).
+const GROUP_KEYS: ReadonlySet<string> = new Set(POSITION_GROUPS.map((g) => g.id));
 const resolveGroup = (g: unknown): PositionGroup =>
   typeof g === "string" && GROUP_KEYS.has(g.toUpperCase()) ? (g.toUpperCase() as PositionGroup) : "CM";
 

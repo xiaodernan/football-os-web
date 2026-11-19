@@ -139,6 +139,10 @@ const DECLARED = {
   "< 1024": { kind: "split", sites: 2, files: 1, why: "one formatter's own ladder — the settings page's byte formatter draws its two lines from the same kilobyte bound" },
   "< 0.01": { kind: "split", sites: 2, files: 1, why: "one decision asked of two quantities in one expression: the tolerance that says a tactic already matches the recommendation, asked of the press and of the tempo" },
   ">= 76": { kind: "one", home: "domain/analytics.ts", door: "isLateWindow", why: "the late window's opening - minute 76 and after, stoppage included. written once, in the one door both the late-xG family and the last-gasp strike ask, so the sixth window cannot drift between the two readers" },
+  // M1195 The Counselor: the imprisoned doors' digit-cap — two doors independently chose twelve as
+  // the count of numerals the fold will tolerate before refusing outright (latch.ts:108, counsel.ts:102).
+  // Same cap asked of the same flood in two files — declared, not merged — a numeral flood is a numeral flood.
+  "> 12": { kind: "split", sites: 2, files: 2, why: "the imprisoned numeral flood's ceiling: the latch and the counsel each tolerate twelve numerals before refusing the answer outright — the doors' mercy on a model that cannot count its own words, asked of the same flood in the same way in two files" },
 };
 
 // ---------------------------------------------------------------------------
@@ -188,13 +192,13 @@ const splitBad = splitEntries.filter((k) => {
   return rows.length !== DECLARED[k].sites || files !== DECLARED[k].files;
 });
 ok(`every split keeps its shape: the sites and the files are pinned, and the reason says why the decisions differ (${splitEntries.length} split(s), ${splitBad.length} changed [${splitBad.join(", ")}])`,
-  splitEntries.length === 14 && splitBad.length === 0,
+  splitEntries.length === 15 && splitBad.length === 0,
   `changed: ${splitBad.join(", ")}`);
 
 // Every declaration says WHY, in a sentence a reader can weigh.
 const thin = declaredKeys.filter((k) => typeof DECLARED[k].why !== "string" || DECLARED[k].why.length < 40);
 ok(`every declaration says why, in a sentence a reader can weigh (${declaredKeys.length} declarations, ${thin.length} too short [${thin.join(", ")}])`,
-  thin.length === 0 && declaredKeys.length === 20,
+  thin.length === 0 && declaredKeys.length === 21,
   `too short: ${thin.join(", ")}`);
 
 // The doors behave like the inline forms they replaced, on every sample a reader could meet.
