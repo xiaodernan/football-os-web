@@ -25,8 +25,7 @@ on:
 
 jobs:
   verify:
-    # This repo's own self-hosted Windows runner (registered by the authoring session).
-    runs-on: [self-hosted, Windows, X64]
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
