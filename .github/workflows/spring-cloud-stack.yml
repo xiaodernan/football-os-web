@@ -49,5 +49,7 @@ jobs:
         run: npm run build
       - name: Run the full proof suite
         run: npm run proof
+      - name: Install the Playwright browsers
+        run: npx playwright install --with-deps chromium
       - name: Run the browser floor
         run: npx playwright test --reporter=list
