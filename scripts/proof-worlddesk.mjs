@@ -24,7 +24,7 @@ ok("envelopeFor emits exactly the retrieved passages as JSON-safe evidence",
 ok("the evidence carries the visitor's language and the original question", /question: string/.test(desk) && /locale: string/.test(desk));
 
 // the numerical imprisonment — real work, not regex theatre
-ok("evidenceNumerals harvests every numeral in the retrieved passages (raw + rounded)", /evidenceNumerals/.test(desk) && /matchAll/.test(desk) && /Math\.round/.test(desk));
+ok("collectEvidenceNumbers harvests every numeral in the evidence text (raw + rounded) — the one law both desks obey", /collectEvidenceNumbers/.test(desk) && /matchAll/.test(desk) && /Math\.round/.test(desk));
 ok("single digits are exempt; compound numerals are re-proved against the envelope", /raw\.length === 1/.test(desk) && /allowed\.has\(raw\)/.test(desk));
 ok("an off-corpus numeral trips offCorpus — the only way to print your own invention", /out\.add\("offCorpus"\)/.test(desk));
 ok("the prediction door stays shut on futurology", /out\.add\("prediction"\)/.test(desk) && /never will/.test(desk) && /by the time/.test(desk) && /years from now/.test(desk));

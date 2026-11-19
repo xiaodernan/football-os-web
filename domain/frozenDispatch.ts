@@ -8,14 +8,16 @@ import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
 import { footballProvider } from "@/data/footballService";
 import { customPointsTable, STANDARD_RULES } from "@/domain/league";
+import { last } from "@/domain/attributes";
 
-import { verifyNumbersAgainst, type WorldViolation } from "@/domain/worldLibrarian";
+import { verifyNumbersAgainst, type WorldViolation, type WorldNote } from "@/domain/worldLibrarian";
 
-export type FrozenAskId = "summit" | "chase" | "runIn";
-export const FROZEN_ASKS = ["summit", "chase", "runIn"] as const;
+export const FROZEN_ASK_IDS = ["summit", "chase", "runIn"] as const;
+export type FrozenAskId = (typeof FROZEN_ASK_IDS)[number];
+export const FROZEN_ASKS = FROZEN_ASK_IDS;
 
 export type DispatchStage = FsmStage;
-export type DispatchNote = "shelvesInHand" | "envelopeSealed" | "commitOk" | "foldOk" | "precommitRefused";
+export type DispatchNote = WorldNote;
 export type DispatchViolation = WorldViolation;
 
 export const DISPATCH_BUILD_ENTRY = { stage: "build", verdict: "pass", note: "envelopeSealed" } as const;
@@ -31,9 +33,7 @@ export interface DispatchTraceEntry {
 }
 
 export interface DispatchState {
-  readonly askId: FrozenAskId;
   readonly locale: Locale;
-  readonly envelope: object;
   readonly status: DispatchStage;
   readonly trace: readonly DispatchTraceEntry[];
   readonly answer: string;
@@ -49,7 +49,7 @@ export interface DispatchEnvelopeCompetition {
 }
 
 /** The one read-through of the seeded fold — identical to the library corpus' own math. */
-export function frozenFolds(provider = footballProvider): DispatchEnvelopeCompetition[] {
+export function frozenFolds(provider: typeof footballProvider): DispatchEnvelopeCompetition[] {
   const clubs = provider.clubs();
   const matches = provider.matches();
   const byClub = new Map(clubs.map((c) => [c.id, c] as const));
@@ -63,12 +63,12 @@ export function frozenFolds(provider = footballProvider): DispatchEnvelopeCompet
       const club = byClub.get(r.clubId);
       return [r.standardPosition, club?.name ?? r.clubId, r.standardPoints, r.played, r.gf, r.ga, r.gf - r.ga] as const;
     });
-    const last = rows[rows.length - 1];
+    const tailRow = last(rows) ?? rows[0];
     const tail: readonly [number, string, number, number] = [
-      last.standardPosition,
-      byClub.get(last.clubId)?.name ?? last.clubId,
-      last.standardPoints,
-      last.played,
+      tailRow.standardPosition,
+      byClub.get(tailRow.clubId)?.name ?? tailRow.clubId,
+      tailRow.standardPoints,
+      tailRow.played,
     ];
     const runs = rows.slice(0, 2).map((r) => {
       // the last five — the seed's own letters, newest at the front.
@@ -128,10 +128,8 @@ export function retrieveFrozen(askId: FrozenAskId, folds: readonly DispatchEnvel
 export const verifyFrozenText = (text: string, envelope: object): DispatchViolation[] =>
   verifyNumbersAgainst(text, JSON.stringify(envelope));
 
-export const createFrozenDispatch = (askId: FrozenAskId, locale: Locale): DispatchState => ({
-  askId,
+export const createFrozenDispatch = (_askId: FrozenAskId, locale: Locale): DispatchState => ({
   locale,
-  envelope: retrieveFrozen(askId, frozenFolds()),
   status: "preflight",
   trace: [],
   answer: "",

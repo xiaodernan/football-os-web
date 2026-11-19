@@ -10,6 +10,7 @@ import { cn } from "@/lib/utils";
 import { searchLibrary, type LibraryHit } from "@/data/libraryCorpus";
 import { round3 } from "@/lib/utils";
 import { LLM_CONFIG, callLlmStream, withWorldBook } from "@/data/llm";
+import type { ReleaseBadge } from "@/domain/releaseArtifact";
 import {
   createWorldDesk,
   envelopeFor,
@@ -33,7 +34,7 @@ export function Library() {
   const [worldTrace, setWorldTrace] = useState<readonly WorldTraceEntry[] | null>(null);
   const [worldViolations, setWorldViolations] = useState<string[] | null>(null);
   const [worldBusy, setWorldBusy] = useState(false);
-  const [worldBadge, setWorldBadge] = useState<"verified" | "folded" | "offline" | null>(null);
+  const [worldBadge, setWorldBadge] = useState<ReleaseBadge | null>(null);
   const [openedCount, setOpenedCount] = useState(0);
 
   const foldWorldAnswer = (hitsNow: readonly LibraryHit[]): string =>

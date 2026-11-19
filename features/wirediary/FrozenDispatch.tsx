@@ -5,7 +5,9 @@ import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
+import type { ReleaseBadge } from "@/domain/releaseArtifact";
 import { LLM_CONFIG, callLlmStream, withWorldBook } from "@/data/llm";
+import { footballProvider } from "@/data/footballService";
 import {
   createFrozenDispatch,
   dispatchBuild,
@@ -28,10 +30,10 @@ export function FrozenDispatch() {
   const [trace, setTrace] = useState<readonly DispatchTraceEntry[] | null>(null);
   const [violations, setViolations] = useState<string[] | null>(null);
   const [busy, setBusy] = useState(false);
-  const [badge, setBadge] = useState<"verified" | "folded" | "offline" | null>(null);
+  const [badge, setBadge] = useState<ReleaseBadge | null>(null);
 
   // Building the fold is deterministic work; memoize per ask selection.
-  const foldLens = useMemo(() => retrieveFrozen(askId, frozenFolds()), [askId]);
+  const foldLens = useMemo(() => retrieveFrozen(askId, frozenFolds(footballProvider)), [askId]);
 
   const foldFallback = (): string =>
     [t("frozenDispatch.fold.intro"), ...foldSummary(askId)].join("\n");
@@ -39,12 +41,12 @@ export function FrozenDispatch() {
   const foldSummary = (lens: FrozenAskId): string[] => {
     const env = foldLens as { competitions: { name: string; summit?: readonly (readonly [number, string, number, number, number, number, number])[]; gap?: number; runs?: readonly (readonly [number, string, number, string])[] }[] };
     if (lens === "summit") {
-      return env.competitions.slice(0, 5).map((c) => `· ${c.name}: ${c.summit?.[0]?.[1] ?? "?"} — ${c.summit?.[0]?.[2] ?? 0} pts`);
+      return env.competitions.slice(0, 5).map((c) => `- ${c.name}: ${c.summit?.[0]?.[1] ?? "?"}. ${c.summit?.[0]?.[2] ?? 0} pts.`);
     }
     if (lens === "chase") {
-      return env.competitions.slice(0, 5).map((c) => `· ${c.name}: gap ${c.gap ?? 0}`);
+      return env.competitions.slice(0, 5).map((c) => `- ${c.name}: gap ${c.gap ?? 0}`);
     }
-    return env.competitions.slice(0, 5).map((c) => `· ${c.name}: ${c.runs?.[0]?.[3] ?? "–"}`);
+    return env.competitions.slice(0, 5).map((c) => `- ${c.name}: ${c.runs?.[0]?.[3] ?? "-"}`);
   };
 
   const run = async (lens: FrozenAskId) => {
@@ -64,7 +66,7 @@ export function FrozenDispatch() {
       setBusy(false);
       return;
     }
-    const envelope = retrieveFrozen(lens, frozenFolds());
+    const envelope = retrieveFrozen(lens, frozenFolds(footballProvider));
     const system = withWorldBook([
       "You are the frozen dispatcher of Football OS — the seeded world's wire desk.",
       "Answer ONLY from the envelope below (the seed's own numbers).",
@@ -139,7 +141,7 @@ export function FrozenDispatch() {
           </span>
         )}
         {violations && violations.length > 0 && (
-          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">{violations.map((v) => t(`frozenDispatch.violation.${v}`)).join(" · ")}</p>
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">{violations.map((v) => t(`frozenDispatch.violation.${v}`)).join(" | ")}</p>
         )}
         {trace && (
           <div className="mt-4 border-t border-border/60 pt-3">

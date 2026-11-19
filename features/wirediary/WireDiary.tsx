@@ -6,14 +6,14 @@ import { PANEL_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import { fetchReleaseArtifact } from "@/domain/releaseArtifact";
+import { fetchReleaseArtifact, type ReleaseStatus } from "@/domain/releaseArtifact";
 import { isWireDiaryPayload, type WireDiaryPayload } from "@/domain/wireDiary";
 import { PrinterIcon } from "lucide-react";
 
 export function WireDiary() {
   const { t } = useI18n();
   const [payload, setPayload] = useState<WireDiaryPayload | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "error" | "absent">("loading");
+  const [status, setStatus] = useState<ReleaseStatus>("loading");
   const [attempt, setAttempt] = useState(0);
 
   useEffect(() => {

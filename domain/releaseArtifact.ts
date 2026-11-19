@@ -4,6 +4,12 @@
 // and served unchanged by the static host. The fold-check lives with the artifact guards in
 // each diary module; only the READ mechanics — one cached promise, one fetch per page load,
 // one shape guard — live here. Honest degrade without the file: null, never a fake payload.
+// The three shared vocabularies (verdict, status, badge) live in ONE place so two doors that
+// speak the same truth spell it the same way.
+
+export type ReleaseVerdict = "model" | "fold";
+export type ReleaseStatus = "loading" | "ready" | "error" | "absent";
+export type ReleaseBadge = "verified" | "folded" | "offline";
 
 const cache = new Map<string, Promise<unknown | null>>();
 

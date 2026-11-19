@@ -34,7 +34,7 @@ ok("the streaming door is the ONE callLlmStream — no second fetch",
 // Planted refusal trap — the lying file the desk must refuse
 const plantedFetch = 'fetch("/api/llm/chat")';
 ok("the planted stranger knocking at the door is exactly what the desk refuses", /(\bfetch\(|XMLHttpRequest)/.test(plantedFetch));
-ok("the envelope embeds ridely at ask time — never a stale fold", /retrieveFrozen\(lens, frozenFolds\(\)\)/.test(screen) && /ENVELOPE/.test(screen));
+ok("the envelope embeds ridely at ask time — never a stale fold", /retrieveFrozen\(lens, frozenFolds\([a-zA-Z]*\)\)/.test(screen) && /ENVELOPE/.test(screen));
 ok("verification happens BEFORE commit", /verifyFrozenText\(result\.text/.test(screen) && /dispatchCommit\(dispatchPrecommit\(desk, "pass"/.test(screen) && /dispatchRefused\(dispatchPrecommit\(desk, "refused"/.test(screen));
 ok("the refusal lane swaps the model's voice for the fold's honest reading — never silently", /foldFallback\(\)/.test(screen));
 ok("aria-live polite keeps the streaming readable", /aria-live="polite"/.test(screen));

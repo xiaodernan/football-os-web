@@ -2,8 +2,9 @@
 // The diary is written once per release by scripts/update-wire-diary.mjs (the real model, imprisoned to the fold),
 // verified against the artifact, and committed as public/wire-diary.json. The screen reads it; nothing else writes it.
 // M1201: the read mechanics live behind domain/releaseArtifact.ts — the screens call it directly.
+import type { ReleaseVerdict } from "@/domain/releaseArtifact";
 
-export type WireDiaryVerdict = "model" | "fold";
+export type WireDiaryVerdict = ReleaseVerdict;
 
 export interface DiaryArticle {
   leagueId: string;

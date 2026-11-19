@@ -70,9 +70,11 @@ if (claimProblems.length) console.log("   drift:\n   " + claimProblems.join("\n 
 const screen = readFileSync("features/wirediary/WireDiary.tsx", "utf8");
 ok("the screen ships print affordance and a retry door", screen.includes("window.print()") && screen.includes('t("wireDiary.printHint")'));
 const domain = readFileSync("domain/wireDiary.ts", "utf8");
+const sharedDoor = readFileSync("domain/releaseArtifact.ts", "utf8");
 ok("the screen fetches /wire-diary.json with zero model traffic",
-  screen.includes("fetchWireDiary") && !/callLlmStream|data\/llm/.test(screen) &&
-  /fetch\(`\$\{import\.meta\.env\.BASE_URL\}wire-diary\.json`/.test(domain) && !/callLlmStream|data\/llm/.test(domain));
+  screen.includes("fetchReleaseArtifact") && !/callLlmStream|data\/llm/.test(screen) &&
+  /wire-diary\.json/.test(screen) && !/callLlmStream|data\/llm/.test(domain) &&
+  !/callLlmStream|data\/llm/.test(sharedDoor));
 
 const dict = readFileSync("i18n/dictionaries.ts", "utf8");
 for (const key of ["nav.wireDiary", "wireDiary.kicker", "wireDiary.title", "wireDiary.subtitle", "wireDiary.tag", "wireDiary.meta",

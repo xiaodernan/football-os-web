@@ -3,8 +3,11 @@
 // imprisoned to the frozen fold), verified on every numeral against public/frozen-fold.json,
 // and committed as public/frozen-diary.json. The screen reads it; nothing else writes it.
 // M1201: the read mechanics live behind domain/releaseArtifact.ts — the screens call it directly.
+import type { ReleaseVerdict } from "@/domain/releaseArtifact";
 
-export type FrozenDiaryVerdict = "model" | "fold";
+export const FROZEN_BY_VALUES = ["model", "mixed", "fold"] as const;
+export type FrozenDiaryVerdict = ReleaseVerdict;
+export type FrozenDiaryOutcome = (typeof FROZEN_BY_VALUES)[number];
 
 export interface FrozenDiaryArticle {
   competitionId: string;
@@ -12,7 +15,7 @@ export interface FrozenDiaryArticle {
   nation: string;
   tier: number;
   paragraphs: string[];
-  by: FrozenDiaryVerdict;
+  by: ReleaseVerdict;
 }
 
 export interface FrozenDiaryPayload {
@@ -20,7 +23,7 @@ export interface FrozenDiaryPayload {
   generatedAt: string;
   diary: FrozenDiaryArticle[];
   summary: { competitionsFrozen: number; byModel: number; byFold: number };
-  by: "model" | "mixed" | "fold";
+  by: FrozenDiaryOutcome;
 }
 
 /** A reader could hand-edit the file in their browser — this guard refuses anything malformed. */
@@ -29,7 +32,7 @@ export function isFrozenDiaryPayload(p: unknown): p is FrozenDiaryPayload {
   const d = p as FrozenDiaryPayload;
   if (d.version !== "frozen-diary/v1") return false;
   if (typeof d.generatedAt !== "string" || !/^[0-9]{4}-[0-9]{2}-[0-9]{2}T/.test(d.generatedAt)) return false;
-  if (!["model", "mixed", "fold"].includes(d.by)) return false;
+  if (!FROZEN_BY_VALUES.includes(d.by)) return false;
   if (!d.summary || d.summary.competitionsFrozen !== d.diary?.length) return false;
   if (typeof d.diary !== "object" || !Array.isArray(d.diary) || d.diary.length === 0) return false;
   for (const a of d.diary) {
