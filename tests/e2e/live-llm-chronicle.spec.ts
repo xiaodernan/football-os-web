@@ -6,20 +6,21 @@ import { test, expect } from "@playwright/test";
 // It dials the real model (aizzz.xyz / gpt-6.2-sol) with the real key, so it is armed only with:
 //   LLM_LIVE=1 npx playwright test tests/e2e/live-llm-chronicle.spec.ts
 // The default suite (CI included) skips it — no key, no spend, no flake.
-const LIVE = process.env.LLM_LIVE === "1";
-
-test.skip(!LIVE, "the live LLM witness — set LLM_LIVE=1 to arm it (it spends real tokens)");
+// M1203: timeout raised because gpt-6.2-sol is deliberately slow on reasoning; the chronicler
+// produces longer-form text that takes longer to land. 180s is the honest cap.
+test.skip(!process.env.LLM_LIVE, "the live LLM witness — set LLM_LIVE=1 to arm it (it spends real tokens)");
 
 test("the chronicle narrates the epic live, streaming honestly into the page", async ({ page }) => {
+  test.setTimeout(180_000);
   const errors: string[] = [];
   const consoleText: string[] = [];
   page.on("console", (m) => { consoleText.push(m.text()); if (m.type() === "error") errors.push(m.text().slice(0, 200)); });
   page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 240)}`));
 
   await page.goto("/#/chronicle", { waitUntil: "domcontentloaded" });
-  await expect(page.getByRole("heading", { level: 1, name: "The Chronicle" })).toBeVisible({ timeout: 20000 });
+  await expect(page.getByRole("heading", { level: 1, name: /The Chronicle|世界史诗|世界故事/i }).first()).toBeVisible({ timeout: 20000 });
 
-  const ask = page.getByRole("button", { name: "Ask the chronicler for the tale" });
+  const ask = page.getByRole("button", { name: /ask the chronicler for the tale|请求叙述者讲述|請敘述者講述/i });
   await expect(ask).toBeVisible({ timeout: 10000 });
   await expect(ask).toBeEnabled();
   await ask.click();
@@ -30,7 +31,7 @@ test("the chronicle narrates the epic live, streaming honestly into the page", a
   const prose = page.locator("p.whitespace-pre-wrap");
   await expect(prose).toBeVisible({ timeout: 30000 });
   // Streaming finished means the streaming badge disappeared or the button is back.
-  await expect(page.getByText("the chronicler is writing")).toHaveCount(0, { timeout: 60000 });
+  await expect(page.getByText(/the chronicler is writing|叙述者.*讲述中|叙述正在讲述|streaming/i)).toHaveCount(0, { timeout: 150_000 });
 
   const text = (await prose.innerText()).trim();
   console.log(`M1118 live witness: ${text.length} chars of chronicle rendered`);
