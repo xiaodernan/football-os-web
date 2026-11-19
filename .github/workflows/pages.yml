@@ -16,7 +16,11 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    # Hosted runner queue on this account is saturated; this repo already ships with two dedicated
+    # self-hosted Windows runners (lenovo-pages / lenovo-pages-2). The deploy does `npm ci` + a Vite
+    # build on the self-hosted hardware — identical output, no queue. The 3-hour update cadence the
+    # sync automation expects is kept by committing only the substance.
+    runs-on: [self-hosted, Windows, X64]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
