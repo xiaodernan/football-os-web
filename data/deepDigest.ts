@@ -6,6 +6,7 @@
 import { footballProvider } from "@/data/footballService";
 import leagueTables from "../services/league-service/src/main/resources/league-tables.json";
 import { byOverall, tally } from "@/domain/attributes";
+import { byKickoff } from "@/domain/analytics";
 import { fmt1 } from "@/lib/utils";
 
 type FrozenRow = { position: number; clubId: string; points: number; played: number; won: number; drawn: number; lost: number; gf: number; ga: number };
@@ -168,6 +169,20 @@ export const DEEP_DIGEST: string = (() => {
     "  honesty  What is honest here — every number measured, frozen seed, never a demo dressed as live",
     "  print    Print this page — plain A4, seven chapters, zero JavaScript in the output",
   ]) out.push(line);
+
+  // M1218 · THE COMPLETE TAPE — every fixture the seed carries, played or scheduled, in
+  // kickoff order. This is the long-context spine: a model asked about ANY match can read the
+  // exact line here instead of guessing from a table or a narrowed retrieval envelope. It is
+  // derived only from the frozen seed, byte-stable on every load, and never paraphrased.
+  const fullTape = matches.slice().sort(byKickoff);
+  out.push(`THE COMPLETE TAPE (all ${fullTape.length} seeded fixtures, kickoff ascending; UTC kickoff · league · matchday · clubs · score or scheduled · id):`);
+  out.push("GROUNDING LAW FOR THE TAPE: quote only a line printed here. If a club, date or score is not printed here, say 'the seed has no such fixture' — never answer from real-world football memory.");
+  for (const m of fullTape) {
+    const score = m.status === "FINISHED" && m.homeGoals !== null && m.awayGoals !== null
+      ? `${m.homeGoals}-${m.awayGoals}`
+      : "scheduled";
+    out.push(`${m.kickoff.slice(0, 10)} ${m.competitionId} MD${m.round} — ${clubName(m.homeClubId)} ${score} ${clubName(m.awayClubId)} · ${m.status} · ${m.id}`);
+  }
 
   return out.join("\n");
 })();

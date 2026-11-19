@@ -15,6 +15,7 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 const server = await createServer({ server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const { DEEP_DIGEST, DEEP_DIGEST_NUMBERS, WORLD_CLUB_NAMES } = await server.ssrLoadModule("/data/deepDigest.ts");
 const { footballProvider } = await server.ssrLoadModule("/data/footballService.ts");
+const { byKickoff } = await server.ssrLoadModule("/domain/analytics.ts");
 
 const dig = DEEP_DIGEST;
 ok("the digest is real — non-trivial, ten-digit kilobytes, no placeholder", typeof dig === "string" && dig.length >= 25_000 && dig.length <= 300_000 && !dig.includes("<placeholder>"));
@@ -60,7 +61,11 @@ const playedAll = matches.filter((m) => m.status === "FINISHED" && m.homeGoals !
 const marginOf = (m) => Math.abs((m.homeGoals ?? 0) - (m.awayGoals ?? 0));
 const expectedWideLines = playedAll.filter((m) => marginOf(m) >= 2).length;
 const wideStart = dig.indexOf("THE WIDE MARGINS");
-const wideLines = dig.slice(wideStart).split("\n").filter((l) => /MD\d+/.test(l)).length;
+// M1218: bound the section. Slicing to the end of the digest counted later MD-bearing
+// sections as wide margins once THE COMPLETE TAPE was added — the gate must read one
+// section, not everything that follows it. This narrows the claim, it does not weaken it.
+const wideEnd = dig.indexOf("THE FULL ROSTER", wideStart);
+const wideLines = dig.slice(wideStart, wideEnd > wideStart ? wideEnd : undefined).split("\n").filter((l) => /MD\d+/.test(l)).length;
 ok(`THE WIDE MARGINS carries every fixture with a margin of two or more (${wideLines} lines, recount ${expectedWideLines})`,
   wideLines === expectedWideLines && wideLines >= 1);
 
@@ -83,6 +88,22 @@ ok("THE SPRING PLANE names every service of the stack", ["gateway", "registry", 
   .every((w) => dig.includes(w)));
 ok("THE MANUAL names the seven doors", ["welcome", "modes", "explore", "epics", "spring", "honesty", "print"]
   .every((w) => dig.includes(w)));
+
+// M1218 · THE COMPLETE TAPE — the long-context spine. Re-derive every line the way the
+// digest does, then demand all of them be present. A dropped or paraphrased fixture is red.
+const tapeStart = dig.indexOf("THE COMPLETE TAPE");
+const completeBlock = dig.slice(tapeStart);
+const fullTape = matches.slice().sort(byKickoff);
+const completeTapeLines = fullTape.map((m) => {
+  const score = m.status === "FINISHED" && m.homeGoals !== null && m.awayGoals !== null
+    ? `${m.homeGoals}-${m.awayGoals}` : "scheduled";
+  const cname = (id) => footballProvider.clubs().find((c) => c.id === id)?.name ?? id;
+  return `${m.kickoff.slice(0, 10)} ${m.competitionId} MD${m.round} — ${cname(m.homeClubId)} ${score} ${cname(m.awayClubId)} · ${m.status} · ${m.id}`;
+});
+ok(`THE COMPLETE TAPE carries every seeded fixture verbatim (${completeTapeLines.length} lines, ${matches.length} in the seed)`,
+  tapeStart >= 0 && completeTapeLines.length === matches.length && completeTapeLines.every((line) => completeBlock.includes(line)));
+ok(`THE COMPLETE TAPE is the long-context spine (digest ${dig.length} chars ≈ ${Math.round(dig.length / 4)} tokens, every fixture inside)`,
+  dig.length >= 200_000 && dig.length <= 300_000);
 
 // Plants: two known-shipped contamination samples must be refused by the set logic.
 const plantedNumber = "999999999";
