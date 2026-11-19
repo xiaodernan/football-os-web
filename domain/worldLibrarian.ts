@@ -70,23 +70,21 @@ export const envelopeFor = (question: string, hits: readonly LibraryHit[], local
   })),
 });
 
-/** Every numeral the model may lawfully write — the union of digits present in the opened shelves. */
-export const evidenceNumerals = (hits: readonly LibraryHit[]): Set<string> => {
+/** Every numeral the model may lawfully write — the union of digits present in the evidence. */
+export const collectEvidenceNumbers = (evidence: string): Set<string> => {
   const out = new Set<string>();
-  for (const hit of hits) {
-    for (const m of hit.document.text.matchAll(/\d+(?:[\d.,]*\d)?/g)) {
-      const raw = m[0].replace(/,/g, "");
-      out.add(raw);
-      out.add(String(Math.round(Number(raw))));
-    }
+  for (const m of evidence.matchAll(/\d+(?:[\d.,]*\d)?/g)) {
+    const raw = m[0].replace(/,/g, "");
+    out.add(raw);
+    out.add(String(Math.round(Number(raw))));
   }
   return out;
 };
 
-/** The imprisoned verifier — every numeral must be traceable to a passage the reader actually opened. */
-export function verifyWorldText(text: string, hits: readonly LibraryHit[]): WorldViolation[] {
+/** The one numerical-imprisonment law both ask desks obey: zero free digits in a sealed envelope. */
+export const verifyNumbersAgainst = (text: string, evidence: string): WorldViolation[] => {
   const out = new Set<WorldViolation>();
-  const allowed = evidenceNumerals(hits);
+  const allowed = collectEvidenceNumbers(evidence);
   for (const m of text.matchAll(/\d+(?:[\d.,]*\d)?/g)) {
     const raw = m[0].replace(/,/g, "");
     // Single digits are ubiquitous and meaningless to imprison; compound numerals must anchor.
@@ -97,6 +95,11 @@ export function verifyWorldText(text: string, hits: readonly LibraryHit[]): Worl
   }
   if (/\b(will|won't|never will|by the time|years from now|listen to me)\b/i.test(text)) out.add("prediction");
   return [...out];
+};
+
+/** The imprisoned verifier — every numeral must be traceable to a passage the reader actually opened. */
+export function verifyWorldText(text: string, hits: readonly LibraryHit[]): WorldViolation[] {
+  return verifyNumbersAgainst(text, hits.map((hit) => hit.document.text).join("\n"));
 }
 
 // ---- the state machine -----------------------------------------------------

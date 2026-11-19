@@ -112,6 +112,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "grand-dispatch", label: t("nav.grandDispatch"), group: "goto", run: nav("/grand-dispatch") },
       { id: "golden-hour", label: t("nav.goldenHour"), group: "goto", run: nav("/golden-hour") },
       { id: "wire-diary", label: t("nav.wireDiary"), group: "goto", run: nav("/wire-diary") },
+      { id: "frozen-dispatch", label: t("nav.frozenDispatch"), group: "goto", run: nav("/frozen-dispatch") },
       { id: "journey", label: t("nav.journey"), group: "goto", run: nav("/journey") },
       { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
       { id: "review", label: t("nav.review"), group: "goto", run: nav("/review") },

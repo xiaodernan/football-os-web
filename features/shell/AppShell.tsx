@@ -138,6 +138,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   { to: "/grand-dispatch", label: t("nav.grandDispatch"), icon: I.newspaper, match: ["/grand-dispatch"] },
   { to: "/golden-hour", label: t("nav.goldenHour"), icon: I.golden, match: ["/golden-hour"] },
   { to: "/wire-diary", label: t("nav.wireDiary"), icon: I.scroll, match: ["/wire-diary"] },
+  { to: "/frozen-dispatch", label: t("nav.frozenDispatch"), icon: I.scroll, match: ["/frozen-dispatch"] },
   { to: "/about", label: t("nav.about"), icon: I.book, match: ["/about", "/manual"] },
   { to: "/manual", label: t("nav.manual"), icon: I.book, match: ["/manual"] },
     { to: "/platform", label: t("nav.platform"), icon: I.server, match: ["/platform"] },
