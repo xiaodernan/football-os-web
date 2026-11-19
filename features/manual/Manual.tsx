@@ -75,6 +75,7 @@ export function Manual() {
     { to: "/wire-diary", label: t("nav.wireDiary") },
     { to: "/frozen-dispatch", label: t("nav.frozenDispatch") },
     { to: "/witness-bench", label: t("nav.witnessBench") },
+    { to: "/cartographer", label: t("nav.cartographer") },
     { to: "/frozen-diary", label: t("nav.frozenDiary") },
     { to: "/about", label: t("nav.about") },
     { to: "/manual", label: t("nav.manual") },

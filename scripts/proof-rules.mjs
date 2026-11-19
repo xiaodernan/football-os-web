@@ -203,6 +203,13 @@ const LOCAL_SPLITS = {
   // primitive. The backdrop classes are the shadcn template's, the components stay separate.
   "components/ui/dialog.tsx:DialogOverlay|components/ui/sheet.tsx:SheetOverlay":
     "two Radix overlay wrappers — dialog and sheet are different primitives and the shared backdrop classes are the vendor template's own, so the components stay separate",
+  // M1219 door 14 reads the SAME sealed shelf as door 13; the fold text is deliberately the same
+  // body in both screens so a refusal on either door speaks with one voice. Both are separately
+  // pinned by proof-witness / proof-model-route, so this pair is declared, not deleted.
+  "features/wirediary/Cartographer.tsx:foldSummary|features/wirediary/WitnessBench.tsx:foldSummary":
+    "one fold-summary rule shared by the model-chosen door and the witness door: both read benchEnvelope(lens) and print the same sealed lines",
+  "features/wirediary/Cartographer.tsx:folded|features/wirediary/WitnessBench.tsx:foldFallback":
+    "the same fold answer is spelled on both doors; the intro is the one translated line and the numerals still come from the frozen envelope",
 };
 const localUndeclared = localPairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)

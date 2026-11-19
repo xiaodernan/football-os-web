@@ -179,7 +179,7 @@ const DEAD_CEILING = 25;
 // M1178 The Consultation: +1 domain/consult.ts -> 206 -> 207.
 // M1179 The Tutor: +1 domain/tutor.ts -> 207 -> 208.
 // M1187: 213 -> 214 — domain/latch.ts joins the population.
-const POP_PIN = 225; // M1188 The Dispatch: 214 -> 215 — domain/dispatch.ts joins the population. M1195 The Counselor: 215 -> 217 — domain/counsel.ts AND features/dashboard/Counselor.tsx both join it. M1197 The World Desk: 217 -> 218 — domain/worldLibrarian.ts joins the reader. M1199 The Frozen Dispatch: 218 -> 220 — domain/frozenDispatch.ts AND features/wirediary/FrozenDispatch.tsx join the reader. M1201 The Frozen Diary: 220 -> 222 — domain/frozenDiary.ts AND features/wirediary/FrozenDiary.tsx join the reader. M1201 refactor: 222 -> 223 — domain/releaseArtifact.ts joins the reader.
+const POP_PIN = 226; // M1219 The Cartographer: 225 -> 226 — features/wirediary/Cartographer.tsx joins the reader. M1188 The Dispatch: 214 -> 215 — domain/dispatch.ts joins the population. M1195 The Counselor: 215 -> 217 — domain/counsel.ts AND features/dashboard/Counselor.tsx both join it. M1197 The World Desk: 217 -> 218 — domain/worldLibrarian.ts joins the reader. M1199 The Frozen Dispatch: 218 -> 220 — domain/frozenDispatch.ts AND features/wirediary/FrozenDispatch.tsx join the reader. M1201 The Frozen Diary: 220 -> 222 — domain/frozenDiary.ts AND features/wirediary/FrozenDiary.tsx join the reader. M1201 refactor: 222 -> 223 — domain/releaseArtifact.ts joins the reader.
 // M248 removed `hooks/use-mobile.ts`, which was the only module in `hooks/`, so the walk now reads
 // 11 top-level directories and finds modules in 10 of them. The clause that used to notice that
 // gap said `Object.keys(byDir).length === popDirs.length`; the honest repair is NOT the `<=` this
@@ -221,7 +221,7 @@ const POP_PIN = 225; // M1188 The Dispatch: 214 -> 215 — domain/dispatch.ts jo
 // M1064: domain 44 -> 45 (ringMath.ts).
 // M1076: data 7 -> 8 — data/llm.ts.
 // M1080: domain 45 -> 46, features 57 -> 58 — domain/seasonRoom.ts + features/seasonroom/SeasonRoom.tsx.
-const BY_DIR_PIN = { components: 15, data: 11, domain: 88, features: 91, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 }; // M1188: domain 81 -> 82 (domain/dispatch.ts) · M1195: domain 82 -> 83 (domain/counsel.ts), features 87 -> 88 (dashboard/Counselor.tsx) · M1197 The World Desk: domain 83 -> 84 (domain/worldLibrarian.ts rides the Library) · M1199 The Frozen Dispatch: domain 84 -> 85 (domain/frozenDispatch.ts), features 88 -> 89 (wirediary/FrozenDispatch.tsx) · M1201 The Frozen Diary: domain 85 -> 86 (domain/frozenDiary.ts), features 89 -> 90 (wirediary/FrozenDiary.tsx). · M1201 refactor: domain 86 -> 87 (domain/releaseArtifact.ts — the one door both diaries read through)
+const BY_DIR_PIN = { components: 15, data: 11, domain: 88, features: 92, functions: 2, i18n: 3, lib: 8, src: 3, store: 1, ui: 3 }; // M1219: features 91 -> 92 (features/wirediary/Cartographer.tsx). M1188: domain 81 -> 82 (domain/dispatch.ts) · M1195: domain 82 -> 83 (domain/counsel.ts), features 87 -> 88 (dashboard/Counselor.tsx) · M1197 The World Desk: domain 83 -> 84 (domain/worldLibrarian.ts rides the Library) · M1199 The Frozen Dispatch: domain 84 -> 85 (domain/frozenDispatch.ts), features 88 -> 89 (wirediary/FrozenDispatch.tsx) · M1201 The Frozen Diary: domain 85 -> 86 (domain/frozenDiary.ts), features 89 -> 90 (wirediary/FrozenDiary.tsx). · M1201 refactor: domain 86 -> 87 (domain/releaseArtifact.ts — the one door both diaries read through)
 // M522: 45, measured after the quarantine. The deep count moves with the population, and the five
 // Playwright specs under tests/e2e/ are no longer read as app modules.
 // M523: 45 -> 46. features/coach/CoachProfile.tsx sits two levels down.
@@ -247,7 +247,7 @@ const BY_DIR_PIN = { components: 15, data: 11, domain: 88, features: 91, functio
 // M1152: features/livewire/LiveWire.tsx sits two levels down — 93 -> 94.
 // M1164: +1 (features/ledger/Ledger.tsx is two levels down).
 // M1165: +1 (features/worldtable/WorldTable.tsx is two levels down).
-const DEEP_PIN = 107; // M1175 The Wire Diary: 94 -> 103 when wireDiary.ts joined the ledger · M1195: features/dashboard/Counselor.tsx sits two levels down — 103 -> 104.: +1 features/wirediary/WireDiary.tsx · M1199 The Frozen Dispatch: 104 -> 105 — features/wirediary/FrozenDispatch.tsx sits two levels down. · M1201 The Frozen Diary: 105 -> 106 — features/wirediary/FrozenDiary.tsx sits two levels down.
+const DEEP_PIN = 108; // M1219: 107 -> 108 — features/wirediary/Cartographer.tsx sits two levels down. M1175 The Wire Diary: 94 -> 103 when wireDiary.ts joined the ledger · M1195: features/dashboard/Counselor.tsx sits two levels down — 103 -> 104.: +1 features/wirediary/WireDiary.tsx · M1199 The Frozen Dispatch: 104 -> 105 — features/wirediary/FrozenDispatch.tsx sits two levels down. · M1201 The Frozen Diary: 105 -> 106 — features/wirediary/FrozenDiary.tsx sits two levels down.
 
 // A name on this list is a claim about a file, and the gate has to survive the claim being
 // false. Existence is reported by the clause that says so; every later read of a declared name

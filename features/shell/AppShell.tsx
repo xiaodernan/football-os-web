@@ -140,6 +140,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   { to: "/wire-diary", label: t("nav.wireDiary"), icon: I.scroll, match: ["/wire-diary"] },
   { to: "/frozen-dispatch", label: t("nav.frozenDispatch"), icon: I.scroll, match: ["/frozen-dispatch"] },
   { to: "/witness-bench", label: t("nav.witnessBench"), icon: I.scroll, match: ["/witness-bench"] },
+  { to: "/cartographer", label: t("nav.cartographer"), icon: I.scroll, match: ["/cartographer"] },
   { to: "/frozen-diary", label: t("nav.frozenDiary"), icon: I.ledger, match: ["/frozen-diary"] },
   { to: "/about", label: t("nav.about"), icon: I.book, match: ["/about", "/manual"] },
   { to: "/manual", label: t("nav.manual"), icon: I.book, match: ["/manual"] },

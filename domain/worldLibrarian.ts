@@ -70,10 +70,16 @@ export const envelopeFor = (question: string, hits: readonly LibraryHit[], local
   })),
 });
 
-/** Every numeral the model may lawfully write — the union of digits present in the evidence. */
+/**
+ * Every numeral the model may lawfully write — the union of digits present in the evidence.
+ * M1219: the old `[\d.,]*` closure swallowed the COMMAS BETWEEN JSON-ARRAY ELEMENTS, so
+ * `[1,37,15]` harvested one 13715 instead of three lawful numbers and every real sentence
+ * about the sealed fold was refused. A thousands group is one number; a plain comma is a
+ * separator. Both are captured, and the rounded twin is still kept for the shared law.
+ */
 export const collectEvidenceNumbers = (evidence: string): Set<string> => {
   const out = new Set<string>();
-  for (const m of evidence.matchAll(/\d+(?:[\d.,]*\d)?/g)) {
+  for (const m of evidence.matchAll(/\d{1,3}(?:,\d{3})+(?:\.\d+)?|\d+(?:\.\d+)?/g)) {
     const raw = m[0].replace(/,/g, "");
     out.add(raw);
     out.add(String(Math.round(Number(raw))));

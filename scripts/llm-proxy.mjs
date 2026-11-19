@@ -250,6 +250,17 @@ export function laneKey(briefing, family = PROMPT_CACHE_KEY) {
 const systemBriefing = (clean) => clean?.find((m) => m.role === "system")?.content ?? "";
 
 /**
+ * M1219 · the SHIPPED lane derivation. The old call sites passed laneKey's arguments in the
+ * wrong order (family first, briefing second), which made the provider's
+ * key contain the ENTIRE system message plus a constant hash — every door and every envelope
+ * got its own lane, so parallel sessions fragmented the cache. This helper is the one shape
+ * both call sites use: hash the stable briefing's first 4 KiB, nothing else.
+ */
+export function laneForMessages(clean) {
+  return laneKey(systemBriefing(clean));
+}
+
+/**
  * The framework-agnostic core. `cfg` supplies { key, baseUrl, model } from the server env.
  * `cache` is an optional M1079 store (createLlmCache()); when absent the request is uncached,
  * which keeps the M1078 two-argument call sites valid (and the no-key degrade path cache-free).
@@ -324,7 +335,7 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
           max_tokens: 700,
           temperature: 0.55,
           stream: true,
-          prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean)),
+          prompt_cache_key: laneForMessages(clean),
           prompt_cache_retention: PROMPT_CACHE_RETENTION,
         }),
         signal: controller.signal,
@@ -464,7 +475,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
         max_tokens: 700,
         temperature: 0.55,
         stream: true,
-        prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean)),
+        prompt_cache_key: laneForMessages(clean),
         prompt_cache_retention: PROMPT_CACHE_RETENTION,
       }),
       signal: controller.signal,

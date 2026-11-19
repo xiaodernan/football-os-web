@@ -241,7 +241,8 @@ ok(`M1096 PROMPT_CACHE_KEY is exported, STABLE at the "football-os-web" family c
   PROXY_MOD.laneKey("ABCXYZ") !== PROXY_MOD.laneKey("ABCXYZ2") &&
   PROXY_MOD.laneKey("") === "football-os-web" &&
   PROXY.includes("stream: true") &&
-  PROXY.includes("prompt_cache_key: laneKey(PROMPT_CACHE_KEY, systemBriefing(clean))") &&
+  PROXY.includes("prompt_cache_key: laneForMessages(clean)") &&
+  typeof PROXY_MOD.laneForMessages === "function" &&
   !/stream_options/.test(PROXY));
 
 ok(`M1200 PROMPT_CACHE_RETENTION is the live-probed "24h" and every upstream call pins it — the lane survives a quiet day instead of cooling out after a burst`,

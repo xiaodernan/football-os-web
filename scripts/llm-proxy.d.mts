@@ -39,6 +39,9 @@ export interface MessagingServiceBody {
 export function messagingServiceHandler(env?: Record<string, string | undefined>, fetchImpl?: typeof fetch): Promise<{ status: number; body: MessagingServiceBody; headers: Record<string, string> }>;
 export function messagingServiceMiddleware(env?: Record<string, string | undefined>, fetchImpl?: typeof fetch): LlmMiddleware;
 export const PROMPT_CACHE_KEY: string;
+export const PROMPT_CACHE_RETENTION: string;
+export function laneKey(briefing: string, family?: string): string;
+export function laneForMessages(messages: unknown): string;
 export const KEEPWARM_MIN: 30;
 export const KEEPWARM_MAX: 900;
 export const LLM_CACHE_POLICY: { enabled: boolean; ttlSeconds: number; jitterSeconds: number; capacity: number; seed: string };

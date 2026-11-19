@@ -21,7 +21,7 @@ export const BENCH_TO_FROZEN: Readonly<Record<WitnessLens, FrozenAskId>> = {
 };
 
 export type BenchStage = FsmStage;
-export type BenchNote = "shelvesInHand" | "envelopeSealed" | "modelRouted" | "modelAbstained" | "commitOk" | "precommitRefused" | "foldOk" | "abstainFold";
+export type BenchNote = "shelvesInHand" | "envelopeSealed" | "modelRouted" | "modelAbstained" | "modelChoseLens" | "modelRouteInvalid" | "commitOk" | "precommitRefused" | "foldOk" | "abstainFold";
 
 export const BENCH_BUILD_ENTRY = { stage: "build", verdict: "pass", note: "envelopeSealed" } as const;
 export const BENCH_MODEL_ROUTED = { stage: "model", verdict: "pass", note: "modelRouted" } as const;
@@ -39,6 +39,29 @@ export function benchRoute(text: string): BenchRoute {
   return /^\s*\[?ABSTAIN\]?\b/i.test(text) ? "abstain" : "answer";
 }
 
+// ── M1219 · the model chooses the BRANCH, not only the answer ────────────────────────────
+// The routing grammar is deliberately tiny and FIRST-LINE ONLY. A paragraph that merely
+// mentions "the crown" is not a directive; a model that drifts into prose cannot silently
+// pick a lens. ABSTAIN still wins, as before, and an unrecognised directive is a refused
+// graph edge — never a guess about what the model "probably meant".
+export interface BenchDirective {
+  readonly lens: WitnessLens | null;
+  readonly route: BenchRoute;
+}
+
+export function parseBenchDirective(text: string): BenchDirective | null {
+  const first = String(text ?? "").split(/\r?\n/, 1)[0].trim();
+  if (/^\[?ABSTAIN\]?\b/i.test(first)) return { lens: null, route: "abstain" };
+  const m = /^LENS:(crown|chase|form)\b/i.exec(first);
+  if (!m) return null;
+  const lens = WITNESS_LENSES.find((candidate) => candidate === m[1].toLowerCase());
+  return lens ? { lens, route: "answer" } : null;
+}
+
+/** Strip the directive line so the answer body can still meet the old numeral law. */
+export const stripBenchDirective = (text: string): string =>
+  String(text ?? "").replace(/^\s*(\[?ABSTAIN\]?|LENS:(?:crown|chase|form))\b[^\n]*\n?/i, "").trim();
+
 export interface BenchTraceEntry {
   readonly stage: BenchStage;
   readonly verdict: TraceVerdict;
@@ -50,6 +73,8 @@ export interface BenchState {
   readonly lens: WitnessLens;
   /** The edge the model itself chose — null until it has spoken. */
   readonly route: BenchRoute | null;
+  /** M1219 · who picked the lens. The UI must never call a visitor's click a model choice. */
+  readonly chosenBy?: "visitor" | "model";
   readonly status: BenchStage;
   readonly trace: readonly BenchTraceEntry[];
   readonly answer: string;
@@ -95,3 +120,13 @@ export const benchRefused = (s: BenchState, answer: string): BenchState =>
 
 export const benchAbstained = (s: BenchState, answer: string): BenchState =>
   fsmRefused({ ...s, answer }, answer, BENCH_ABSTAIN_ENTRY);
+
+/** M1219 · the model named a lens; the graph walks into THAT branch, still gated by precommit. */
+export const benchModelChose = (s: BenchState, lens: WitnessLens): BenchState =>
+  step({ ...s, lens, route: "answer", chosenBy: "model" },
+    { stage: "model", verdict: "pass", note: "modelChoseLens" }, "precommit");
+
+/** An unusable directive is a refused edge — the fold answers and the badge says so. */
+export const benchModelRouteInvalid = (s: BenchState, answer: string): BenchState =>
+  fsmRefused({ ...s, chosenBy: "model", answer }, answer,
+    { stage: "model", verdict: "refused", note: "modelRouteInvalid" });

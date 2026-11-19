@@ -114,6 +114,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "wire-diary", label: t("nav.wireDiary"), group: "goto", run: nav("/wire-diary") },
       { id: "frozen-dispatch", label: t("nav.frozenDispatch"), group: "goto", run: nav("/frozen-dispatch") },
       { id: "witness-bench", label: t("nav.witnessBench"), group: "goto", run: nav("/witness-bench") },
+      { id: "cartographer", label: t("nav.cartographer"), group: "goto", run: nav("/cartographer") },
       { id: "frozen-diary", label: t("nav.frozenDiary"), group: "goto", run: nav("/frozen-diary") },
       { id: "journey", label: t("nav.journey"), group: "goto", run: nav("/journey") },
       { id: "profile", label: t("nav.profile"), group: "goto", run: nav("/profile") },
