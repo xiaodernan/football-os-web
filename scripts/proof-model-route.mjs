@@ -2,7 +2,9 @@
 // Door 13 let the model choose answer-vs-abstain. Here it also chooses the branch itself:
 // one frozen routing envelope carries all three sealed shelves, the model writes
 // `LENS:<id>` on line one, and the graph enters that lens before the shared numeral
-// verifier is allowed to commit. No unrecognised directive can reach a commit.
+// verifier is allowed to commit. An unrecognised directive cannot reach a commit.
+// M1221 adds a SECOND model-driven edge: CHECK:<lens> names a different shelf that must
+// carry the same claim, else the graph walks the contested arm and the fold answers.
 // Run: node scripts/proof-model-route.mjs
 import { readFileSync } from "node:fs";
 import { createServer } from "vite";
@@ -31,6 +33,25 @@ for (const bad of ["LENS:world\nstuff", "the lens is crown", "CROWN", "LENS:crow
 }
 ok("a directive buried in prose is not a route", W.parseBenchDirective("We think LENS:crown is fine.") === null);
 
+// ---- M1221: the second edge names a DIFFERENT sealed shelf -------------------
+const crossCases = [
+  ["CHECK:crown\nsecond shelf", "crown", "answer"],
+  ["CHECK:chase\nsecond shelf", "chase", "answer"],
+  ["CHECK:form\nsecond shelf", "form", "answer"],
+  ["ABSTAIN", null, "abstain"],
+];
+for (const [text, lens, route] of crossCases) {
+  const got = W.parseCrossDirective(text);
+  ok(`cross directive ${JSON.stringify(text.slice(0, 22))} → ${lens ?? route}`, got && got.lens === lens && got.route === route);
+}
+for (const bad of ["CHECK:world\nstuff", "check crown", "the check is form", ""]) {
+  ok(`unusable cross directive ${JSON.stringify(bad)} is refused`, W.parseCrossDirective(bad) === null);
+}
+ok("a CHECK: mention buried in prose is not a cross route", W.parseCrossDirective("We might CHECK:form later.") === null);
+ok("the cross directive line is stripped before the shared verifier reads the prose",
+  W.stripCrossDirective("CHECK:form\nCity lead with 37 points.") === "City lead with 37 points." &&
+  W.stripCrossDirective("ABSTAIN\nfold text") === "fold text");
+
 // ---- the graph records the edge the model chose ------------------------------
 const desk = W.benchBuild(W.benchPreflight(W.createBench("crown", "en")));
 const chosen = W.benchModelChose(desk, "chase", "LENS:chase");
@@ -48,6 +69,31 @@ ok("a truthful sentence about the chosen shelf passes; the same sentence with an
   W.verifyBenchText(truthful, W.benchEnvelope("chase")).length === 0 &&
   W.verifyBenchText(truthful.replace("10 ahead", "99 ahead"), W.benchEnvelope("chase")).includes("offCorpus"));
 
+// ---- M1221: the second shelf's verdict drives a real graph arm --------------
+const crossChosen = W.benchCrossChose(W.benchCommit(W.benchPrecommit(chosen, "pass"), truthful), "form");
+ok("the second shelf is written into state as a traced model edge",
+  crossChosen.crossLens === "form" && crossChosen.status === "precommit" &&
+  crossChosen.trace.at(-1).note === "crossChoseLens" && crossChosen.chosenBy === "model");
+const corroborated = W.benchCrossCorroborated(crossChosen, "recent runs agree");
+ok("a corroborated claim commits with its own trace note",
+  corroborated.status === "commit" && corroborated.crossVerdict === "corroborated" &&
+  corroborated.trace.at(-1).note === "crossCorroborated" && corroborated.answer === "recent runs agree");
+const contested = W.benchCrossContested(crossChosen, "the fold answers");
+ok("a contested claim walks the refused arm and keeps the fold's words",
+  contested.status === "refused" && contested.crossVerdict === "contested" &&
+  contested.trace.at(-1).note === "crossContested" && contested.answer === "the fold answers");
+const badCross = W.benchCrossRouteInvalid(crossChosen, "the fold answers");
+ok("an unusable cross directive walks the refused arm",
+  badCross.status === "refused" && badCross.trace.at(-1).note === "crossRouteInvalid");
+const crossAbstain = W.benchCrossAbstained(crossChosen, "the fold answers");
+ok("a cross abstention walks the refused arm",
+  crossAbstain.status === "refused" && crossAbstain.crossVerdict === "contested" &&
+  crossAbstain.trace.at(-1).note === "crossAbstained");
+const firstShelfOnly = "The table shows 11 points.";
+ok("a claim the first shelf allows can be contested by the second shelf's own numerals",
+  W.verifyBenchText(firstShelfOnly, W.benchEnvelope("chase")).length === 0 &&
+  W.verifyBenchText(firstShelfOnly, W.benchEnvelope("form")).includes("offCorpus"));
+
 // ---- one sealed routing envelope, three frozen shelves ----------------------
 const screen = readFileSync("features/wirediary/Cartographer.tsx", "utf8");
 const routed = (screen.match(/benchEnvelope\(/g) || []).length;
@@ -59,7 +105,24 @@ ok("the chosen directive is parsed before any commit", /parseBenchDirective\(res
 ok("the directive line is stripped before the numeral verifier sees the prose", /stripBenchDirective\(result\.text\)/.test(screen));
 ok("the answer is verified against the CHOSEN lens envelope", /verifyBenchText\(prose, envelope\)/.test(screen) && /const envelope = benchEnvelope\(lens\)/.test(screen));
 ok("a model-chosen answer cannot skip the precommit gate", /benchCommit\(benchPrecommit\(chosen, "pass"/.test(screen) && /benchRefused\(benchPrecommit\(chosen, "refused"/.test(screen));
-ok("one streaming call serves the whole routing door", (screen.match(/callLlmStream\(/g) ?? []).length === 1);
+ok("exactly two streaming calls serve the two graph edges (routing + cross-examination)",
+  (screen.match(/callLlmStream\(/g) ?? []).length === 2);
+ok("both edges share the ONE world-book prefix so the cache lane stays byte-stable",
+  (screen.match(/withWorldBook\(\[/g) ?? []).length === 2 && /const routingEnvelope = Object\.fromEntries\(WITNESS_LENSES\.map/.test(screen) &&
+  /JSON\.stringify\(routingEnvelope, null, 2\)/.test(screen) && /ALL SEALED SHELVES/.test(screen));
+
+// ---- M1221: the second edge is wired to the same verifier and honest arms ---
+ok("the cross directive is parsed before any second commit", /parseCrossDirective\(result\.text\)/.test(screen));
+ok("the cross directive line is stripped before the verifier", /stripCrossDirective\(result\.text\)/.test(screen));
+ok("the cross prose AND the first claim are re-proved against the second shelf",
+  /verifyBenchText\(secondProse, secondEnvelope\)/.test(screen) && /verifyBenchText\(claim, secondEnvelope\)/.test(screen));
+ok("a same-shelf second directive is refused", /directive\.lens === firstLens/.test(screen) && /benchCrossRouteInvalid/.test(screen));
+ok("an abstaining or failed second call takes the contested arm",
+  (screen.match(/benchCrossAbstained\(/g) ?? []).length >= 3 && /result\.ok/.test(screen));
+ok("a corroborated answer still walks the commit stage through the cross edge",
+  /benchCrossCorroborated\(chosen, secondProse\)/.test(screen) && /benchCrossChose\(deskState, other\)/.test(screen));
+ok("the second button stays available on the keyless arm so the contested outcome is observable",
+  /\{deskState && \(/.test(screen) && /const firstLens = lens \?\? "crown"/.test(screen));
 
 // ---- trilingual copy, no mixed language -------------------------------------
 const keys = [
@@ -67,6 +130,9 @@ const keys = [
   "library.door.note.modelChoseLens", "library.door.note.modelRouteInvalid",
   "nav.cartographer", "cartographer.kicker", "cartographer.title", "cartographer.subtitle",
   "cartographer.hint", "cartographer.picked", "cartographer.method",
+  "cartographer.cross.ask", "cartographer.cross.picked", "cartographer.badge.corroborated", "cartographer.badge.contested",
+  "library.door.note.crossChoseLens", "library.door.note.crossCorroborated", "library.door.note.crossContested",
+  "library.door.note.crossRouteInvalid", "library.door.note.crossAbstained",
 ];
 
 for (const locale of ["en", "zh-CN", "zh-TW"]) {
@@ -83,6 +149,10 @@ for (const locale of ["en", "zh-CN", "zh-TW"]) {
 
 const e2e = readFileSync("tests/e2e/cartographer.spec.ts", "utf8");
 ok("the offline E2E sees the model-chooses button", /the model chooses the lens|模型选择视角|模型選擇視角/i.test(e2e));
+const crossE2e = readFileSync("tests/e2e/cartographer-cross.spec.ts", "utf8");
+ok("the cross-examination E2E refuses the transport and asserts the contested arm",
+  /503/.test(crossE2e) && /cartographer\.badge\.contested|cannot corroborate/.test(crossE2e) &&
+  /cross-examine the claim|交叉质询/.test(crossE2e));
 
 await server.close();
 console.log(`\n${pass}/${pass + fail} checks passed`);

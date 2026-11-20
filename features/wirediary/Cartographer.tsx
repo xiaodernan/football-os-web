@@ -12,6 +12,11 @@ import {
   benchAbstained,
   benchBuild,
   benchCommit,
+  benchCrossAbstained,
+  benchCrossChose,
+  benchCrossContested,
+  benchCrossCorroborated,
+  benchCrossRouteInvalid,
   benchEnvelope,
   benchModel,
   benchModelChose,
@@ -21,14 +26,17 @@ import {
   benchRefused,
   createBench,
   parseBenchDirective,
+  parseCrossDirective,
   stripBenchDirective,
+  stripCrossDirective,
   verifyBenchText,
   WITNESS_LENSES,
+  type BenchState,
   type BenchTraceEntry,
   type WitnessLens,
 } from "@/domain/witnessBench";
 
-type MapBadge = "modelChosen" | "verified" | "folded" | "abstained" | "invalid" | "offline";
+type MapBadge = "modelChosen" | "verified" | "folded" | "abstained" | "invalid" | "offline" | "corroborated" | "contested";
 
 const foldSummary = (envelope: object): string[] => {
   const env = envelope as { competitions: { name: string; summit?: readonly (readonly [number, string, number, number, number, number, number])[]; gap?: number; runs?: readonly (readonly [number, string, number, string])[] }[] };
@@ -43,12 +51,16 @@ export function Cartographer() {
   const [busy, setBusy] = useState(false);
   const [badge, setBadge] = useState<MapBadge | null>(null);
   const [lens, setLens] = useState<WitnessLens | null>(null);
+  const [deskState, setDeskState] = useState<BenchState | null>(null);
+  const [crossBusy, setCrossBusy] = useState(false);
+  const [crossLens, setCrossLens] = useState<WitnessLens | null>(null);
 
   const folded = (lens: WitnessLens): string =>
     [t("witnessBench.fold.intro"), ...foldSummary(benchEnvelope(lens))].join("\n");
 
   // One graph entry, one honest drawing of who chose the lens.
-  const enter = (desk: ReturnType<typeof createBench>, text: string, next: MapBadge) => {
+  const enter = (desk: BenchState, text: string, next: MapBadge) => {
+    setDeskState(desk);
     setTrace(desk.trace);
     setAnswer(text);
     setBadge(next);
@@ -62,6 +74,8 @@ export function Cartographer() {
     setViolations(null);
     setBadge(null);
     setLens(null);
+    setDeskState(null);
+    setCrossLens(null);
 
     if (!LLM_CONFIG.hasKey) {
       enter(benchRefused(benchBuild(benchPreflight(createBench("crown", locale))), folded("crown")), folded("crown"), "offline");
@@ -117,8 +131,76 @@ export function Cartographer() {
     enter(benchRefused(benchPrecommit(chosen, "refused"), text), text, "folded");
   };
 
+  // M1221 · the second graph edge. The claim from the first shelf is NOT trusted because it
+  // reads well; a second sealed shelf must carry the same numerals before it stands.
+  const crossExamine = async () => {
+    if (crossBusy || !deskState) return;
+    setCrossBusy(true);
+    setCrossLens(null);
+    const claim = deskState.answer;
+    // Even the keyless/fold arm can be cross-examined: the second shelf either corroborates
+    // the fold's summary through a live model or honestly declares itself contested offline.
+    const firstLens = lens ?? "crown";
+    const crossFold = (other: WitnessLens): string => folded(other);
+
+    const finish = (desk: BenchState, text: string, next: MapBadge) => {
+      enter(desk, text, next);
+      setCrossBusy(false);
+    };
+    if (!LLM_CONFIG.hasKey) {
+      finish(benchCrossAbstained(deskState, crossFold(firstLens)), crossFold(firstLens), "contested");
+      return;
+    }
+
+    const routingEnvelope = Object.fromEntries(WITNESS_LENSES.map((id) => [id, benchEnvelope(id)]));
+    const system = withWorldBook([
+      "You are the second witness of Football OS. A colleague made one claim from a sealed shelf.",
+      "FIRST LINE: exactly CHECK:crown, CHECK:chase or CHECK:form — name a DIFFERENT shelf from the one the claim came from. Or write ABSTAIN alone if no other shelf can test it.",
+      "AFTER THAT: at most 40 words, in the visitor's language, saying only what that second shelf shows. Never invent a numeral, a club, a result or a future tense.",
+      "",
+      "THE CLAIM UNDER TEST:",
+      claim,
+      "",
+      "ALL SEALED SHELVES:",
+      JSON.stringify(routingEnvelope, null, 2),
+    ].join("\n"));
+
+    const result = await callLlmStream(t("cartographer.cross.ask"), [], () => {}, { system });
+    if (!result.ok) {
+      finish(benchCrossAbstained(deskState, crossFold(firstLens)), crossFold(firstLens), "contested");
+      return;
+    }
+    const directive = parseCrossDirective(result.text);
+    if (!directive || directive.route === "abstain" || directive.lens === null) {
+      finish(directive?.route === "abstain"
+        ? benchCrossAbstained(deskState, crossFold(firstLens))
+        : benchCrossRouteInvalid(deskState, crossFold(firstLens)), crossFold(firstLens), "contested");
+      return;
+    }
+    if (directive.lens === firstLens) {
+      finish(benchCrossRouteInvalid(deskState, crossFold(firstLens)), crossFold(firstLens), "contested");
+      return;
+    }
+
+    const other = directive.lens;
+    setCrossLens(other);
+    const secondProse = stripCrossDirective(result.text);
+    const secondEnvelope = benchEnvelope(other);
+    const secondViolations = verifyBenchText(secondProse, secondEnvelope);
+    const claimViolations = verifyBenchText(claim, secondEnvelope);
+    const chosen = benchCrossChose(deskState, other);
+    if (secondViolations.length === 0 && claimViolations.length === 0) {
+      finish(benchCrossCorroborated(chosen, secondProse), secondProse, "corroborated");
+      return;
+    }
+    setViolations([...new Set([...secondViolations, ...claimViolations])]);
+    finish(benchCrossContested(chosen, crossFold(other)), crossFold(other), "contested");
+  };
+
   const badgeLabel = badge === "modelChosen"
     ? t("witnessBench.badge.modelChosen")
+    : badge === "corroborated" ? t("cartographer.badge.corroborated")
+    : badge === "contested" ? t("cartographer.badge.contested")
     : badge === "invalid" ? t("witnessBench.badge.modelInvalid")
     : badge === "abstained" ? t("witnessBench.badge.abstained")
     : badge === "folded" ? t("library.door.badge.folded")
@@ -153,13 +235,28 @@ export function Cartographer() {
         </button>
         {answer && <p aria-live="polite" className="mt-4 whitespace-pre-wrap text-sm leading-relaxed">{answer}</p>}
         {badge && (
-          <span className={cn("mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-widest", badge === "modelChosen" || badge === "verified" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+          <span className={cn("mt-2 inline-flex items-center gap-1.5 rounded-full border px-2.5 py-0.5 font-mono text-[9px] uppercase tracking-widest", badge === "modelChosen" || badge === "verified" || badge === "corroborated" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
             {badgeLabel}
           </span>
         )}
         {lens && (
           <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
             {t("cartographer.picked")} · {t(`witnessBench.ask.${lens}`)}
+          </p>
+        )}
+        {deskState && (
+          <button
+            type="button"
+            onClick={() => void crossExamine()}
+            disabled={crossBusy}
+            className={cn("fo-lift mt-4 rounded-lg border px-4 py-2 text-[10px] font-semibold uppercase tracking-widest transition-colors hover:bg-muted disabled:opacity-60", CHIP_CLASS.badgeInfoStrong)}
+          >
+            {t("cartographer.cross.ask")}
+          </button>
+        )}
+        {crossLens && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            {t("cartographer.cross.picked")} · {t(`witnessBench.ask.${crossLens}`)}
           </p>
         )}
         {violations && violations.length > 0 && (

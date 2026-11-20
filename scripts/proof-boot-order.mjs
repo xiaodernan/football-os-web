@@ -157,7 +157,9 @@ ok(`the verifier keeps the gateway last on purpose (the LB cache decision from M
 // Read only executable lines (strip `//` comments) so the explanation of the old bug cannot itself
 // trip the detector — a gate that reds on a comment about the defect is a gate that teaches people
 // to delete explanations.
-const executable = VERIFY.split("\n").map((l) => l.replace(/\/\/.*$/, "")).join("\n");
+// A CRLF checkout used to make `$` miss the carriage return, so a comment naming the old
+// positional kill stayed "executable" and this gate red on a clean tree. Trim the CR first.
+const executable = VERIFY.split("\n").map((l) => l.replace(/\r$/, "").replace(/\/\/.*$/, "")).join("\n");
 const positionalKill = /children\s*\[\s*\d+\s*\]\s*\.\s*kill/.test(executable);
 ok(`the circuit test stops the league service by name, not by a positional index`,
   !positionalKill && /children\.get\(["']league["']\)/.test(executable));

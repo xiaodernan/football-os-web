@@ -819,6 +819,7 @@ const DYN_SITES = [
   { path: "features/wirediary/Cartographer.tsx", expr: "v", prefix: "witnessBench.violation.", suffix: "" }, // M1219: the shared numeral-verifier codes
   { path: "features/wirediary/Cartographer.tsx", expr: "entry.stage", prefix: "manual.librarian.stage.", suffix: "" }, // M1219: the same traced-FSM stage enum
   { path: "features/wirediary/Cartographer.tsx", expr: "entry.note", prefix: "library.door.note.", suffix: "" }, // M1219: chosen-lens / invalid-route notes
+  { path: "features/wirediary/Cartographer.tsx", expr: "crossLens", prefix: "witnessBench.ask.", suffix: "" }, // M1221: the second shelf's label rides the same lens namespace
   { path: "features/library/Library.tsx", expr: "entry.stage", prefix: "manual.librarian.stage.", suffix: "" }, // M1197 The World Desk: the desk's trace strip — same librarian stage enum, its own screen
   { path: "features/library/Library.tsx", expr: "entry.note", prefix: "library.door.note.", suffix: "" }, // M1197 The World Desk
   { path: "features/library/Library.tsx", expr: "v", prefix: "library.door.violation.", suffix: "" }, // M1197 The World Desk
@@ -1075,7 +1076,7 @@ const SPACES = new Map([
   ["manual.librarian.note.|entry.note", { name: "librarian trace notes", values: ["bookInHand", "indexSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["manual.librarian.violation.|v", { name: "librarian violation codes", values: ["offBook", "prediction"] }],
   // M1197 The World Desk: the world asks itself — the desk's own note/violation census, read from domain/worldLibrarian.ts's WorldNote and WorldViolation.
-  ["library.door.note.|entry.note", { name: "world desk trace notes", values: ["shelvesInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused", "modelRouted", "modelAbstained", "abstainFold", "modelChoseLens", "modelRouteInvalid"] }],
+  ["library.door.note.|entry.note", { name: "world desk trace notes", values: ["shelvesInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused", "modelRouted", "modelAbstained", "abstainFold", "modelChoseLens", "modelRouteInvalid", "crossChoseLens", "crossCorroborated", "crossContested", "crossRouteInvalid", "crossAbstained"] }],
   ["library.door.violation.|v", { name: "world desk violation codes", values: ["offCorpus", "prediction"] }],
   // M1199 The Frozen Dispatch: the frozen century asks itself — lenses and violations, read off domain/frozenDispatch.ts.
   ["frozenDispatch.ask.|id", { name: "frozen lens buttons", values: ["summit", "chase", "runIn"] }],
@@ -1084,6 +1085,7 @@ const SPACES = new Map([
   // M1217 The Witness Bench: the thirteenth door — model-routed graph, same one numeral law.
   ["witnessBench.ask.|id", { name: "witness lens buttons", values: ["crown", "chase", "form"] }],
   ["witnessBench.ask.|lens", { name: "witness lens modes", values: ["crown", "chase", "form"] }],
+  ["witnessBench.ask.|crossLens", { name: "cross-examined lens modes", values: ["crown", "chase", "form"] }],
   ["witnessBench.violation.|v", { name: "witness violation codes", values: ["offCorpus", "prediction"] }],
   // M1179 The Tutor: the lesson-desk trace strip, keyed off its own note/stage enums.
   ["learn.tutor.stage.|entry.stage", { name: "tutor trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
@@ -4963,8 +4965,11 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
 // 3525 -> 3539 measured on this tree. The fold-answer indirection moved from an expression-key call to six literal
 // branches, so expression returns to 70 and localSoon carries {n} (litVarSites 570 -> 571).
   // M1219 The Cartographer: door 14 adds 21 literal and 4 template t() sites; the shared
-  // witness lens label is now a second template site. Measured on this tree: 3660 / 171.
-  shapeCounts.literal === 3660 && shapeCounts.template === 171 && shapeCounts.expression === 70
+  // witness lens label is now a second template site. Measured then: 3660 / 171.
+  // M1221 adds five literal call sites (cross ask, tested-against, corroborated/contested
+  // badges and the second-lens label) and one more template site for the cross lens.
+  // Measured on this tree: 3665 / 172.
+  shapeCounts.literal === 3665 && shapeCounts.template === 172 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

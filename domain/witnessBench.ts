@@ -21,7 +21,7 @@ export const BENCH_TO_FROZEN: Readonly<Record<WitnessLens, FrozenAskId>> = {
 };
 
 export type BenchStage = FsmStage;
-export type BenchNote = "shelvesInHand" | "envelopeSealed" | "modelRouted" | "modelAbstained" | "modelChoseLens" | "modelRouteInvalid" | "commitOk" | "precommitRefused" | "foldOk" | "abstainFold";
+export type BenchNote = "shelvesInHand" | "envelopeSealed" | "modelRouted" | "modelAbstained" | "modelChoseLens" | "modelRouteInvalid" | "commitOk" | "precommitRefused" | "foldOk" | "abstainFold" | "crossChoseLens" | "crossCorroborated" | "crossContested" | "crossRouteInvalid" | "crossAbstained";
 
 export const BENCH_BUILD_ENTRY = { stage: "build", verdict: "pass", note: "envelopeSealed" } as const;
 export const BENCH_MODEL_ROUTED = { stage: "model", verdict: "pass", note: "modelRouted" } as const;
@@ -75,6 +75,9 @@ export interface BenchState {
   readonly route: BenchRoute | null;
   /** M1219 · who picked the lens. The UI must never call a visitor's click a model choice. */
   readonly chosenBy?: "visitor" | "model";
+  /** M1221 · the second shelf the model picked to test the first shelf's claim. */
+  readonly crossLens?: WitnessLens;
+  readonly crossVerdict?: "corroborated" | "contested";
   readonly status: BenchStage;
   readonly trace: readonly BenchTraceEntry[];
   readonly answer: string;
@@ -130,3 +133,46 @@ export const benchModelChose = (s: BenchState, lens: WitnessLens): BenchState =>
 export const benchModelRouteInvalid = (s: BenchState, answer: string): BenchState =>
   fsmRefused({ ...s, chosenBy: "model", answer }, answer,
     { stage: "model", verdict: "refused", note: "modelRouteInvalid" });
+
+// ── M1221 · cross-examination: a SECOND model-driven edge ────────────────────────────────
+// The first shelf's claim is not trusted because it sounds tidy. The model names a second
+// sealed shelf, and the ONE shared numeral law asks that shelf whether the claim still holds.
+// A second shelf that cannot carry the claim is a CONTESTED arm — the fold's words replace the
+// claim, so the visitor never reads an unsupported numeral just because one envelope allowed it.
+export interface CrossDirective extends BenchDirective {}
+
+/** FIRST-LINE ONLY, just like LENS:. A mention of CHECK: in prose is not a directive. */
+export function parseCrossDirective(text: string): CrossDirective | null {
+  const first = String(text ?? "").split(/\r?\n/, 1)[0].trim();
+  if (/^\[?ABSTAIN\]?\b/i.test(first)) return { lens: null, route: "abstain" };
+  const m = /^CHECK:(crown|chase|form)\b/i.exec(first);
+  if (!m) return null;
+  const lens = WITNESS_LENSES.find((candidate) => candidate === m[1].toLowerCase());
+  return lens ? { lens, route: "answer" } : null;
+}
+
+export const stripCrossDirective = (text: string): string =>
+  String(text ?? "").replace(/^\s*(\[?ABSTAIN\]?|CHECK:(?:crown|chase|form))\b[^\n]*\n?/i, "").trim();
+
+/** The model named the second shelf; a repeat of the first shelf is refused by the UI, not here. */
+export const benchCrossChose = (s: BenchState, lens: WitnessLens): BenchState =>
+  step({ ...s, crossLens: lens, chosenBy: "model" },
+    { stage: "model", verdict: "pass", note: "crossChoseLens" }, "precommit");
+
+/** The claim survived the second shelf: a committed cross-examination, still numeral-proved. */
+export const benchCrossCorroborated = (s: BenchState, answer: string): BenchState =>
+  step({ ...s, crossVerdict: "corroborated", answer },
+    { stage: "commit", verdict: "pass", note: "crossCorroborated" }, "commit");
+
+/** The second shelf could not carry the claim: the fold answers, and the badge says contested. */
+export const benchCrossContested = (s: BenchState, answer: string): BenchState =>
+  fsmRefused({ ...s, crossVerdict: "contested", answer }, answer,
+    { stage: "refused", verdict: "refused", note: "crossContested" });
+
+export const benchCrossRouteInvalid = (s: BenchState, answer: string): BenchState =>
+  fsmRefused({ ...s, chosenBy: "model", answer }, answer,
+    { stage: "model", verdict: "refused", note: "crossRouteInvalid" });
+
+export const benchCrossAbstained = (s: BenchState, answer: string): BenchState =>
+  fsmRefused({ ...s, crossVerdict: "contested", answer }, answer,
+    { stage: "refused", verdict: "refused", note: "crossAbstained" });
