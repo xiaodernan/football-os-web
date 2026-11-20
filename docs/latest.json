@@ -1,12 +1,12 @@
 {
-  "head": "0590208",
-  "total_commits": 1745,
-  "milestone": "M1222",
-  "milestone_full": "本提交落地后 M1222 The Replay Room",
-  "pwa_kb": 841,
-  "assets": 115,
-  "screens": 85,
-  "screens_label": "85+ screens",
+  "head": "157b515",
+  "total_commits": 1747,
+  "milestone": "M1224",
+  "milestone_full": "本提交落地后 M1224 The Long-Context Chronicler",
+  "pwa_kb": 848,
+  "assets": 117,
+  "screens": 86,
+  "screens_label": "86+ screens",
   "locales": 3,
   "feature_surface": [
     "The Chronicle — the epic fixture, AI-narrated",
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-20T02:58:34.689Z"
+  "generated_at": "2026-11-20T05:54:26.989Z"
 }
