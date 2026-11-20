@@ -1,9 +1,9 @@
 {
-  "head": "6b81023",
-  "total_commits": 1740,
-  "milestone": "M1219",
-  "milestone_full": "本提交落地后 M1219",
-  "pwa_kb": 836,
+  "head": "0590208",
+  "total_commits": 1745,
+  "milestone": "M1222",
+  "milestone_full": "本提交落地后 M1222 The Replay Room",
+  "pwa_kb": 841,
   "assets": 115,
   "screens": 85,
   "screens_label": "85+ screens",
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-19T23:18:53.114Z"
+  "generated_at": "2026-11-20T02:58:34.689Z"
 }
