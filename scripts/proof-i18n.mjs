@@ -574,7 +574,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
 // M1188: +1 domain/dispatch.ts (the one order the model names; the reader rides it on /ops).
-const APP_SRC_PIN = 222; // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const APP_SRC_PIN = 223; // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -667,7 +667,7 @@ const TSX_PIN = 115; // M1219: +1 features/wirediary/Cartographer.tsx. M1195: 11
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 225; // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const SRC_PIN = 226; // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -846,6 +846,11 @@ const DYN_SITES = [
   { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.dispatch.stage.", suffix: "" }, // M1188 The Dispatch: the named-order strip
   { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.dispatch.note.", suffix: "" }, // M1188 The Dispatch
   { path: "features/ops/Ops.tsx", expr: "v", prefix: "ops.dispatch.violation.", suffix: "" }, // M1188 The Dispatch // the refusal error names the dispatch violation code
+  { path: "features/ops/Ops.tsx", expr: "a.id", prefix: "ops.replay.anomaly.", suffix: "" }, // M1222 The Replay Room: the four anomaly cards
+  { path: "features/ops/Ops.tsx", expr: "replayChosen", prefix: "ops.replay.anomaly.", suffix: "" }, // M1222: the model-chosen anomaly label
+  { path: "features/ops/Ops.tsx", expr: "replayBadge", prefix: "ops.replay.badge.", suffix: "" }, // M1222: verified / folded / invalid / abstained
+  { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.replay.stage.", suffix: "" }, // M1222: the replay StateGraph trace strip
+  { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.replay.note.", suffix: "" }, // M1222: the replay transition notes
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
   { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
@@ -1103,6 +1108,13 @@ const SPACES = new Map([
   ["ops.dispatch.stage.|entry.stage", { name: "dispatch trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused", "done"] }],
   ["ops.dispatch.note.|entry.note", { name: "dispatch trace notes", values: ["dispatchOn", "ordersSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["ops.dispatch.violation.|v", { name: "dispatch violation codes", values: ["offEvidence", "prediction", "tooManyNumbers"] }],
+  // M1222 The Replay Room: the anomaly ids come from the domain table itself; the badge and trace
+  // spaces are the closed unions Ops.tsx and domain/replay.ts write down.
+  ["ops.replay.anomaly.|a.id", { name: "replay anomaly ids", values: spaceOf("domain/replay.ts", /export const REPLAY_ANOMALIES = \[[^\]]*\] as const/, quoted) }],
+  ["ops.replay.anomaly.|replayChosen", { name: "replay model-chosen anomalies", values: spaceOf("domain/replay.ts", /export const REPLAY_ANOMALIES = \[[^\]]*\] as const/, quoted) }],
+  ["ops.replay.badge.|replayBadge", { name: "replay verdict badges", values: ["verified", "folded", "invalid", "abstained"] }],
+  ["ops.replay.stage.|entry.stage", { name: "replay trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused", "done"] }],
+  ["ops.replay.note.|entry.note", { name: "replay trace notes", values: ["windowSealed", "modelChoseAnomaly", "anomalyInvalid", "modelAbstained", "commitOk", "precommitRefused", "foldOk"] }],
   // M1185 The Analyst: the admin reasoning strip, keyed off its own note/stage enums.
   ["ops.analyst.stage.|entry.stage", { name: "analyst trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["ops.analyst.note.|entry.note", { name: "analyst trace notes", values: ["analystOn", "evidenceSealed", "commitOk", "foldOk", "precommitRefused"] }],
@@ -3467,7 +3479,7 @@ ok(`the *Key scan is reading files that actually carry the fields (${keyFiles.si
 // M1194 The Gate Lane: the four FSM stage identifiers (preflight / build / model / precommit —
 // domain/tracedFsm.ts's own symbols) are shared with the existing English values of the same
 // names — named here, paid here: 161 -> 163.
-const DUP_VALUES_PIN = 163;
+const DUP_VALUES_PIN = 164; // M1222: the replay source labels reuse one short sentence in all three locales.
 // M947: the club rhythm's 4 keys per locale pay their toll (243 -> 245).
 // M970: the same "Pts" join pays its excess: 252 -> 254.
 // M1020: the same shared idiom join pays its excess: 254 -> 255.
@@ -3476,7 +3488,7 @@ const DUP_VALUES_PIN = 163;
 // M1175 The Wire Diary: one shared English excess key joins the ratchet; 263 -> 264.
 // M1194 The Gate Lane: the same shared FSM stage identifiers pay the excess end of the ratchet
 // too — three keys ride values the dictionaries already carry — 265 -> 268, paid as measured.
-const DUP_EXCESS_KEYS_PIN = 268;
+const DUP_EXCESS_KEYS_PIN = 271; // M1222: 33 replay keys × 3 locales, minus the three sentences shared on purpose.
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -4969,7 +4981,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1221 adds five literal call sites (cross ask, tested-against, corroborated/contested
   // badges and the second-lens label) and one more template site for the cross lens.
   // Measured on this tree: 3665 / 172.
-  shapeCounts.literal === 3665 && shapeCounts.template === 172 && shapeCounts.expression === 70
+  shapeCounts.literal === 3682 && shapeCounts.template === 177 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5150,7 +5162,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1188 The Dispatch: the dispatch badge rides the same door — 569 -> 570.
 // M1195 The Counselor: the localSoon branch hands over {n} on its literal key — 570 -> 571.
   // M1219: the model-chosen branch label hands {lens} at one more literal site — 576 -> 577.
-  litVarSites === 577 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1222: the replay fold answer ({m}, {s}) and the live model badge ({model}) hand their placeholders over.
+  litVarSites === 579 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.

@@ -144,7 +144,7 @@ export function foldPulse(rawVisits: readonly VisitRecord[], cohort: Cohort = "d
 }
 
 /** mulberry-ish LCG, one seeded generator for the whole cohort — no Math.random. */
-function lcg(seed: number) {
+export function lcg(seed: number) {
   let s = seed >>> 0;
   return () => {
     s = (Math.imul(s, 1664525) + 1013904223) >>> 0;
@@ -153,7 +153,7 @@ function lcg(seed: number) {
 }
 
 const DEEP_ROUTES = ["/football", "/dream-team", "/leaders", "/news", "/tomorrow", "/ai", "/records", "/legends", "/chronicle", "/scouting", "/dossiers", "/manual", "/academy"];
-const CONTINUATIONS: [string, number][] = [
+export const CONTINUATIONS: [string, number][] = [
   ["/football", 0.26], ["/dream-team", 0.10], ["/leaders", 0.10], ["/tomorrow", 0.09], ["/ai", 0.08],
   ["/news", 0.06], ["/scouting", 0.05], ["/records", 0.05], ["/manual", 0.05], ["/academy", 0.05], ["/onboarding", 0.05], ["/about", 0.06],
 ];

@@ -10,6 +10,12 @@
 import { useMemo, useState } from "react";
 import { useI18n, formatDate } from "@/i18n";
 import { PULSE_KEY, HIGH_BOUNCE_SHARE, syntheticCohort, foldPulse, type Cohort, type VisitRecord, type PulseFold } from "@/domain/pulse";
+import {
+  createReplay, replayAbstained, replayBuild, replayCommit, replayEnvelope,
+  replayFold, replayModelChose, replayModelRouteInvalid, replayPrecommit, replayPreflight,
+  replayRefused, verifyReplayText, parseReplayDirective, stripReplayDirective,
+  type ReplayAnomalyId, type ReplayBadge, type ReplayState, type ReplayTraceEntry,
+} from "@/domain/replay";
 import { fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
 import { foldPrescription, type Prescription } from "@/domain/prescription";
 import { browserStore, readJson } from "@/domain/localData";
@@ -48,6 +54,9 @@ import { foldTide, type TideReading } from "@/domain/tide";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
 
+// The model's envelope law lives with the screen, as on the other LLM doors; the domain stays data-only.
+const REPLAY_LAW = "Every figure below is tagged measured or simulated. Never swap the two. Answer in the visitor's language, at most 60 words, and use ONLY these figures.";
+
 const PASSCODE = "123"; // the shared demo passcode, deliberately public per the owner's instruction
 const MIN_DEVICE_VISITS = 3;
 
@@ -78,12 +87,23 @@ export function Ops() {
   const [dispatchViolations, setDispatchViolations] = useState<readonly DispatchViolation[] | null>(null);
   const [dispatchAnswer, setDispatchAnswer] = useState("");
   const [orderedRx, setOrderedRx] = useState<string | null>(null);
+  const [replayBusy, setReplayBusy] = useState(false);
+  const [replayTrace, setReplayTrace] = useState<readonly ReplayTraceEntry[] | null>(null);
+  const [replayAnswer, setReplayAnswer] = useState("");
+  const [replayBadge, setReplayBadge] = useState<ReplayBadge | null>(null);
+  const [replayChosen, setReplayChosen] = useState<ReplayAnomalyId | null>(null);
+  const [replayViolations, setReplayViolations] = useState<readonly string[] | null>(null);
 
   const deviceFold = useMemo(() => {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
     return foldPulse(held, "device");
   }, []);
   const seededFold = useMemo(() => foldPulse(syntheticCohort(), "seeded"), []);
+  // M1222 · a read-only replay of the last hour. This never writes the pulse ring.
+  const replay = useMemo(() => {
+    const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
+    return replayFold(held);
+  }, []);
   const useSeeded = cohort === "seeded" || deviceFold.visits < MIN_DEVICE_VISITS;
   const fold: PulseFold = useSeeded ? seededFold : deviceFold;
 
@@ -118,6 +138,58 @@ export function Ops() {
       </div>
     );
   }
+
+  // M1222 · the model chooses ONE anomaly from the replay envelope; every numeral it speaks
+  // must still be re-proved against that envelope before the graph commits.
+  const replayFoldText = (): string => t("ops.replay.foldAnswer", {
+    m: fmt1(replay.recorded.visits),
+    s: fmt1(replay.predicted.visits),
+  });
+
+  const askReplay = async () => {
+    if (replayBusy) return;
+    setReplayBusy(true);
+    setReplayTrace(null);
+    setReplayAnswer("");
+    setReplayBadge(null);
+    setReplayChosen(null);
+    setReplayViolations(null);
+    const fallback = replayFoldText();
+    const enter = (s: ReplayState, text: string, badge: ReplayBadge) => {
+      setReplayTrace(s.trace);
+      setReplayAnswer(text);
+      setReplayBadge(badge);
+      setReplayBusy(false);
+    };
+    const desk = replayBuild(replayPreflight(createReplay(locale), replay));
+    if (!LLM_CONFIG.hasKey) { enter(replayRefused(desk, fallback), fallback, "folded"); return; }
+
+    const envelope = replayEnvelope(replay, REPLAY_LAW);
+    const system = withWorldBook([
+      "You are the Replay Examiner of Football OS. Choose ONE anomaly worth investigating.",
+      "FIRST LINE: exactly ANOMALY:entryBounce, ANOMALY:deepExit, ANOMALY:loopDetour or ANOMALY:deadEnd. Or write ABSTAIN alone when the envelope cannot support a choice.",
+      "AFTER THAT: at most 60 words, in the visitor's language, naming the measured and simulated figures of the chosen anomaly. Keep the two provenances distinct. Do not invent a numeral, a cause or a future promise.",
+      "",
+      "REPLAY ENVELOPE:",
+      JSON.stringify(envelope, null, 2),
+    ].join("\n"));
+
+    const result = await callLlmStream(t("ops.replay.ask"), [], () => {}, { system });
+    if (!result.ok) { enter(replayRefused(desk, fallback), fallback, "folded"); return; }
+    const directive = parseReplayDirective(result.text);
+    if (!directive) { enter(replayModelRouteInvalid(desk, fallback), fallback, "invalid"); return; }
+    if (directive.route === "abstain" || directive.anomaly === null) {
+      enter(replayAbstained(desk, fallback), fallback, "abstained");
+      return;
+    }
+    const chosen = replayModelChose(desk, directive.anomaly);
+    setReplayChosen(directive.anomaly);
+    const prose = stripReplayDirective(result.text);
+    const found = verifyReplayText(prose, envelope);
+    if (found.length === 0) { enter(replayCommit(replayPrecommit(chosen, "pass"), prose), prose, "verified"); return; }
+    setReplayViolations(found);
+    enter(replayRefused(replayPrecommit(chosen, "refused"), fallback), fallback, "folded");
+  };
 
   const dwellSec = (ms: number) => Math.round(ms / 1000);
 
@@ -809,6 +881,72 @@ export function Ops() {
         ) : (
           <p className="mt-3 text-xs leading-relaxed text-muted-foreground">{t("ops.dispatch.via.local")}</p>
         )}
+      </Panel>
+
+      {/* M1222 · The Replay Room — measured device hour vs simulated continuation, never mixed */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.replay.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.replay.title")}</p>
+            <p className="mt-1 max-w-2xl text-[10px] leading-snug text-muted-foreground">{t("ops.replay.subtitle")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {replay.anomalies.map((a) => (
+            <div key={a.id} className="rounded-lg border p-2">
+              <div className="text-[10px] font-semibold text-foreground/90">{t(`ops.replay.anomaly.${a.id}`)}</div>
+              <div className="mt-1 flex flex-wrap gap-x-3 gap-y-1 font-mono text-[9px] uppercase tracking-widest">
+                <span title={t("ops.replay.source.measured")}>{t("ops.replay.source.measured")} · {fmt1(a.measured)}</span>
+                <span title={t("ops.replay.source.simulated")}>{t("ops.replay.source.simulated")} · {fmt1(a.simulated)}</span>
+              </div>
+            </div>
+          ))}
+        </div>
+        <button
+          type="button"
+          onClick={() => void askReplay()}
+          disabled={replayBusy}
+          className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
+        >
+          {replayBusy ? t("pressroom.answering") : t("ops.replay.ask")}
+        </button>
+        {replayAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{replayAnswer}</p>}
+        {replayBadge && (
+          <span className={cn("mt-2 inline-flex rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest",
+            replayBadge === "verified" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+            {t(`ops.replay.badge.${replayBadge}`)}
+          </span>
+        )}
+        {replayChosen && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            {t("ops.replay.chosen")} · {t(`ops.replay.anomaly.${replayChosen}`)}
+          </p>
+        )}
+        {replayViolations && replayViolations.length > 0 && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+            {t("ops.replay.violations")} · {replayViolations.join(" · ")}
+          </p>
+        )}
+        {replayTrace && (
+          <div className="mt-4 border-t border-border/60 pt-3">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.replay.trace.label")}</span>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {replayTrace.map((entry, index) => (
+                <span key={`${entry.stage}-${index}`} title={t(`ops.replay.note.${entry.note}`)}
+                  className={cn("rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                    entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+                  {t(`ops.replay.stage.${entry.stage}`)}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+        <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.replay.method")}</p>
       </Panel>
 
       {/* 14-day rhythm */}

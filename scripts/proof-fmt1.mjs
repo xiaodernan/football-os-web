@@ -61,7 +61,7 @@ const CONSUMERS = [
 const CALL_PINS = {
   "domain/compare.ts": 1, "domain/history.ts": 2, "domain/review.ts": 3,
   "features/film/FilmRoom.tsx": 1, "features/football/Details.tsx": 1, "features/player/PlayerOS.tsx": 1,
-  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 4, // M1182 did not engage the fmt1 door: the tide chip reads the one-decimal sibling signed1 instead (proof-signed pins it).
+  "features/scouting/ScoutingPanel.tsx": 5, "features/settings/SettingsPage.tsx": 1,  "features/ops/Ops.tsx": 8, // M1182 did not engage the fmt1 door: the tide chip reads the one-decimal sibling signed1 instead (proof-signed pins it). M1222 adds four literal calls — two in the replay fold answer, one each for the measured and simulated figure on every anomaly card.
   "features/journey/Journey.tsx": 2,
   "features/watchlist/WatchlistBoard.tsx": 1,
   // M1157 The Prescription: five literal door calls (bounce now/next, loop, bounceDoor, fatigue).
@@ -268,7 +268,7 @@ const homeCalls = count(codeOf(HOME), CALL_FMT1);
 const homeImports = count(src[HOME], IMPORT_FMT1);
 const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
 ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 28 && // M1182: 28 holds; the tide chip went through the one-decimal sibling, not the door.
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 32 && // M1182: 28 held; M1222 adds the Replay Room's four literal calls (two fold-answer figures, two provenance figures per anomaly card) — re-measured, not waived.
   homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
   treeCallers.length === CONSUMERS.length + 1);
 
