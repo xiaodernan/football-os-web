@@ -234,6 +234,8 @@ const expectedUsers = [
   "features/livewire/LiveWire.tsx",
   "features/load/LoadPage.tsx",
   "features/manager/ManagerOS.tsx", "features/manager/SquadPlanning.tsx", "features/onboarding/Onboarding.tsx",
+  // M1225 The Prescription Council: the undecided decision cell folds through the door.
+  "features/ops/Ops.tsx",
   "features/player/PlayerOS.tsx", "features/programme/Programme.tsx", "features/review/ReviewPage.tsx",
   "features/scouting/ScoutingPanel.tsx", "features/settings/SettingsPage.tsx",
   "features/sim/SimulationLab.tsx", "features/transfers/TransferCentre.tsx",
@@ -280,6 +282,8 @@ const expectedPerUser = [
   ["features/livewire/LiveWire.tsx", 5],
   ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
+  // M1225: the council's undecided decision cell uses the door once.
+  ["features/ops/Ops.tsx", 1],
   // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
   // they cannot fold — the census charges them the shared toll.
   // M1134: the streak line names each side and falls back to the door now too — 4 -> 6.

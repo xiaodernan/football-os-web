@@ -36,10 +36,9 @@ const replayM = await vite.ssrLoadModule("/domain/replay.ts");
 const rxM = await vite.ssrLoadModule("/domain/prescription.ts");
 const brief = await vite.ssrLoadModule("/data/llm.ts");
 
-const domainSrc = readFileSync(resolve(root, "domain/rxCouncil.ts"), "utf8");
 const ops = readFileSync(resolve(root, "features/ops/Ops.tsx"), "utf8");
 const LAW = "Write only numerals printed in the sealed replay envelope. Keep measured and simulated apart; never invent a figure, a cause, a route or a future promise.";
-ok("the witness uses the exact law shipped by the domain", domainSrc.includes(`export const RX_COUNCIL_LAW = "${LAW}"`));
+ok("the witness uses the exact law shipped by the panel", ops.includes(`const COUNCIL_LAW = "${LAW}"`));
 ok("the witness uses the exact first-line grammar shipped by the panel",
   ops.includes("FIRST LINE: exactly RX:<id>") && ops.includes("Or write ABSTAIN alone"));
 

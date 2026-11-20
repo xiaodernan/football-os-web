@@ -30,7 +30,7 @@ ok("the first line is taught verbatim: one offered RX:<id> or a bare ABSTAIN",
 ok("exactly one streamed call proposes from the same envelope; the keyless arm never fakes a rail",
   ((ops.split("const askCouncil = async () => {")[1] ?? "").split("\n  const decideCouncil")[0]
     .match(/callLlmStream\(/g) ?? []).length === 1 &&
-  /councilEnvelope\(replay, councilOfferings, RX_COUNCIL_LAW\)/.test(ops) &&
+  /councilEnvelope\(replay, councilOfferings, COUNCIL_LAW\)/.test(ops) &&
   /withWorldBook\(\[/.test(ops) && /LLM_CONFIG\.hasKey/.test(ops));
 ok("invalid proposals, abstentions and failed verification walk refused arms, never a silent commit",
   /councilProposalInvalid/.test(ops) && /councilAbstained/.test(ops) &&
@@ -80,7 +80,7 @@ try {
   ok("an unknown prescription id is dropped, never guessed into an anomaly",
     rx.offerPrescriptions([{ id: "rx.ghost", severity: "now", score: 1, vars: {} }]).length === 0);
 
-  const law = rx.RX_COUNCIL_LAW;
+  const law = /const COUNCIL_LAW = "([^"]+)"/.exec(ops)?.[1] ?? "";
   const env = rx.councilEnvelope(snap, offerings, law);
   const envText = JSON.stringify(env);
   ok("the council envelope IS the replay envelope plus the offered shelf",

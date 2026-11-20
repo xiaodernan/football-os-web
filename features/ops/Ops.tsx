@@ -16,14 +16,14 @@ import {
   replayRefused, verifyReplayText, parseReplayDirective, stripReplayDirective,
   type ReplayAnomalyId, type ReplayBadge, type ReplayState, type ReplayTraceEntry,
 } from "@/domain/replay";
-import { fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
+import { ABSENT, fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
 import { foldPrescription, type Prescription } from "@/domain/prescription";
 import {
-  RX_COUNCIL_LAW, RX_FORECAST_KEY, councilAbstained, councilAdopt, councilBuild, councilEnvelope,
+  RX_FORECAST_KEY, councilAbstained, councilAdopt, councilBuild, councilEnvelope,
   councilFold, councilFoldText, councilModelProposed, councilPreflight, councilProposalInvalid, councilProposalRefused, createCouncil,
   councilReject, councilVerified, forecastFrom, gradeForecast, offerPrescriptions,
   parseCouncilDirective, stripCouncilDirective,
-  type CouncilState, type CouncilTraceEntry, type RxForecast, type RxScore,
+  type CouncilState, type CouncilTraceEntry, type RxCouncilDecision, type RxForecast, type RxScore,
 } from "@/domain/rxCouncil";
 import { browserStore, readJson, writeJson } from "@/domain/localData";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
@@ -63,6 +63,7 @@ import { cn } from "@/lib/utils";
 
 // The model's envelope law lives with the screen, as on the other LLM doors; the domain stays data-only.
 const REPLAY_LAW = "Every figure below is tagged measured or simulated. Never swap the two. Answer in the visitor's language, at most 60 words, and use ONLY these figures.";
+const COUNCIL_LAW = "Write only numerals printed in the sealed replay envelope. Keep measured and simulated apart; never invent a figure, a cause, a route or a future promise.";
 
 const PASSCODE = "123"; // the shared demo passcode, deliberately public per the owner's instruction
 const MIN_DEVICE_VISITS = 3;
@@ -226,7 +227,7 @@ export function Ops() {
     setCouncilBadge(null);
     setCouncilViolations(null);
     const fallback = councilOfferings[0] ? councilFoldText(councilOfferings[0], t) : t("ops.rxCouncil.empty");
-    const enter = (desk: CouncilState, text: string, badge: "verified" | "folded" | "invalid" | "abstained") => {
+    const enter = (desk: CouncilState, text: string, badge: ReplayBadge) => {
       setCouncilDesk(desk);
       setCouncilTrace(desk.trace);
       setCouncilAnswer(text);
@@ -237,7 +238,7 @@ export function Ops() {
     if (desk.status === "refused") { enter(desk, fallback, "folded"); return; }
     if (!LLM_CONFIG.hasKey) { enter(councilFold(desk, fallback), fallback, "folded"); return; }
 
-    const envelope = councilEnvelope(replay, councilOfferings, RX_COUNCIL_LAW);
+    const envelope = councilEnvelope(replay, councilOfferings, COUNCIL_LAW);
     const system = withWorldBook([
       "You are the Prescription Council of Football OS. Propose ONE concrete next move for the operator.",
       "FIRST LINE: exactly RX:<id> using one of the offered ids below. Or write ABSTAIN alone when the envelope cannot support a move.",
@@ -269,7 +270,7 @@ export function Ops() {
     enter(councilVerified(proposed), prose, "verified");
   };
 
-  const decideCouncil = (decision: "adopt" | "reject") => {
+  const decideCouncil = (decision: RxCouncilDecision) => {
     const desk = councilDesk;
     if (!desk || desk.status !== "commit" || desk.decision !== null) return;
     const next = decision === "adopt" ? councilAdopt(desk, desk.answer) : councilReject(desk, desk.answer);
@@ -1125,7 +1126,7 @@ export function Ops() {
             <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
               {t("ops.rxCouncil.stategraph")} · {councilDesk?.status ?? t("ops.replay.stage.preflight")}
               {" · "}{t("ops.rxCouncil.forecastOk")}:{councilDesk?.forecastOk ? 1 : 0}
-              {" · "}{t("ops.rxCouncil.decision")}:{councilDesk?.decision ?? "—"}
+              {" · "}{t("ops.rxCouncil.decision")}:{councilDesk?.decision ?? ABSENT}
               {" · "}{councilDesk?.answer.length ?? 0}
             </p>
           </div>

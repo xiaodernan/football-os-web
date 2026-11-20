@@ -8,9 +8,8 @@ import type { Locale } from "@/i18n/dictionaries";
 import { step, fsmBuild, fsmCommit, fsmRefused, type FsmStage, type Verdict } from "@/domain/tracedFsm";
 import { replayEnvelope, type ReplayAnomalyId, type ReplaySnapshot } from "@/domain/replay";
 import { type Prescription, type RxSeverity } from "@/domain/prescription";
+import type { BenchRoute } from "@/domain/witnessBench";
 
-/** The law is printed inside the envelope, so a numeral may only come from that envelope. */
-export const RX_COUNCIL_LAW = "Write only numerals printed in the sealed replay envelope. Keep measured and simulated apart; never invent a figure, a cause, a route or a future promise.";
 /** The one read-only slot this door owns; the pulse ring itself is never written. */
 export const RX_FORECAST_KEY = "football-os.rxcouncil.forecast.v1";
 
@@ -67,7 +66,7 @@ export function councilEnvelope(snapshot: ReplaySnapshot, offerings: readonly Rx
 
 export interface CouncilDirective {
   readonly id: string | null;
-  readonly route: "answer" | "abstain";
+  readonly route: BenchRoute;
 }
 
 /** First line only: one of the OFFERED ids, or a bare ABSTAIN. A foreign id is not a route. */
