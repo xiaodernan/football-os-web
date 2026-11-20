@@ -1,0 +1,156 @@
+{
+  "milestone": "M1220",
+  "generatedAt": "2026-11-20T00:24:32.357Z",
+  "sessions": 16,
+  "wallMs": 17699,
+  "maxSessionMs": 13115,
+  "minSessionMs": 11468,
+  "allOk": true,
+  "transport": "POST /api/llm/chat fulfilled with 503 in every context — no live model call",
+  "rows": [
+    {
+      "session": 0,
+      "ms": 11784,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 1,
+      "ms": 12197,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 2,
+      "ms": 11468,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 3,
+      "ms": 12806,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 4,
+      "ms": 12124,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 5,
+      "ms": 12098,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 6,
+      "ms": 12166,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 7,
+      "ms": 13115,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 8,
+      "ms": 11941,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 9,
+      "ms": 11840,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 10,
+      "ms": 12062,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 11,
+      "ms": 11983,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 12,
+      "ms": 12121,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 13,
+      "ms": 12283,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 14,
+      "ms": 12081,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    },
+    {
+      "session": 15,
+      "ms": 12603,
+      "fold": true,
+      "badge": true,
+      "traceChips": 3,
+      "storageIntact": true,
+      "errors": []
+    }
+  ]
+}
