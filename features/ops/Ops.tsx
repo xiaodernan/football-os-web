@@ -16,9 +16,16 @@ import {
   replayRefused, verifyReplayText, parseReplayDirective, stripReplayDirective,
   type ReplayAnomalyId, type ReplayBadge, type ReplayState, type ReplayTraceEntry,
 } from "@/domain/replay";
-import { fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
+import { ABSENT, fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
 import { foldPrescription, type Prescription } from "@/domain/prescription";
-import { browserStore, readJson } from "@/domain/localData";
+import {
+  RX_FORECAST_KEY, councilAbstained, councilAdopt, councilBuild, councilEnvelope,
+  councilFold, councilFoldText, councilModelProposed, councilPreflight, councilProposalInvalid, councilProposalRefused, createCouncil,
+  councilReject, councilVerified, forecastFrom, gradeForecast, offerPrescriptions,
+  parseCouncilDirective, stripCouncilDirective,
+  type CouncilState, type CouncilTraceEntry, type RxCouncilDecision, type RxForecast, type RxScore,
+} from "@/domain/rxCouncil";
+import { browserStore, readJson, writeJson } from "@/domain/localData";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import {
   createConsult, consultBuild, consultCommit, consultPrecommit,
@@ -56,6 +63,7 @@ import { cn } from "@/lib/utils";
 
 // The model's envelope law lives with the screen, as on the other LLM doors; the domain stays data-only.
 const REPLAY_LAW = "Every figure below is tagged measured or simulated. Never swap the two. Answer in the visitor's language, at most 60 words, and use ONLY these figures.";
+const COUNCIL_LAW = "Write only numerals printed in the sealed replay envelope. Keep measured and simulated apart; never invent a figure, a cause, a route or a future promise.";
 
 const PASSCODE = "123"; // the shared demo passcode, deliberately public per the owner's instruction
 const MIN_DEVICE_VISITS = 3;
@@ -93,6 +101,13 @@ export function Ops() {
   const [replayBadge, setReplayBadge] = useState<ReplayBadge | null>(null);
   const [replayChosen, setReplayChosen] = useState<ReplayAnomalyId | null>(null);
   const [replayViolations, setReplayViolations] = useState<readonly string[] | null>(null);
+  // M1225 · the model proposes one prescription from the replay envelope; the operator decides.
+  const [councilBusy, setCouncilBusy] = useState(false);
+  const [councilDesk, setCouncilDesk] = useState<CouncilState | null>(null);
+  const [councilTrace, setCouncilTrace] = useState<readonly CouncilTraceEntry[] | null>(null);
+  const [councilAnswer, setCouncilAnswer] = useState("");
+  const [councilBadge, setCouncilBadge] = useState<"verified" | "folded" | "invalid" | "abstained" | "adopted" | "rejected" | null>(null);
+  const [councilViolations, setCouncilViolations] = useState<readonly string[] | null>(null);
 
   const deviceFold = useMemo(() => {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
@@ -104,6 +119,12 @@ export function Ops() {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
     return replayFold(held);
   }, []);
+  // M1225 · a stored forecast is graded only when a LATER window has actually been measured.
+  const councilForecast = useMemo<RxForecast | null>(
+    () => readJson<RxForecast | null>(browserStore(), RX_FORECAST_KEY, null).value, []);
+  const councilScore = useMemo<RxScore | null>(
+    () => councilForecast && councilForecast.at < replay.windowEnd
+      ? gradeForecast(councilForecast, replay) : null, [councilForecast, replay]);
   const useSeeded = cohort === "seeded" || deviceFold.visits < MIN_DEVICE_VISITS;
   const fold: PulseFold = useSeeded ? seededFold : deviceFold;
 
@@ -192,6 +213,74 @@ export function Ops() {
   };
 
   const dwellSec = (ms: number) => Math.round(ms / 1000);
+
+  // M1225 · one call proposes ONE fold prescription from the SAME sealed replay envelope.
+  // The proposal is never adopted automatically: the operator must press adopt or reject, and
+  // each press writes a new edge into the same traced graph.
+  const councilOfferings = offerPrescriptions(foldPrescription(replay.recorded));
+
+  const askCouncil = async () => {
+    if (councilBusy) return;
+    setCouncilBusy(true);
+    setCouncilTrace(null);
+    setCouncilAnswer("");
+    setCouncilBadge(null);
+    setCouncilViolations(null);
+    const fallback = councilOfferings[0] ? councilFoldText(councilOfferings[0], t) : t("ops.rxCouncil.empty");
+    const enter = (desk: CouncilState, text: string, badge: ReplayBadge) => {
+      setCouncilDesk(desk);
+      setCouncilTrace(desk.trace);
+      setCouncilAnswer(text);
+      setCouncilBadge(badge);
+      setCouncilBusy(false);
+    };
+    const desk = councilBuild(councilPreflight(createCouncil(locale), councilOfferings));
+    if (desk.status === "refused") { enter(desk, fallback, "folded"); return; }
+    if (!LLM_CONFIG.hasKey) { enter(councilFold(desk, fallback), fallback, "folded"); return; }
+
+    const envelope = councilEnvelope(replay, councilOfferings, COUNCIL_LAW);
+    const system = withWorldBook([
+      "You are the Prescription Council of Football OS. Propose ONE concrete next move for the operator.",
+      "FIRST LINE: exactly RX:<id> using one of the offered ids below. Or write ABSTAIN alone when the envelope cannot support a move.",
+      "AFTER THAT: at most 70 words, in the visitor's language, naming the measured or simulated figure that justifies this one move. Keep the two provenances distinct. Do not invent a numeral, a cause or a future promise.",
+      "",
+      "OFFERED PRESCRIPTIONS:",
+      JSON.stringify(councilOfferings.map((o) => ({ id: o.id, severity: o.severity, anomaly: o.anomaly, score: o.score, vars: o.vars })), null, 2),
+      "",
+      "REPLAY ENVELOPE:",
+      JSON.stringify(envelope, null, 2),
+    ].join("\n"));
+
+    const result = await callLlmStream(t("ops.rxCouncil.ask"), [], () => {}, { system });
+    if (!result.ok) { enter(councilFold(desk, fallback), fallback, "folded"); return; }
+    const directive = parseCouncilDirective(result.text, councilOfferings);
+    if (!directive) { enter(councilProposalInvalid(desk, fallback), fallback, "invalid"); return; }
+    if (directive.route === "abstain" || directive.id === null) {
+      enter(councilAbstained(desk, fallback), fallback, "abstained");
+      return;
+    }
+    const proposed = councilModelProposed(desk, directive.id);
+    const prose = stripCouncilDirective(result.text);
+    const found = verifyReplayText(prose, envelope);
+    if (found.length > 0) {
+      setCouncilViolations(found);
+      enter(councilProposalRefused(proposed, fallback), fallback, "folded");
+      return;
+    }
+    enter(councilVerified(proposed), prose, "verified");
+  };
+
+  const decideCouncil = (decision: RxCouncilDecision) => {
+    const desk = councilDesk;
+    if (!desk || desk.status !== "commit" || desk.decision !== null) return;
+    const next = decision === "adopt" ? councilAdopt(desk, desk.answer) : councilReject(desk, desk.answer);
+    setCouncilDesk(next);
+    setCouncilTrace(next.trace);
+    setCouncilBadge(decision === "adopt" ? "adopted" : "rejected");
+    const offering = councilOfferings.find((o) => o.id === desk.proposalId);
+    writeJson(browserStore(), RX_FORECAST_KEY,
+      decision === "adopt" && offering ? forecastFrom(replay, offering, locale) : null);
+  };
 
   // The forecast, the fold and the projection are the same pulse — one pass, no new data invented.
   const tide: TideReading = foldTide(fold);
@@ -947,6 +1036,102 @@ export function Ops() {
           </div>
         )}
         <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.replay.method")}</p>
+      </Panel>
+
+      {/* M1225 · The Prescription Council — a model proposal, an explicit human edge, a graded forecast */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.rxCouncil.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.rxCouncil.title")}</p>
+            <p className="mt-1 max-w-2xl text-[10px] leading-snug text-muted-foreground">{t("ops.rxCouncil.subtitle")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        <div className="mt-3 flex flex-wrap gap-1">
+          {councilOfferings.map((o) => (
+            <span key={o.id} className="rounded-md border border-border/60 bg-muted/30 px-2 py-1 font-mono text-[9px] uppercase tracking-widest">
+              {o.id} · {t(`ops.rx.severity.${o.severity}`)} · {t(`ops.replay.anomaly.${o.anomaly}`)}
+            </span>
+          ))}
+          {councilOfferings.length === 0 && <span className="text-[10px] text-muted-foreground">{t("ops.rxCouncil.empty")}</span>}
+        </div>
+        <button
+          type="button"
+          onClick={() => void askCouncil()}
+          disabled={councilBusy || councilOfferings.length === 0}
+          className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
+        >
+          {councilBusy ? t("pressroom.answering") : t("ops.rxCouncil.ask")}
+        </button>
+        {councilAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{councilAnswer}</p>}
+        {councilBadge && (
+          <span className={cn("mt-2 inline-flex rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest",
+            councilBadge === "verified" || councilBadge === "adopted" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+            {t(`ops.rxCouncil.badge.${councilBadge}`)}
+          </span>
+        )}
+        {councilDesk?.proposalId && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            {t("ops.rxCouncil.proposed")} · {councilDesk.proposalId} · {councilDesk.locale}
+          </p>
+        )}
+        {councilViolations && councilViolations.length > 0 && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-warning">
+            {t("ops.rxCouncil.violations")} · {councilViolations.join(" · ")}
+          </p>
+        )}
+        {councilDesk?.status === "commit" && councilDesk.decision === null && (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <button type="button" onClick={() => decideCouncil("adopt")}
+              className="fo-lift rounded-lg border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted">
+              {t("ops.rxCouncil.adopt")}
+            </button>
+            <button type="button" onClick={() => decideCouncil("reject")}
+              className="fo-lift rounded-lg border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted">
+              {t("ops.rxCouncil.reject")}
+            </button>
+          </div>
+        )}
+        {councilDesk?.decision && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            {t("ops.rxCouncil.decision")} · {t(`ops.rxCouncil.badge.${councilDesk.decision}`)}
+          </p>
+        )}
+        {councilForecast && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+            {t("ops.rxCouncil.forecast")} · {t(`ops.replay.anomaly.${councilForecast.anomaly}`)} · {councilForecast.predicted} · {councilForecast.rxId} · {councilForecast.at} · {councilForecast.locale}
+          </p>
+        )}
+        {councilScore && (
+          <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-foreground/90">
+            {t("ops.rxCouncil.score")} · {t(`ops.replay.anomaly.${councilScore.anomaly}`)} · {councilScore.forecast} → {councilScore.actual} · {councilScore.delta} · {t(`ops.rxCouncil.score.${councilScore.verdict}`)}
+          </p>
+        )}
+        {councilTrace && (
+          <div className="mt-4 border-t border-border/60 pt-3">
+            <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.rxCouncil.trace.label")}</span>
+            <div className="mt-1 flex flex-wrap gap-1">
+              {councilTrace.map((entry, index) => (
+                <span key={`${entry.stage}-${index}`} title={t(`ops.rxCouncil.note.${entry.note}`)}
+                  className={cn("rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                    entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+                  {t(`ops.replay.stage.${entry.stage}`)}
+                </span>
+              ))}
+            </div>
+            <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+              {t("ops.rxCouncil.stategraph")} · {councilDesk?.status ?? t("ops.replay.stage.preflight")}
+              {" · "}{t("ops.rxCouncil.forecastOk")}:{councilDesk?.forecastOk ? 1 : 0}
+              {" · "}{t("ops.rxCouncil.decision")}:{councilDesk?.decision ?? ABSENT}
+              {" · "}{councilDesk?.answer.length ?? 0}
+            </p>
+          </div>
+        )}
+        <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.rxCouncil.method")}</p>
       </Panel>
 
       {/* 14-day rhythm */}
