@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useI18n } from "@/i18n";
 import { Panel, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { cn } from "@/lib/utils";
+import { unique } from "@/domain/attributes";
 import { LLM_CONFIG, callLlmStream, withWorldBook } from "@/data/llm";
 import {
   benchAbstained,
@@ -193,7 +194,7 @@ export function Cartographer() {
       finish(benchCrossCorroborated(chosen, secondProse), secondProse, "corroborated");
       return;
     }
-    setViolations([...new Set([...secondViolations, ...claimViolations])]);
+    setViolations(unique([...secondViolations, ...claimViolations]));
     finish(benchCrossContested(chosen, crossFold(other)), crossFold(other), "contested");
   };
 

@@ -24,7 +24,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 
 let pass = 0, fail = 0;
-const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
+const ok = (name, cond, detail = "") => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name + (detail ? " — " + detail : "")); } };
 
 const KEYWORDS = new Set([
   "const", "let", "var", "return", "if", "else", "for", "of", "in", "new", "typeof", "as",
@@ -237,7 +237,19 @@ for (let i = 0; i < allUnits.length; i++) {
     if (sameRule(allUnits[i].tk, allUnits[j].tk)) sameFilePairs.push([allUnits[i], allUnits[j]]);
   }
 }
-const SAME_FILE_SPLITS = {};
+// M1221's cross-examination edge deliberately mirrors the first edge's grammar: LENS and CHECK
+// name different graph edges and different shelves, so the shared parser/stripper/route-guard
+// SHAPE is two contracts, not one copied rule. Declare them here instead of hiding the finding.
+const SAME_FILE_SPLITS = {
+  "domain/witnessBench.ts:parseBenchDirective|domain/witnessBench.ts:parseCrossDirective":
+    "the LENS and CHECK first-line grammars share one shape but name two different StateGraph edges, each pinned by its own proof clause",
+  "domain/witnessBench.ts:stripBenchDirective|domain/witnessBench.ts:stripCrossDirective":
+    "the first-line stripper is deliberately shared in shape across the two directives; the envelopes it verifies stay separate",
+  "domain/witnessBench.ts:benchModelRouteInvalid|domain/witnessBench.ts:benchCrossRouteInvalid":
+    "an invalid LENS and an invalid CHECK both refuse the graph with one voice; the traces name different edges",
+  "domain/witnessBench.ts:benchCrossContested|domain/witnessBench.ts:benchCrossAbstained":
+    "a contested shelf and an abstaining model both refuse the commit with one traced voice; the notes name different arms",
+};
 const sfUndeclared = sameFilePairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)
   .filter((k) => !(k in SAME_FILE_SPLITS));
