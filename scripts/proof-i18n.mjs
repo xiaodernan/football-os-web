@@ -574,7 +574,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
 // M1188: +1 domain/dispatch.ts (the one order the model names; the reader rides it on /ops).
-const APP_SRC_PIN = 223; // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const APP_SRC_PIN = 225; // M1224 The Long-Context Chronicler: 223 -> 225 — domain/chronicler.ts + features/chronicle/LongChronicler.tsx join the reader. // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -612,7 +612,7 @@ const APP_SRC_PIN = 223; // M1222 The Replay Room: 222 -> 223 — domain/replay.
 // M1169 The Grand Dispatch: +1 TSX.
 // M1173 The Golden Hour: +1 TSX (GoldenHour.tsx).
 // M1175 The Wire Diary: +1 TSX (WireDiary.tsx).
-const TSX_PIN = 115; // M1219: +1 features/wirediary/Cartographer.tsx. M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk. · M1199 The Frozen Dispatch: 111 -> 112 — features/wirediary/FrozenDispatch.tsx joins the .tsx walk. · M1201 The Frozen Diary: 112 -> 113 — features/wirediary/FrozenDiary.tsx joins the .tsx walk.
+const TSX_PIN = 116; // M1224: +1 features/chronicle/LongChronicler.tsx. M1219: +1 features/wirediary/Cartographer.tsx. M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk. · M1199 The Frozen Dispatch: 111 -> 112 — features/wirediary/FrozenDispatch.tsx joins the .tsx walk. · M1201 The Frozen Diary: 112 -> 113 — features/wirediary/FrozenDiary.tsx joins the .tsx walk.
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -667,7 +667,7 @@ const TSX_PIN = 115; // M1219: +1 features/wirediary/Cartographer.tsx. M1195: 11
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 226; // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const SRC_PIN = 228; // M1224 The Long-Context Chronicler: 226 -> 228 — the chronicler's domain + screen join the dictionary-table reader. // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -1047,6 +1047,11 @@ DYN_SITES.push(
   // five bands, one word each locale, hint row beside.
   { path: "features/chalkboard/Chalkboard.tsx", expr: "band", prefix: "chalkboard.rank.", suffix: "" },
   { path: "features/chalkboard/Chalkboard.tsx", expr: "band", prefix: "chalkboard.rank.hint.", suffix: "" },
+  // M1224 The Long-Context Chronicler: door 15's own violation codes and its trace strip. The
+  // stage/note prefixes are shared with the World Desk and the manual — one site, one space.
+  { path: "features/chronicle/LongChronicler.tsx", expr: "v", prefix: "chronicler.violation.", suffix: "" },
+  { path: "features/chronicle/LongChronicler.tsx", expr: "entry.note", prefix: "library.door.note.", suffix: "" },
+  { path: "features/chronicle/LongChronicler.tsx", expr: "entry.stage", prefix: "manual.librarian.stage.", suffix: "" },
 
 );
 
@@ -1077,11 +1082,15 @@ const SPACES = new Map([
   ["ops.tide.direction.|tide.cls", { name: "tide directions", values: ["rising", "steady", "falling"] }],
   ["ops.tide.recommendation.|tide.cls", { name: "tide recommendations", values: ["rising", "steady", "falling"] }],
   // M1181 The Librarian: the manual asks about itself — title opens the matched chapter; keywordKey lists the tokens the librarian scored.
-  ["manual.librarian.stage.|entry.stage", { name: "librarian trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused"] }],
+  // M1224: the chronicler adds its two verifier stages to the same trace-chip space.
+  ["manual.librarian.stage.|entry.stage", { name: "librarian trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused", "structure", "numerals"] }],
+  ["chronicler.violation.|v", { name: "chronicler verifier codes", values: ["missingSection", "wrongOrder", "emptySection", "tooLong"] }],
   ["manual.librarian.note.|entry.note", { name: "librarian trace notes", values: ["bookInHand", "indexSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["manual.librarian.violation.|v", { name: "librarian violation codes", values: ["offBook", "prediction"] }],
   // M1197 The World Desk: the world asks itself — the desk's own note/violation census, read from domain/worldLibrarian.ts's WorldNote and WorldViolation.
-  ["library.door.note.|entry.note", { name: "world desk trace notes", values: ["shelvesInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused", "modelRouted", "modelAbstained", "abstainFold", "modelChoseLens", "modelRouteInvalid", "crossChoseLens", "crossCorroborated", "crossContested", "crossRouteInvalid", "crossAbstained"] }],
+  // M1224: door 15's notes join the same seal/verifier note space — the panel reads them through
+  // the world-desk prefix, so one space covers both doors rather than a second hand copy.
+  ["library.door.note.|entry.note", { name: "world desk trace notes", values: ["shelvesInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused", "modelRouted", "modelAbstained", "abstainFold", "modelChoseLens", "modelRouteInvalid", "crossChoseLens", "crossCorroborated", "crossContested", "crossRouteInvalid", "crossAbstained", "tapeSealed", "chapterChose", "directiveInvalid", "structurePassed", "structureRefused", "numeralsPassed", "numeralsRefused"] }],
   ["library.door.violation.|v", { name: "world desk violation codes", values: ["offCorpus", "prediction"] }],
   // M1199 The Frozen Dispatch: the frozen century asks itself — lenses and violations, read off domain/frozenDispatch.ts.
   ["frozenDispatch.ask.|id", { name: "frozen lens buttons", values: ["summit", "chase", "runIn"] }],
@@ -4981,7 +4990,10 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // M1221 adds five literal call sites (cross ask, tested-against, corroborated/contested
   // badges and the second-lens label) and one more template site for the cross lens.
   // Measured on this tree: 3665 / 172.
-  shapeCounts.literal === 3682 && shapeCounts.template === 177 && shapeCounts.expression === 70
+  // M1224: door 15 adds 29 literal and 3 template t() sites (fold sentences, verifier badges,
+  // trace labels). The state-seal line reads the three FSM proof flags through three more literal
+  // keys. Measured on this tree: 3714 / 180.
+  shapeCounts.literal === 3714 && shapeCounts.template === 180 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5163,7 +5175,9 @@ ok(`every call that names its keys in front of check 24's regex still hands over
 // M1195 The Counselor: the localSoon branch hands over {n} on its literal key — 570 -> 571.
   // M1219: the model-chosen branch label hands {lens} at one more literal site — 576 -> 577.
   // M1222: the replay fold answer ({m}, {s}) and the live model badge ({model}) hand their placeholders over.
-  litVarSites === 579 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1224: the three fold sentences, the model badge and the picked-fixture line hand their
+  // placeholders over — four more sites, 579 -> 583, measured on this tree.
+  litVarSites === 583 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
@@ -5412,7 +5426,7 @@ const stVarSites = [...appSrc].flatMap(([p2, code]) => [...code.matchAll(ST_T_CA
   .map((m) => [p2, (m[1].match(/status:\s*([^,}]*)/) ?? [])[1]?.trim()])
   .filter(([, v]) => v !== undefined));
 const stVarBad = stVarSites.filter(([, v]) => !v.startsWith("matchStatusLabel(")).map(([p2, v]) => `${p2} :: status: ${v}`);
-const ST_VAR_PIN = 2;
+const ST_VAR_PIN = 3; // M1224: the chronicler's fold line resolves the sealed fixture's status through matchStatusLabel before handing it to t() — the third lawful site.
 const ST_ROW_SITES = [...appSrc].filter(([, c]) => /vars:\s*\{[^}]*\bstatus:/.test(c)).map(([p]) => p);
 const ST_PLANT_VAR = 't("fw.matches.hint", { n: rows.length, status: tab })';
 const stVarOf = (code) => (code.match(new RegExp(ST_T_CALL.source)) ?? [, ""])[1];

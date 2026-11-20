@@ -49,6 +49,7 @@ export function Manual() {
     { to: "/legends", label: t("nav.legends") },
     { to: "/records", label: t("nav.records") },
     { to: "/chronicle", label: t("nav.chronicle") },
+    { to: "/chronicler", label: t("nav.chronicler") },
     { to: "/tomorrow", label: t("nav.tomorrow") },
     { to: "/moonshots", label: t("nav.moonshots") },
     { to: "/atlas", label: t("nav.atlas") },

@@ -115,6 +115,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/leaders", label: t("nav.leaders"), icon: I.trophy, match: ["/leaders"] },
   { to: "/legends", label: t("nav.legends"), icon: I.trophy, match: ["/legends"] },
   { to: "/chronicle", label: t("nav.chronicle"), icon: I.book, match: ["/chronicle"] },
+  { to: "/chronicler", label: t("nav.chronicler"), icon: I.book, match: ["/chronicler"] },
   { to: "/atlas", label: t("nav.atlas"), icon: I.globe, match: ["/atlas"] },
   { to: "/derby-codex", label: t("nav.derby"), icon: I.globe, match: ["/derby-codex"] },
   { to: "/prophet", label: t("nav.prophet"), icon: I.chart, match: ["/prophet"] },

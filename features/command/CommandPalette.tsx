@@ -86,6 +86,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       { id: "season-room", label: t("nav.seasonRoom"), group: "goto", run: nav("/season-room") },
       { id: "legends", label: t("nav.legends"), group: "goto", run: nav("/legends") },
       { id: "chronicle", label: t("nav.chronicle"), group: "goto", run: nav("/chronicle") },
+      { id: "chronicler", label: t("nav.chronicler"), group: "goto", run: nav("/chronicler") },
       { id: "atlas", label: t("nav.atlas"), group: "goto", run: nav("/atlas") },
       { id: "derby-codex", label: t("nav.derby"), group: "goto", run: nav("/derby-codex") },
       { id: "prophet", label: t("nav.prophet"), group: "goto", run: nav("/prophet") },

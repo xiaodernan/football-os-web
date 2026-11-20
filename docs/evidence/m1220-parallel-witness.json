@@ -1,16 +1,16 @@
 {
   "milestone": "M1220",
-  "generatedAt": "2026-11-20T00:24:32.357Z",
+  "generatedAt": "2026-11-20T05:46:54.551Z",
   "sessions": 16,
-  "wallMs": 17699,
-  "maxSessionMs": 13115,
-  "minSessionMs": 11468,
+  "wallMs": 11315,
+  "maxSessionMs": 8434,
+  "minSessionMs": 7178,
   "allOk": true,
   "transport": "POST /api/llm/chat fulfilled with 503 in every context — no live model call",
   "rows": [
     {
       "session": 0,
-      "ms": 11784,
+      "ms": 7534,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -19,7 +19,7 @@
     },
     {
       "session": 1,
-      "ms": 12197,
+      "ms": 8374,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -28,7 +28,7 @@
     },
     {
       "session": 2,
-      "ms": 11468,
+      "ms": 7658,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -37,7 +37,7 @@
     },
     {
       "session": 3,
-      "ms": 12806,
+      "ms": 7767,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -46,7 +46,7 @@
     },
     {
       "session": 4,
-      "ms": 12124,
+      "ms": 7719,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -55,7 +55,7 @@
     },
     {
       "session": 5,
-      "ms": 12098,
+      "ms": 7916,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -64,7 +64,7 @@
     },
     {
       "session": 6,
-      "ms": 12166,
+      "ms": 7827,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -73,7 +73,7 @@
     },
     {
       "session": 7,
-      "ms": 13115,
+      "ms": 7734,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -82,7 +82,7 @@
     },
     {
       "session": 8,
-      "ms": 11941,
+      "ms": 8434,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -91,7 +91,7 @@
     },
     {
       "session": 9,
-      "ms": 11840,
+      "ms": 7714,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -100,7 +100,7 @@
     },
     {
       "session": 10,
-      "ms": 12062,
+      "ms": 7771,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -109,7 +109,7 @@
     },
     {
       "session": 11,
-      "ms": 11983,
+      "ms": 7256,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -118,7 +118,7 @@
     },
     {
       "session": 12,
-      "ms": 12121,
+      "ms": 7561,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -127,7 +127,7 @@
     },
     {
       "session": 13,
-      "ms": 12283,
+      "ms": 7253,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -136,7 +136,7 @@
     },
     {
       "session": 14,
-      "ms": 12081,
+      "ms": 7178,
       "fold": true,
       "badge": true,
       "traceChips": 3,
@@ -145,7 +145,7 @@
     },
     {
       "session": 15,
-      "ms": 12603,
+      "ms": 7521,
       "fold": true,
       "badge": true,
       "traceChips": 3,

@@ -210,6 +210,10 @@ const LOCAL_SPLITS = {
     "one fold-summary rule shared by the model-chosen door and the witness door: both read benchEnvelope(lens) and print the same sealed lines",
   "features/wirediary/Cartographer.tsx:folded|features/wirediary/WitnessBench.tsx:foldFallback":
     "the same fold answer is spelled on both doors; the intro is the one translated line and the numerals still come from the frozen envelope",
+  // M1224: two separate screens land their own traced FSM state into their own React panel; the
+  // five setState calls are the shared terminal shape, not a shared rule between two doors.
+  "features/chronicle/LongChronicler.tsx:enter|features/wirediary/Cartographer.tsx:enter":
+    "each imprisoned door commits its own typed state into its own screen; the five setters are the framework's terminal shape, and the two FSMs and panels remain distinct",
 };
 const localUndeclared = localPairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)
@@ -249,6 +253,14 @@ const SAME_FILE_SPLITS = {
     "an invalid LENS and an invalid CHECK both refuse the graph with one voice; the traces name different edges",
   "domain/witnessBench.ts:benchCrossContested|domain/witnessBench.ts:benchCrossAbstained":
     "a contested shelf and an abstaining model both refuse the commit with one traced voice; the notes name different arms",
+  // M1224: door 15's two model-side refusal edges and two verifier-side refusal edges share a
+  // traced voice on purpose; the stage and note of each edge are pinned separately by proof-chronicler.
+  "domain/chronicler.ts:chapterDirectiveInvalid|domain/chronicler.ts:chapterAbstained":
+    "a bad CHAPTER directive and a model ABSTAIN both clear the fixture and refuse with one traced voice; the notes name different edges",
+  "domain/chronicler.ts:chapterStructureRefused|domain/chronicler.ts:chapterNumeralsRefused":
+    "both verifier stages refuse through the same traced FSM helper; the structure and numerals stages are separate transitions with their own notes",
+  "domain/chronicler.ts:chapterStructurePassed|domain/chronicler.ts:chapterNumeralsPassed":
+    "both verifier stages mark their own proof flag in state before advancing; the flags are consumed by different stages and are pinned separately",
 };
 const sfUndeclared = sameFilePairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)
