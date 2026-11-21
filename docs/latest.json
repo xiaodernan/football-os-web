@@ -1,8 +1,8 @@
 {
-  "head": "ca1d61c",
-  "total_commits": 1757,
-  "milestone": "M1226",
-  "milestone_full": "本提交落地后 M1226 The Forecast Ombudsman — the model audits its own recorded forecast against a later measured hour",
+  "head": "95772dd",
+  "total_commits": 1759,
+  "milestone": "M1227",
+  "milestone_full": "本提交落地后 M1227 The Wheel-Direction Gate — a regression proof that native scroll direction is preserved",
   "pwa_kb": 855,
   "assets": 117,
   "screens": 86,
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-21T13:09:50.597Z"
+  "generated_at": "2026-11-21T13:54:25.501Z"
 }
