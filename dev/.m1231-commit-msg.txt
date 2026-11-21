@@ -1,0 +1,31 @@
+M1231 The Keepers' Union: the world's goalkeepers, named
+
+Every board on the leaders screen ranks what clubs and outfield players did;
+none named who stood between the posts for the best defensive record. This
+lands /keepers: each club's number one, with the club's own clean-sheet record
+beside him.
+
+- domain/keepers.ts (new, pure): one keeper per club — its highest-rated
+  goalkeeper, with a total-order comparator (overall, then potential, then id)
+  so equal keepers never reorder between runs. The clean-sheet numbers are NOT
+  a second sweep of the fixtures: they are read from the shared leagueWall
+  fold the leaders' wall board prints, so the two screens cannot disagree
+  about a sheet. The best wall is a record, not a rating: a club that has
+  never kept a sheet has no wall to be best of. Empty, keeperless and
+  sheet-less worlds read empty values, not crashes.
+- features/keepers/KeepersUnion.tsx (new screen): three tiles (best keeper,
+  best wall, the count), the board of number ones with crest, club, overall,
+  the club's "p played · c clean · r%" line and a rate bar, and the honest
+  method line naming what the sheets are and who the keeper is.
+- scripts/proof-keepers.mjs (new, 8/8): a hand-counted world (A 2/2 @ 100%,
+  B 1/2 @ 50%, C takes no row), the shared-wall equality field by field, the
+  ordering and both headline reads, the three empty boundaries, and the
+  tie-break total order; the screen's keys are trilingual with agreeing
+  placeholders and the route is mounted.
+- Gates: proof-i18n 453/453 (literal 3776->3792, litVar 589->593, APP_SRC
+  230->232, TSX 118->119, SRC 233->235), proof-storage 63/63 (226->228 — both
+  new files ride the eight-directory scope), proof-coverage 26/26 (POP
+  234->236, deep 109->110), proof-app-tree 13/13 (233->235), proof-router
+  29/29 (223->225), proof-screens 32/32, proof-pwa 4/4 (bundle 863->865 KB,
+  baseline re-recorded); tsc clean, build exit 0. E2E keepers 1/1 and
+  all-routes 95/95 with the new route in the net.

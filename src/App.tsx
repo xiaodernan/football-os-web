@@ -77,6 +77,8 @@ const Discipline = lazy(() => import("@/features/analytics/Discipline").then((m)
 const EventClock = lazy(() => import("@/features/analytics/EventClock").then((m) => ({ default: m.EventClock })));
 const LeadRetention = lazy(() => import("@/features/analytics/LeadRetention").then((m) => ({ default: m.LeadRetention })));
 const Streaks = lazy(() => import("@/features/analytics/Streaks").then((m) => ({ default: m.Streaks })));
+// M1231: the keepers' union — the world's goalkeepers, named.
+const KeepersUnion = lazy(() => import("@/features/keepers/KeepersUnion").then((m) => ({ default: m.KeepersUnion })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) => ({ default: m.LeagueRules })));
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
@@ -249,6 +251,7 @@ function Routes() {
   else if (path === "/clock") inner = <EventClock />;
   else if (path === "/leads") inner = <LeadRetention />;
   else if (path === "/streaks") inner = <Streaks />;
+  else if (path === "/keepers") inner = <KeepersUnion />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
   else if (path === "/messaging") inner = <QueueObservatory />;
