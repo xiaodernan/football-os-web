@@ -1,0 +1,26 @@
+M1234 The Cliff: the drop from the best player to the eleventh
+
+Every board in this world ranks the top. This one measures the fall — the
+overall distance from a club's headline act to its eleventh, which is the
+distance between a table position and an injury crisis.
+
+- domain/depth.ts (new, pure): per club the squad size, the best overall, the
+  XI average (the best eleven, 2dp), the bench average (everyone past them; a
+  squad that IS the eleven reads zero rather than dividing by zero) and the
+  cliff itself. Ranks steepest-first; the two headline tiles' tie-break reads
+  the bench thickness, so the steepest and shallowest tiles name different
+  clubs whenever the world allows it.
+- features/depth/SquadDepth.tsx (new screen): three tiles, the board ranked
+  steepest-first with the cliff as the bar's scale, and the honest method
+  line naming exactly what a cliff is.
+- scripts/proof-depth.mjs (new, 5/5): a hand-counted world (A 10/85/58.5,
+  B 10/75/0, C takes no row, league 10), the exact-eleven zero bench, the
+  empty world, the id tie-break, and the screen's trilingual keys with the
+  route mounted.
+- Gates: proof-i18n 454/454 (literal 3827->3842, litVar 596->599, APP_SRC
+  236->238, TSX 121->122, SRC 239->241; two value collisions fixed — the
+  world-average tile and the nav label each took their own word),
+  proof-storage 63/63 (232->234), proof-coverage 26/26 (POP 240->242, deep
+  110->113), proof-app-tree 13/13 (239->241), proof-router 29/29 (229->231),
+  proof-screens 32/32, proof-pwa 4/4 (bundle 871->874 KB, baseline
+  re-recorded); tsc clean, build exit 0. E2E depth 1/1 and all-routes 98/98.
