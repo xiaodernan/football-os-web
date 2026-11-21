@@ -1,0 +1,41 @@
+M1235 The Training Desk: the seventeenth door, and the adoption that lands
+
+The Selection Chair names a XI. This one prescribes a week of work — and
+unlike every earlier door, a lawful answer does not stop at a paragraph:
+adopting it feeds the SAME plan pipeline the coach screen uses, so the
+model's analysis lands as a real training plan.
+
+- domain/trainingDesk.ts (new): the strict two-directive-line parser —
+  RX:<attrKey> x at most three from the dossier's OWN vector, MIN:<n> one of
+  the supported minutes — with seven violation codes; the numeral law over
+  the prose; the fold's own deterministic prescription (the three weakest
+  attributes, minutes answering to the load zone: a spike week gets the
+  short sharp session); the shared traced FSM's two arms.
+- features/desk/TrainingDesk.tsx (new screen): the dossier panel (the
+  player's six weakest attributes and their load zone), the ask control, the
+  model's prescription and the fold's side by side, violation badges, trace
+  chips, and the ADOPT button that dispatches the prescription into the real
+  plan pipeline — the model's decision becoming state.
+- scripts/proof-trainingdesk.mjs (new, 8/8): the lawful parse, each unlawful
+  shape by code, the prose law, the fold's determinism, the four zone
+  answers, the empty dossier, the machine's two arms, and the dossier clone.
+  One honesty repair on the way: the proof's message once measured a
+  different figure than its assertion (91 in the message, 987654 in the
+  condition — the digest carries 91), the exact vacuity this repo bans; the
+  message now reads the same string the assertion does.
+- Gates: proof-i18n 456/456 (literal 3842->3870, template 193->197, litVar
+  599->603, APP_SRC 238->240, TSX 122->123, SRC 241->243; the desk.v.
+  dynamic site and its value space declared from the domain union; the two
+  attr.name. sites declared; the missing desk.adopted key added; the
+  prediction badge differentiated from the chair's), proof-storage 63/63
+  (234->236), proof-coverage 26/26 (POP 242->244, deep 110->114),
+  proof-app-tree 13/13 (241->243), proof-router 29/29 (231->233),
+  proof-screens 32/32, proof-pwa 4/4 (bundle 874->878 KB, baseline
+  re-recorded); tsc clean, build exit 0. E2E desk 1/1 and all-routes 99/99.
+- Live witness scripts/verify-desk-live.mjs (new, 10/10): ONE real
+  gpt-6.2-sol call on William Saliba's real dossier — 200 in 10897ms, the
+  model prescribed RX:set_pieces,crossing,first_touch MIN:45, which is
+  EXACTLY the fold's three weakest: the model read the dossier honestly. The
+  prose rode the numeral law, the planted ghost attribute and the planted
+  47-minute value were charged, and the 24h lane stayed warm
+  (cached_tokens=142529). Key never printed; not part of npm run proof.

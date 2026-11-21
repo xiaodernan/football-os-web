@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1234` The Cliff — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1235` The Training Desk — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1234–M1206 · Latest ledger (newest first)
+## M1235–M1206 · Latest ledger (newest first)
+
+- **M1235 The Training Desk — 训练处方席（/desk），第十七道禁闭门，第二道会做决定的门。** 用户第四条纵深：选人席点名十一人，这道开一周训练方。`domain/trainingDesk.ts`（新）——`RX:<attrKey>×≤3` + `MIN:<n>` 双指令行严格解析（七种违规码：无指令/超三项/重复/档案外属性/不支持分钟数/档案外数字/预言）；数字法（档案向量 + 世界书）；`foldRx` 折叠兜底（三项最弱属性 + 负荷区间分钟数：spike 30 / caution-high 45 / under-low 60 / optimal 45，五区到四区的映射在屏幕侧显式字典）；FSM 同门（preflight→build→model→precommit→commit 带处方 / refused 带折叠处方）。`features/desk/TrainingDesk.tsx`（新屏）——档案面板（玩家姓名 + 六项最弱属性 + 负荷区间）+ 问席 + 模型处方与折叠处方并列 + 违规徽章 + 轨迹芯片 + **「采纳进我的计划」按钮：合法处方直接喂入既有 `requestPlan` 计划管线（模型的分析落成真实训练计划，不是一段话）**。三语 28 键。`scripts/proof-trainingdesk.mjs`（新，8/8）：合法处方解析、五种违规逐码、数字法、折叠处方与确定性、四区分钟数、空档案、FSM 双臂、档案克隆。**纪律一刻**：证词首版的消息用 91、断言用 987654（digest 恰好含 91）——「报告与断言不一致」正是本项自禁的虚妄，已对齐。门禁：proof-i18n 456/456（literal 3842→3870、template 193→197、litVar 599→603、APP_SRC 238→240、TSX 122→123、SRC 241→243；补 desk.v. 动态站点 + value space（从域层联合类型读取）+ 两个 attr.name. 站点（k 表达式两处各一条）；漏定义的 desk.adopted 键补上；desk.v.prediction 与 chair.v.prediction 撞值差异化）、proof-storage 63/63（234→236）、proof-coverage 26/26（POP 242→244、domain 97→98、features 97→98、deep 110→114）、proof-app-tree 13/13（241→243）、proof-router 29/29（231→233）、proof-screens 32/32、proof-pwa 4/4（bundle 874→878 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E desk 1/1 + all-routes 99/99。**活体见证 10/10**（verify-desk-live.mjs）：真实调用 200/10897ms，模型给 William Saliba 开 `RX:set_pieces,crossing,first_touch / MIN:45`——**与折叠的三项最弱完全收敛**（模型真的读了档案的证据），散文过数字法，种植的幽灵属性与 47 分钟均被 charge，24h 道温热（cached=142529）。
+
 
 - **M1234 The Cliff — 断层榜（/depth）。** 内容流水线第四屏：此前的榜都排「最强」，这块量「落差」——从头牌到第十一名的综合距离，积分榜位置与伤病危机之间的距离。`domain/depth.ts`（新，纯折叠）——每队：阵容人数、头牌综合、十一人均值（round2）、替补均值（其余所有人，恰好十一人读 0 不除零）、断层（头牌 − 第十一名）；排序断层降序（平局看十一人均值降、再 id）；最陡/最浅两块磁贴的平局判据看替补厚度（同等断层、身后更薄的更浅）——保证两块磁卡尽量点名不同球队。`features/depth/SquadDepth.tsx`（新屏）——三块牌 + 榜单（断层为刻度条）+ 诚实方法句。三语 12 键。`scripts/proof-depth.mjs`（新，5/5）：手工对账（A 断层 10/十一人 85/替补 58.5，B 断层 10/75/0，C 单人不占行、世界平均 10）、恰好十一人读零替补不 NaN、空世界、平局落 id、屏幕键三语占位符 + 路由。门禁：proof-i18n 454/454（literal 3827→3842、litVar 596→599、APP_SRC 236→238、TSX 121→122、SRC 239→241；两处撞值修正：depth.tileAvg 与 con.tileAvg 同值改 Mean cliff、nav.depth 与 depth.title 同值改 Squad Depth）、proof-storage 63/63（232→234）、proof-coverage 26/26（POP 240→242、domain 96→97、features 96→97、deep 110→113）、proof-app-tree 13/13（239→241）、proof-router 29/29（229→231）、proof-screens 32/32、proof-pwa 4/4（bundle 871→874 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E depth 1/1 + all-routes 98/98。环境注记：dev server 长跑后 goto 偶发超时（本机另一项目占 CPU），重跑即过。
 

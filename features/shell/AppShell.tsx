@@ -165,6 +165,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/congestion", label: t("nav.congestion"), icon: I.calendar, match: ["/congestion"] },
     { to: "/chair", label: t("nav.chair"), icon: I.curtains, match: ["/chair"] },
     { to: "/depth", label: t("nav.depth"), icon: I.chart, match: ["/depth"] },
+    { to: "/desk", label: t("nav.desk"), icon: I.trek, match: ["/desk"] },
     { to: "/form", label: t("nav.form"), icon: I.chart, match: ["/form"] },
     { to: "/briefing", label: t("nav.briefing"), icon: I.review, match: ["/briefing"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },

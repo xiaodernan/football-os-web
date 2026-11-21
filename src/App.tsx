@@ -85,6 +85,8 @@ const CongestedCalendar = lazy(() => import("@/features/congestion/CongestedCale
 const SelectionChair = lazy(() => import("@/features/chair/SelectionChair").then((m) => ({ default: m.SelectionChair })));
 // M1234: the cliff — the squad depth board.
 const SquadDepth = lazy(() => import("@/features/depth/SquadDepth").then((m) => ({ default: m.SquadDepth })));
+// M1235: the training desk — the seventeenth imprisoned door, the second that decides.
+const TrainingDesk = lazy(() => import("@/features/desk/TrainingDesk").then((m) => ({ default: m.TrainingDesk })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) => ({ default: m.LeagueRules })));
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
@@ -261,6 +263,7 @@ function Routes() {
   else if (path === "/congestion") inner = <CongestedCalendar />;
   else if (path === "/chair") inner = <SelectionChair />;
   else if (path === "/depth") inner = <SquadDepth />;
+  else if (path === "/desk") inner = <TrainingDesk />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
   else if (path === "/messaging") inner = <QueueObservatory />;
