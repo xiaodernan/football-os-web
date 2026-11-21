@@ -81,6 +81,7 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import { normalize, scanSource, lookupsIn, sourceBalance } from "./lib/rawUiScan.mjs";
 import { skipReason, reachableModulesIn, appEntriesIn, resolveModuleSpec, APP_DIRS } from "./lib/appTree.mjs";
 import { join, dirname, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { fileURLToPath } from "node:url";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
@@ -91,7 +92,10 @@ const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } 
 // The dictionary is TypeScript, so load it through the same Vite SSR runtime
 // the other proofs use rather than parsing it by hand.
 const { createServer } = await import("vite");
-const server = await createServer({ root, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
+// A private cacheDir keeps this read-only census off the shared node_modules/.vite lock — a
+// concurrent lane running vitest (or another proof) must never make the i18n gate flaky.
+const cacheDir = join(tmpdir(), `football-os-proof-i18n-${process.pid}`);
+const server = await createServer({ root, cacheDir, server: { middlewareMode: true }, appType: "custom", logLevel: "error" });
 const dict = await server.ssrLoadModule("/i18n/dictionaries.ts");
 const { DICTIONARIES: D, LOCALES: L } = dict;
 // M1059: the message pipeline's six mechanism ids are one exported list, read by the screen to
