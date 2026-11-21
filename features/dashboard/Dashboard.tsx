@@ -26,6 +26,7 @@ import { useLearnRecords, usePersonalNews } from "@/lib/hooks";
 import { Panel, SectionTitle, Crest, PositionTag, AttributeBar, EmptyState, CHIP_CLASS, ZONE_CLASS, PANEL_CLASS, BAR_FILL } from "@/ui/primitives";
 import { AttributeRadar, ProgressLine } from "@/ui/charts";
 import { Button } from "@/components/ui/button";
+import { TeachHint } from "@/ui/TeachHint";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -392,14 +393,18 @@ export function Dashboard() {
             <SectionTitle title={t("dash.modules")} hint={t("dash.modulesHint")} />
             <div className="mt-1 grid grid-cols-2 gap-1.5">
               {MODULE_LINKS.map((m) => (
-                <Link
-                  key={m.to}
-                  to={m.to}
-                  className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50", PANEL_CLASS.panelGhost)}
-                >
-                  <span className="grid w-5 place-items-center text-base leading-none text-primary">{m.icon}</span>
-                  <span className="truncate">{t(m.labelKey)}</span>
-                </Link>
+                <div key={m.to} className="relative">
+                  <Link
+                    to={m.to}
+                    className={cn("flex items-center gap-2 rounded-lg border px-2.5 py-2 pr-7 text-sm transition-colors hover:border-primary/40 hover:bg-secondary/50", PANEL_CLASS.panelGhost)}
+                  >
+                    <span className="grid w-5 place-items-center text-base leading-none text-primary">{m.icon}</span>
+                    <span className="truncate">{t(m.labelKey)}</span>
+                  </Link>
+                  {/* M1229: the one-line lesson behind the "?" — outside the anchor, so reading a
+                      lesson never navigates away from the board it explains. */}
+                  <TeachHint id={m.teach} className="absolute right-1.5 top-1/2 -translate-y-1/2" />
+                </div>
               ))}
             </div>
           </Panel>
@@ -430,28 +435,28 @@ const STEP_ICON: Record<NextStepKind, string> = {
 };
 
 const MODULE_LINKS = [
-  { to: "/player", labelKey: "nav.player", icon: "●" },
-  { to: "/manager", labelKey: "nav.manager", icon: "▤" },
-  { to: "/profile", labelKey: "nav.profile", icon: "☺" },
-  { to: "/review", labelKey: "nav.review", icon: "◷" },
-  { to: "/load", labelKey: "nav.load", icon: "◔" },
-  { to: "/achievements", labelKey: "nav.achievements", icon: "♛" },
-  { to: "/settings", labelKey: "nav.settings", icon: "⚙" },
-  { to: "/history", labelKey: "nav.history", icon: "⧗" },
-  { to: "/scouting", labelKey: "nav.scouting", icon: "⌖" },
-  { to: "/world", labelKey: "nav.world", icon: "⧗" },
-  { to: "/film", labelKey: "nav.film", icon: "✂" },
-  { to: "/data", labelKey: "nav.data", icon: "▨" },
-  { to: "/transfers", labelKey: "nav.transfers", icon: "⇄" },
-  { to: "/compare", labelKey: "nav.compare", icon: "⚖" },
-  { to: "/watchlist", labelKey: "nav.watch", icon: "☆" },
-  { to: "/tactical-studio", labelKey: "nav.tactical", icon: "⛶" },
-  { to: "/simulation", labelKey: "nav.simulation", icon: "▷" },
-  { to: "/ai", labelKey: "nav.ai", icon: "⚡" },
-  { to: "/knowledge", labelKey: "nav.knowledge", icon: "☰" },
-  { to: "/learn", labelKey: "nav.learn", icon: "✎" },
-  { to: "/community", labelKey: "nav.community", icon: "❉" },
-  { to: "/football", labelKey: "nav.football", icon: "◎" },
+  { to: "/player", labelKey: "nav.player", icon: "●", teach: "player" },
+  { to: "/manager", labelKey: "nav.manager", icon: "▤", teach: "manager" },
+  { to: "/profile", labelKey: "nav.profile", icon: "☺", teach: "profile" },
+  { to: "/review", labelKey: "nav.review", icon: "◷", teach: "review" },
+  { to: "/load", labelKey: "nav.load", icon: "◔", teach: "load" },
+  { to: "/achievements", labelKey: "nav.achievements", icon: "♛", teach: "achievements" },
+  { to: "/settings", labelKey: "nav.settings", icon: "⚙", teach: "settings" },
+  { to: "/history", labelKey: "nav.history", icon: "⧗", teach: "history" },
+  { to: "/scouting", labelKey: "nav.scouting", icon: "⌖", teach: "scouting" },
+  { to: "/world", labelKey: "nav.world", icon: "⧗", teach: "world" },
+  { to: "/film", labelKey: "nav.film", icon: "✂", teach: "film" },
+  { to: "/data", labelKey: "nav.data", icon: "▨", teach: "data" },
+  { to: "/transfers", labelKey: "nav.transfers", icon: "⇄", teach: "transfers" },
+  { to: "/compare", labelKey: "nav.compare", icon: "⚖", teach: "compare" },
+  { to: "/watchlist", labelKey: "nav.watch", icon: "☆", teach: "watchlist" },
+  { to: "/tactical-studio", labelKey: "nav.tactical", icon: "⛶", teach: "tactical" },
+  { to: "/simulation", labelKey: "nav.simulation", icon: "▷", teach: "simulation" },
+  { to: "/ai", labelKey: "nav.ai", icon: "⚡", teach: "ai" },
+  { to: "/knowledge", labelKey: "nav.knowledge", icon: "☰", teach: "knowledge" },
+  { to: "/learn", labelKey: "nav.learn", icon: "✎", teach: "learn" },
+  { to: "/community", labelKey: "nav.community", icon: "❉", teach: "community" },
+  { to: "/football", labelKey: "nav.football", icon: "◎", teach: "football" },
 ];
 
 function LiveCell({ m }: { m: Match }) {

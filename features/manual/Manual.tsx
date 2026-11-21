@@ -3,6 +3,7 @@ import { Link } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { DemoBadge, SectionTitle, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
+import { TeachHint } from "@/ui/TeachHint";
 import { cn } from "@/lib/utils";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import {
@@ -148,6 +149,8 @@ export function Manual() {
               {t("manual.title")}
             </h1>
             <DemoBadge />
+            {/* M1229: even the manual wears a "?" — this one says what the manual is for. */}
+            <TeachHint id="manual" />
           </div>
           <p className="mt-2 max-w-2xl text-xs text-muted-foreground">{t("manual.subtitle", { n: players, clubs })}</p>
         </div>

@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1228` The Stress Witness — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1229` The Teaching Hints — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1228–M1206 · Latest ledger (newest first)
+## M1229–M1206 · Latest ledger (newest first)
+
+- **M1229 The Teaching Hints — the main interface teaches itself.** 用户总指令第五条「主界面给各种按键和操作加上附带的教学说明」的兑现：`domain/teachHint.ts`（新，纯域）持有 25 条课程目录（22 个模块磁贴 + 指令面板 + 说明书 + 运营台）与已读账簿算术（markSeen 幂等且拒绝目录外 id、parseSeen 把损坏存储降解为干净账簿、unseenIds 补集按目录序）；`ui/TeachHint.tsx`（新）是「?」气泡——未读的轻轻脉冲、读了就安静，Esc/点外面关闭，aria-label 未读时播报「未读教学」；已读态写唯一存储键 `football-os.teachSeen.v1`（localData 注册为 preference——重置活动不清已读）。接线：Dashboard 22 个模块磁贴每贴一课（气泡在锚点**之外**——读教学绝不导航）、AppShell 顶栏搜索钮、Manual  hero、Ops 控制台、SettingsPage 新增「按键教学」行（未读计数 + 全部标为未读）。三语 25 条课程 + 9 个组件/设置键。`scripts/proof-teachhint.mjs`（新，11/11）：目录形状、账簿算术、localStorage 往返逐字节、22 贴接线且种植的「锚点内气泡」被拒、四屏同读一个目录、占位符三语一致。门禁：proof-i18n 453/453（literal 3760→3766、expression 70→71、computed 26→27、litVar 587→588、ariaKeyed 45→46、APP_SRC 226→228、TSX 116→117、SRC 229→231）、proof-storage 63/63（APP_FILES 224→225）、proof-coverage 26/26（POP 230→232、domain 91→92、ui 3→4）、proof-app-tree 13/13（229→231）、proof-router 29/29（221→222）、proof-pwa 4/4（bundle 855→860 KB 诚实步进 + baseline 重录）、proof-i18n-scan 1/1；tsc 0、build 0；E2E 新增 `teach-hints.spec.ts` 3/3（22 个未读「?」、点开教学不导航、Esc 关闭后计数 21、设置行 25 条未读与重置、顶栏 palette 教学），command-center + all-routes 94/94、ops 3/3 复跑绿。另：`docs/MASTER-DIRECTIVE.md`（新）把用户 2026-11-22 十二点总指令固化为治理计划；分支收拢完成（六个分支独有提交均为 0，M1228-storm worktree 成果已接手落地为 M1228）；大模型 API 当日实测 19/19（真实作答 8.5s、缓存二击 6ms、4 并发合并 1 次真调用、70k 上下文 ≈90% 命中）。环境注记：本机另有项目 dev server 抢占 CPU，proof 偶发变慢属环境竞争；Playwright chromium 1248 构建缺失已补装。
+
 
 - **M1228 The Stress Witness — 512 simulated visitors fold through the pure doors at once.** 从 `fos-m1228-storm` worktree 接手并收拢：`scripts/proof-storm.mjs`（13/13）把 512 个确定性设备队列（没耐心的单次访客、迷路的乱点者、忠实的回访者）同时折进同一批纯域门——并行折叠与串行折叠逐字节一致（无共享可变状态）；全部 512 个突发信封哈希到同一条内容派生的 24h 世界书缓存道（`PROMPT_CACHE_RETENTION === "24h"`）；512 个并发预测写入落进 512 个互不污染的每设备槽位，脉冲环零触碰；任何折叠都不打印 `NaN`/`Infinity`/`undefined`；LRU 缓存在满容量突发下逐值隔离。刻意种植（换道、错槽、缓存损坏）全部被charge。无任何真实模型调用、上游绝不拨号。未改一行应用代码：bundle 维持 855 KB / 117 assets。给证词加了 pid 隔离 cacheDir（沿用 1871de3 的 M1228 教训：共享 node_modules/.vite 锁会让并发构建把只读普查超时掉）。全电池 227/227 证词脚本（proof-i18n 普查读 227 个脚本、3934 条断言谓词、0 不可失败；proof-coverage 26/26、proof-app-tree 13/13 复核通过）。
 

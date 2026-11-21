@@ -6,6 +6,8 @@
 // keeps every function testable without a browser.
 
 import { LEARN_STORE_KEY } from "./learn";
+// M1229: the teaching-hint seen-ledger — a preference (what you have read survives an activity reset).
+import { TEACH_SEEN_KEY } from "./teachHint";
 
 export const OS_STATE_KEY = "football-os.state.v2";
 export const CAREER_KEY = "football-os.career.v1";
@@ -58,6 +60,7 @@ export const LOCAL_KEYS: KeySpec[] = [
   { key: CHALKBOARD_KEY, labelKey: "set.key.chalkboard", kind: "activity" },
   { key: TACTICS_KEY, labelKey: "set.key.tactics", kind: "activity" },
   { key: COACH_KEY, labelKey: "set.key.coach", kind: "preference" },
+  { key: TEACH_SEEN_KEY, labelKey: "set.key.teach", kind: "preference" },
   { key: FIXTURES_KEY, labelKey: "set.key.fixtures", kind: "activity" },
   { key: LOCALE_KEY, labelKey: "set.key.locale", kind: "preference" },
   { key: THEME_KEY, labelKey: "set.key.theme", kind: "preference" },

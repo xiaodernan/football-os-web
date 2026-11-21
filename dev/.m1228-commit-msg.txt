@@ -1,0 +1,21 @@
+M1228 The Stress Witness: five hundred silent visitors walk the pitch at once
+
+The fos-m1228-storm worktree left a finished witness uncommitted; with every
+branch already folded into master, this takes it over and lands it.
+
+- scripts/proof-storm.mjs (new, 13/13): 512 deterministic device cohorts -
+  impatient one-visit browsers, lost clickers, faithful returners - fold
+  through the SAME pure domain doors at once. Parallel folds equal the serial
+  fold byte-for-byte (no shared mutable state); all 512 burst envelopes hash
+  to the ONE content-derived world-book lane with PROMPT_CACHE_RETENTION
+  "24h"; 512 concurrent forecast writes land in 512 distinct per-device slots
+  without ever touching the pulse ring; no fold prints NaN, Infinity or
+  undefined; the LRU cache keeps every value isolated under a full-capacity
+  burst. Planted lane change, wrong forecast slot and cache corruption are
+  all charged. No real model call is spent; the upstream is never dialed.
+- The witness rides a pid-scoped Vite cacheDir (the 1871de3 lesson): a
+  concurrent build elsewhere must not be able to time a read-only census out.
+- No app or UI code changed: bundle stays 855 KB / 117 assets.
+- Gates: proof-storm 13/13, proof-i18n 453/453 (the vacuity census now reads
+  227 scripts, 3934 predicates, 0 unfailable), proof-coverage 26/26,
+  proof-app-tree 13/13.

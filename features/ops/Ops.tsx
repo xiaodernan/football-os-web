@@ -64,6 +64,7 @@ import {
 } from "@/domain/debrief";
 import { foldTide, type TideReading } from "@/domain/tide";
 import { Panel, PANEL_CLASS, CHIP_CLASS, BAR_FILL } from "@/ui/primitives";
+import { TeachHint } from "@/ui/TeachHint";
 import { cn } from "@/lib/utils";
 
 // The model's envelope law lives with the screen, as on the other LLM doors; the domain stays data-only.
@@ -645,7 +646,11 @@ export function Ops() {
         <div aria-hidden className="fo-grid absolute inset-0 opacity-40" />
         <div className="relative">
           <div className="text-[10px] uppercase tracking-[0.35em] text-primary">{t("ops.kicker")}</div>
-          <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-5xl">{t("ops.title")}</h1>
+          <div className="flex flex-wrap items-center gap-2">
+            <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-3xl font-black tracking-tight text-transparent sm:text-5xl">{t("ops.title")}</h1>
+            {/* M1229: the console wears its lesson too — what it watches, and the open password. */}
+            <TeachHint id="ops" />
+          </div>
           <p className="mt-1 max-w-2xl text-xs text-muted-foreground">{t("ops.subtitle")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-2">
             <button type="button" onClick={() => { setCohort("device"); setOrderedRx(null); }} className={cn("rounded-md border px-2.5 py-1 text-[10px] uppercase tracking-widest", cohort === "device" ? CHIP_CLASS.optionOn : CHIP_CLASS.optionOff)}>{t("ops.cohort.device")}</button>

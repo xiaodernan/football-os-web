@@ -1,0 +1,32 @@
+M1229 The Teaching Hints: every button on the main interface now teaches
+
+The master directive's fifth point named the gap by name: the main interface's
+buttons and operations carry no teaching. This closes it.
+
+- domain/teachHint.ts (new, pure): a 25-lesson catalogue (the dashboard's 22
+  module tiles, the command palette, the manual and the operator console) and
+  the seen-ledger arithmetic - markSeen is idempotent and refuses ids outside
+  the catalogue, parseSeen degrades a corrupt store to a clean ledger, unseenIds
+  is the complement in catalogue order.
+- ui/TeachHint.tsx (new): the "?" bubble. Unread lessons pulse quietly, read
+  ones stay out of the way; Escape or a tap outside closes; the aria-label
+  announces an unread lesson as unread. The seen state lives under ONE storage
+  key (football-os.teachSeen.v1), registered in localData as a preference so an
+  activity reset keeps what you have read.
+- Wiring: one lesson per dashboard module tile (the bubble sits OUTSIDE the
+  anchor - reading a lesson never navigates), the palette trigger in the header,
+  the manual's hero, the operator console, and a settings row that counts the
+  unread lessons and marks them all unread again.
+- scripts/proof-teachhint.mjs (new, 11/11): catalogue shape, ledger arithmetic,
+  a byte-identical localStorage round-trip, the 22-tile wiring with a planted
+  inside-anchor lesson refused, four screens reading one catalogue, agreeing
+  placeholders across all three locales.
+- Gates: proof-i18n 453/453 (literal 3760->3766, expression 70->71, computed
+  26->27, litVar 587->588, ariaKeyed 45->46, APP_SRC 226->228, TSX 116->117,
+  SRC 229->231), proof-storage 63/63 (224->225), proof-coverage 26/26 (POP
+  230->232), proof-app-tree 13/13 (229->231), proof-router 29/29 (221->222),
+  proof-pwa 4/4 (bundle 855->860 KB, baseline re-recorded), proof-i18n-scan
+  1/1; tsc clean, build exit 0. New E2E tests/e2e/teach-hints.spec.ts 3/3;
+  command-center + all-routes 94/94 and ops 3/3 re-run green.
+- docs/MASTER-DIRECTIVE.md (new): the user's twelve-point directive of
+  2026-11-22, fixed as the governing plan with per-point verified status.

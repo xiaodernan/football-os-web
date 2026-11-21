@@ -6,6 +6,9 @@ import { useOs, STORAGE_KEY } from "@/store/useFootballOS";
 import { applyImport, browserStore, buildExport, clearActivity, inventory, readImport } from "@/domain/localData";
 import { DEMO_MODE, footballProvider } from "@/data/footballService";
 import { MODES } from "@/domain/types";
+import { useLocalStorage } from "@/lib/hooks";
+import { TEACH_SEEN_KEY, resetSeen } from "@/domain/teachHint";
+import { unreadTeachCount } from "@/ui/TeachHint";
 import { Panel, SectionTitle, DemoBadge, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -17,6 +20,10 @@ export function SettingsPage() {
   const { state, setMode, reset } = useOs();
   const [confirming, setConfirming] = useState(false);
   const [imported, setImported] = useState<{ keys: number } | null>(null);
+  // M1229: the teaching-hint ledger — how many dashboard lessons are still unread, and the
+  // control that puts every "?" back to its unread pulse.
+  const [teachSeen, setTeachSeen] = useLocalStorage<string[]>(TEACH_SEEN_KEY, []);
+  const unreadLessons = unreadTeachCount(teachSeen);
 
   const inv = useMemo(() => inventory(browserStore()), [state]);
 
@@ -199,6 +206,21 @@ export function SettingsPage() {
           )}
         </div>
         <p className="mt-2 text-[11px] text-muted-foreground">{t("set.resetKeepsPrefs")}</p>
+      </Panel>
+
+      <Panel className="p-4">
+        <SectionTitle title={t("teach.settingsTitle")} hint={t("teach.settingsHint")} />
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-sm">{unreadLessons > 0 ? t("teach.unreadCount", { n: unreadLessons }) : t("teach.allRead")}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={unreadLessons === 0}
+            onClick={() => { setTeachSeen(resetSeen()); toast(t("teach.resetDone")); }}
+          >
+            {t("teach.reset")}
+          </Button>
+        </div>
       </Panel>
 
       <Panel className="p-4">
