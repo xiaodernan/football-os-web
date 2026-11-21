@@ -275,6 +275,36 @@ const SAME_FILE_SPLITS = {
     "both are honest fold arms on the same refused stage; the abstention is the model's word, the fold is the on-device answer",
   "domain/rxCouncil.ts:councilAdopt|domain/rxCouncil.ts:councilReject":
     "both are operator edges into the same commit stage; the traced decision and the recorded forecast differ by design",
+  // M1226 The Forecast Ombudsman: its refusal arms, verifier steps and operator edges share the
+  // traced-FSM terminal shape with the council's own, but every pair names a different note.
+  "domain/rxCouncil.ts:councilAdopt|domain/rxCouncil.ts:auditPublish":
+    "council adoption records a forecast; ombudsman publication records a graded minute — same commit shape, different contract",
+  "domain/rxCouncil.ts:councilAdopt|domain/rxCouncil.ts:auditContest":
+    "council adoption and ombudsman contest are separate operator edges with distinct notes and ledgers",
+  "domain/rxCouncil.ts:councilReject|domain/rxCouncil.ts:auditPublish":
+    "council rejection and ombudsman publication are separate operator edges with distinct notes and ledgers",
+  "domain/rxCouncil.ts:councilReject|domain/rxCouncil.ts:auditContest":
+    "council rejection and an ombudsman dispute are separate operator edges; neither writes the other's slot",
+  "domain/rxCouncil.ts:auditInvalid|domain/rxCouncil.ts:auditGradeMismatch":
+    "an unusable first line and a grade that contradicts the deterministic comparison are distinct refusals with separate notes",
+  "domain/rxCouncil.ts:auditInvalid|domain/rxCouncil.ts:auditStructureRefused":
+    "a directive refusal and a section-order refusal are separate gates with separate notes",
+  "domain/rxCouncil.ts:auditInvalid|domain/rxCouncil.ts:auditNumeralsRefused":
+    "a directive refusal and a numeral refusal are separate gates with separate notes",
+  "domain/rxCouncil.ts:auditAbstained|domain/rxCouncil.ts:auditFold":
+    "the model's abstention and the on-device fold are different arms of the same refused state",
+  "domain/rxCouncil.ts:auditGradeMismatch|domain/rxCouncil.ts:auditStructureRefused":
+    "a grade mismatch and a failed section check are different verifier refusals with separate notes",
+  "domain/rxCouncil.ts:auditGradeMismatch|domain/rxCouncil.ts:auditNumeralsRefused":
+    "a grade mismatch and a failed numeral check are different verifier refusals with separate notes",
+  "domain/rxCouncil.ts:auditStructurePassed|domain/rxCouncil.ts:auditNumeralsPassed":
+    "the two ombudsman verifier stages advance with their own proof flags and notes, as door 15's do",
+  "domain/rxCouncil.ts:auditStructureRefused|domain/rxCouncil.ts:auditNumeralsRefused":
+    "the two ombudsman verifier stages refuse with one traced voice but distinct stage and note",
+  "domain/rxCouncil.ts:auditPublish|domain/rxCouncil.ts:auditContest":
+    "publish and contest are two terminal operator edges of the audit graph, each with its own note",
+  "features/ops/Ops.tsx:enter|features/ops/Ops.tsx:enter":
+    "the council panel and the ombudsman panel each commit their own typed FSM state into their own React panel; the five setters are the shared terminal shape",
 };
 const sfUndeclared = sameFilePairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)

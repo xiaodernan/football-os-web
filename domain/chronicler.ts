@@ -8,7 +8,7 @@
 // bad directive, an abstention, an offline proxy — walks the graph to an honest fold chapter
 // built from the very same tape line. No second randomness source, no invented figure.
 import type { Locale } from "@/i18n/dictionaries";
-import { step, fsmBuild, fsmCommit, fsmRefused, type FsmStage, type Verdict } from "@/domain/tracedFsm";
+import { step, fsmBuild, fsmCommit, fsmRefused, type FsmStage, type Verdict, type VerifierStage, type VerifierNote } from "@/domain/tracedFsm";
 import type { BenchRoute } from "@/domain/witnessBench";
 import { verifyReplayText } from "@/domain/replay";
 import { safeDiv } from "@/lib/utils";
@@ -153,10 +153,10 @@ export const stripChapterDirective = (text: string): string =>
     .trim();
 
 // ── the traced StateGraph: two verifier stages between the model and the commit ────────────────
-export type ChronicleStage = FsmStage | "structure" | "numerals";
+export type ChronicleStage = FsmStage | VerifierStage;
 export type ChronicleNote =
   | "tapeSealed" | "chapterChose" | "directiveInvalid" | "modelAbstained"
-  | "structurePassed" | "structureRefused" | "numeralsPassed" | "numeralsRefused"
+  | VerifierNote
   | "commitOk" | "foldOk";
 
 export interface ChapterTraceEntry {

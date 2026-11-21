@@ -851,6 +851,7 @@ const DYN_SITES = [
   { path: "features/ops/Ops.tsx", expr: "replayBadge", prefix: "ops.replay.badge.", suffix: "" }, // M1222: verified / folded / invalid / abstained
   { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.replay.stage.", suffix: "" }, // M1222: the replay StateGraph trace strip
   { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.replay.stage.", suffix: "" }, // M1225: the council trace reuses the replay stage strip (second site)
+  { path: "features/ops/Ops.tsx", expr: "entry.stage", prefix: "ops.replay.stage.", suffix: "" }, // M1226: the ombudsman trace reuses it too (third site)
   { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.replay.note.", suffix: "" }, // M1222: the replay transition notes
   // M1225 The Prescription Council: one offered shelf, one operator edge, one forecast grade.
   { path: "features/ops/Ops.tsx", expr: "o.severity", prefix: "ops.rx.severity.", suffix: "" },
@@ -861,6 +862,9 @@ const DYN_SITES = [
   { path: "features/ops/Ops.tsx", expr: "councilScore.anomaly", prefix: "ops.replay.anomaly.", suffix: "" },
   { path: "features/ops/Ops.tsx", expr: "councilScore.verdict", prefix: "ops.rxCouncil.score.", suffix: "" },
   { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.rxCouncil.note.", suffix: "" },
+  // M1226 The Forecast Ombudsman: the audit badge and its own trace-note namespace.
+  { path: "features/ops/Ops.tsx", expr: "ombudsBadge", prefix: "ops.ombudsman.badge.", suffix: "" },
+  { path: "features/ops/Ops.tsx", expr: "entry.note", prefix: "ops.ombudsman.note.", suffix: "" },
   { path: "features/ops/Ops.tsx", expr: "i", prefix: "ops.depth.bucket", suffix: "" }, // M1149: the session-depth bucket label reads its key from the loop index
   { path: "features/sacred/Sacred.tsx", expr: "f", prefix: "longSeason.filter.", suffix: "" }, // M1160 The Long Season: the filter chips key their prefix from the fold
   { path: "features/ops/Ops.tsx", expr: "r.severity", prefix: "ops.rx.severity.", suffix: "" }, // M1157 The Prescription: severity chips read their key from the fold
@@ -1143,6 +1147,9 @@ const SPACES = new Map([
   ["ops.rxCouncil.badge.|councilDesk.decision", { name: "council operator edges", values: ["adopt", "reject"] }],
   ["ops.rxCouncil.score.|councilScore.verdict", { name: "council grade codes", values: ["hit", "near", "miss"] }],
   ["ops.rxCouncil.note.|entry.note", { name: "council trace notes", values: ["offeringSealed", "modelProposed", "proposalInvalid", "modelAbstained", "proposalVerified", "proposalRefused", "adopted", "rejected", "foldOk"] }],
+  // M1226 The Forecast Ombudsman: the badge union and its own trace-note enum.
+  ["ops.ombudsman.badge.|ombudsBadge", { name: "ombudsman badges", values: ["verified", "folded", "invalid", "abstained", "mismatched", "published", "contested"] }],
+  ["ops.ombudsman.note.|entry.note", { name: "ombudsman trace notes", values: ["windowSealed", "modelGraded", "gradeInvalid", "modelAbstained", "gradeMismatch", "structurePassed", "structureRefused", "numeralsPassed", "numeralsRefused", "published", "contested", "foldOk"] }],
   // M1185 The Analyst: the admin reasoning strip, keyed off its own note/stage enums.
   ["ops.analyst.stage.|entry.stage", { name: "analyst trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["ops.analyst.note.|entry.note", { name: "analyst trace notes", values: ["analystOn", "evidenceSealed", "commitOk", "foldOk", "precommitRefused"] }],
@@ -5024,7 +5031,9 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // keys. Measured on this tree: 3714 / 180.
   // M1225 the Prescription Council adds 24 literal and 9 template t() sites on the Ops door
   // (badges, verdict grades, trace notes, forecast labels). Measured on this tree: 3738 / 189.
-  shapeCounts.literal === 3738 && shapeCounts.template === 189 && shapeCounts.expression === 70
+  // M1226 the Forecast Ombudsman adds 22 literal and 3 template t() sites on the same door
+  // (badges, trace notes, grade labels, the fold sentence). Measured: 3760 / 192.
+  shapeCounts.literal === 3760 && shapeCounts.template === 192 && shapeCounts.expression === 70
     && shapeCounts.computed === 26 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5209,7 +5218,8 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // M1224: the three fold sentences, the model badge and the picked-fixture line hand their
   // placeholders over — four more sites, 579 -> 583, measured on this tree.
   // M1225: the council forecast and trace labels carry two more placeholder sites (583 -> 585).
-  litVarSites === 585 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  // M1226: the ombudsman fold sentence and the live model badge carry two more (585 -> 587).
+  litVarSites === 587 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.

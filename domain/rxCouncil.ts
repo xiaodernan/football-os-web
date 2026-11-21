@@ -5,7 +5,7 @@
 // default. The recorded forecast is graded by the NEXT replay against that measured hour — a
 // comparison of a prediction with an observation, never a claim that the prescription caused it.
 import type { Locale } from "@/i18n/dictionaries";
-import { step, fsmBuild, fsmCommit, fsmRefused, type FsmStage, type Verdict } from "@/domain/tracedFsm";
+import { step, fsmBuild, fsmCommit, fsmRefused, type FsmStage, type Verdict, type VerifierStage, type VerifierNote } from "@/domain/tracedFsm";
 import { replayEnvelope, type ReplayAnomalyId, type ReplaySnapshot } from "@/domain/replay";
 import { type Prescription, type RxSeverity } from "@/domain/prescription";
 import type { BenchRoute } from "@/domain/witnessBench";
@@ -168,7 +168,7 @@ export interface RxScore {
   readonly forecast: number;
   readonly actual: number;
   readonly delta: number;
-  readonly verdict: "hit" | "near" | "miss";
+  readonly verdict: AuditGrade;
 }
 
 
@@ -198,5 +198,163 @@ export function councilFoldText(offering: RxOffering, t: (key: string, vars?: Re
     severity: offering.severity,
     anomaly: offering.anomaly,
     value: offering.score,
+  });
+}
+
+// ── M1226 · The Forecast Ombudsman ─────────────────────────────────────────────────────────────
+// The council's forecast is a prediction; a LATER measured hour is an observation. This door makes
+// the model audit its own earlier prediction: it must name the deterministic grade, write a short
+// three-part minute, and pass the SHARED replay numeral door. The human then publishes or contests
+// the minute. Causation is never claimed — the minute compares a forecast with an observation.
+export const OM_KEY = "football-os.ombudsman.note.v1";
+export const AUDIT_GRADES = ["hit", "near", "miss"] as const;
+export type AuditGrade = (typeof AUDIT_GRADES)[number];
+export type AuditDecision = "publish" | "contest";
+
+export interface OmbudsmanNote {
+  readonly grade: AuditGrade;
+  readonly forecast: number;
+  readonly actual: number;
+  readonly delta: number;
+  readonly rxId: string;
+  readonly anomaly: ReplayAnomalyId;
+  readonly at: number;
+  readonly locale: Locale;
+  readonly decision: AuditDecision;
+}
+
+export interface AuditDirective {
+  readonly grade: AuditGrade | null;
+  readonly route: BenchRoute;
+}
+
+/** First line only: the deterministic grade, or a bare ABSTAIN. A buried word is not a route. */
+export function parseAuditDirective(text: string): AuditDirective | null {
+  const first = String(text ?? "").split(/\r?\n/, 1)[0].trim();
+  if (/^\[?ABSTAIN\]?\b/i.test(first)) return { grade: null, route: "abstain" };
+  const m = /^GRADE:(hit|near|miss)\b/i.exec(first);
+  if (!m) return null;
+  return { grade: m[1].toLowerCase() as AuditGrade, route: "answer" };
+}
+
+export function stripAuditDirective(text: string): string {
+  const source = String(text ?? "");
+  const first = source.split(/\r?\n/, 1)[0];
+  if (/^\[?ABSTAIN\]?\b/i.test(first) || /^GRADE:(?:hit|near|miss)\b/i.test(first)) {
+    return source.replace(/^\s*(\[?ABSTAIN\]?|GRADE:(?:hit|near|miss))\b[^\n]*\n?/i, "").trim();
+  }
+  return source.trim();
+}
+
+/** Reuse the sealed replay envelope, then append the prediction and the later observation. */
+export function auditEnvelope(forecast: RxForecast, later: ReplaySnapshot, law: string): object {
+  return {
+    ...(replayEnvelope(later, law) as Record<string, unknown>),
+    forecast: {
+      predicted: forecast.predicted,
+      rxId: forecast.rxId,
+      anomaly: forecast.anomaly,
+      at: forecast.at,
+      source: "prediction",
+    },
+    observation: {
+      measured: later.anomalies.find((a) => a.id === forecast.anomaly)?.measured ?? 0,
+      at: later.windowEnd,
+      source: "measured",
+    },
+  };
+}
+
+/** The three ordered sections keep the minute readable and its provenance separate. */
+export function verifyAuditStructure(text: string): boolean {
+  const prose = String(text ?? "").trim();
+  const markers = ["FORECAST:", "OBSERVATION:", "BOUNDARY:"];
+  let cursor = -1;
+  for (const marker of markers) {
+    const at = prose.indexOf(marker);
+    if (at <= cursor) return false;
+    cursor = at;
+  }
+  const parts = prose.split(/FORECAST:|OBSERVATION:|BOUNDARY:/).map((s) => s.trim());
+  if (parts.length !== 4 || parts.slice(1).some((s) => s.length === 0)) return false;
+  return prose.split(/\s+/).filter(Boolean).length <= 80;
+}
+
+export type AuditStage = FsmStage | VerifierStage;
+export type AuditNote =
+  | "windowSealed" | "modelGraded" | "gradeInvalid" | "modelAbstained" | "gradeMismatch"
+  | VerifierNote
+  | "published" | "contested" | "foldOk";
+
+export interface AuditTraceEntry {
+  readonly stage: AuditStage;
+  readonly verdict: Verdict;
+  readonly note: AuditNote;
+}
+
+export interface OmbudsmanState {
+  readonly locale: Locale;
+  readonly status: AuditStage;
+  readonly grade: AuditGrade | null;
+  readonly decision: OmbudsmanNote["decision"] | null;
+  readonly trace: readonly AuditTraceEntry[];
+  readonly answer: string;
+}
+
+export const createOmbudsman = (locale: Locale): OmbudsmanState => ({
+  locale, status: "preflight", grade: null, decision: null, trace: [], answer: "",
+});
+
+/** A forecast without a later window has nothing honest to compare; refuse before any ask. */
+export const auditPreflight = (s: OmbudsmanState, forecast: RxForecast | null, later: ReplaySnapshot): OmbudsmanState =>
+  forecast && forecast.at < later.windowEnd
+    ? step(s, { stage: "preflight", verdict: "pass", note: "windowSealed" }, "build")
+    : fsmRefused(s, "", { stage: "preflight", verdict: "refused", note: "foldOk" });
+
+export const auditBuild = (s: OmbudsmanState): OmbudsmanState =>
+  fsmBuild({ ...s, answer: "", grade: null, decision: null },
+    { stage: "build", verdict: "pass", note: "windowSealed" }, "model");
+
+export const auditModelGraded = (s: OmbudsmanState, grade: AuditGrade): OmbudsmanState =>
+  step({ ...s, grade, decision: s.decision }, { stage: "model", verdict: "pass", note: "modelGraded" }, "precommit");
+
+export const auditInvalid = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmRefused({ ...s, answer, grade: s.grade }, answer, { stage: "model", verdict: "refused", note: "gradeInvalid" });
+
+export const auditAbstained = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmRefused({ ...s, answer, grade: s.grade }, answer, { stage: "refused", verdict: "refused", note: "modelAbstained" });
+
+export const auditGradeMismatch = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmRefused({ ...s, answer, decision: s.decision }, answer, { stage: "precommit", verdict: "refused", note: "gradeMismatch" });
+
+export const auditStructurePassed = (s: OmbudsmanState): OmbudsmanState =>
+  step({ ...s }, { stage: "structure", verdict: "pass", note: "structurePassed" }, "numerals");
+
+export const auditStructureRefused = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmRefused({ ...s, answer, grade: s.grade }, answer, { stage: "structure", verdict: "refused", note: "structureRefused" });
+
+export const auditNumeralsPassed = (s: OmbudsmanState): OmbudsmanState =>
+  step({ ...s }, { stage: "numerals", verdict: "pass", note: "numeralsPassed" }, "commit");
+
+export const auditNumeralsRefused = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmRefused({ ...s, answer, decision: s.decision }, answer, { stage: "precommit", verdict: "refused", note: "numeralsRefused" });
+
+export const auditPublish = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmCommit({ ...s, answer, decision: "publish" }, answer, { stage: "commit", verdict: "pass", note: "published" });
+
+export const auditContest = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmCommit({ ...s, answer, decision: "contest" }, answer, { stage: "commit", verdict: "pass", note: "contested" });
+
+export const auditFold = (s: OmbudsmanState, answer: string): OmbudsmanState =>
+  fsmRefused({ ...s, answer, grade: s.grade }, answer, { stage: "refused", verdict: "refused", note: "foldOk" });
+
+export function auditFoldText(
+  t: (key: string, vars?: Record<string, string | number>) => string,
+  score: RxScore,
+): string {
+  return t("ops.ombudsman.fold", {
+    grade: score.verdict,
+    predicted: score.forecast,
+    actual: score.actual,
   });
 }

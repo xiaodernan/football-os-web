@@ -283,7 +283,7 @@ const expectedPerUser = [
   ["features/load/LoadPage.tsx", 3],
   ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
   // M1225: the council's undecided decision cell uses the door once.
-  ["features/ops/Ops.tsx", 1],
+  ["features/ops/Ops.tsx", 2], // M1226: the council and the ombudsman both print their undecided state through the ABSENT door
   // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
   // they cannot fold — the census charges them the shared toll.
   // M1134: the streak line names each side and falls back to the door now too — 4 -> 6.

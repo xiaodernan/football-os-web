@@ -23,7 +23,12 @@ import {
   councilFold, councilFoldText, councilModelProposed, councilPreflight, councilProposalInvalid, councilProposalRefused, createCouncil,
   councilReject, councilVerified, forecastFrom, gradeForecast, offerPrescriptions,
   parseCouncilDirective, stripCouncilDirective,
-  type CouncilState, type CouncilTraceEntry, type RxCouncilDecision, type RxForecast, type RxScore,
+  OM_KEY, AUDIT_GRADES, auditAbstained, auditBuild, auditContest, auditEnvelope, auditFold, auditFoldText,
+  auditGradeMismatch, auditInvalid, auditModelGraded, auditNumeralsPassed, auditNumeralsRefused,
+  auditPreflight, auditPublish, auditStructurePassed, auditStructureRefused, createOmbudsman,
+  parseAuditDirective, stripAuditDirective, verifyAuditStructure,
+  type AuditDecision, type AuditTraceEntry, type CouncilState, type CouncilTraceEntry,
+  type OmbudsmanNote, type OmbudsmanState, type RxCouncilDecision, type RxForecast, type RxScore,
 } from "@/domain/rxCouncil";
 import { browserStore, readJson, writeJson } from "@/domain/localData";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
@@ -108,6 +113,13 @@ export function Ops() {
   const [councilAnswer, setCouncilAnswer] = useState("");
   const [councilBadge, setCouncilBadge] = useState<"verified" | "folded" | "invalid" | "abstained" | "adopted" | "rejected" | null>(null);
   const [councilViolations, setCouncilViolations] = useState<readonly string[] | null>(null);
+  // M1226 · the ombudsman audits the council's own forecast against a later measured hour.
+  const [ombudsBusy, setOmbudsBusy] = useState(false);
+  const [ombudsDesk, setOmbudsDesk] = useState<OmbudsmanState | null>(null);
+  const [ombudsTrace, setOmbudsTrace] = useState<readonly AuditTraceEntry[] | null>(null);
+  const [ombudsAnswer, setOmbudsAnswer] = useState("");
+  const [ombudsBadge, setOmbudsBadge] = useState<"verified" | "folded" | "invalid" | "abstained" | "mismatched" | "published" | "contested" | null>(null);
+  const [ombudsViolations, setOmbudsViolations] = useState<readonly string[] | null>(null);
 
   const deviceFold = useMemo(() => {
     const held = readJson<{ visits: VisitRecord[] }>(browserStore(), PULSE_KEY, { visits: [] }).value.visits;
@@ -125,6 +137,9 @@ export function Ops() {
   const councilScore = useMemo<RxScore | null>(
     () => councilForecast && councilForecast.at < replay.windowEnd
       ? gradeForecast(councilForecast, replay) : null, [councilForecast, replay]);
+  // M1226 · the audit note ledger is read-only here; the pulse ring is never written.
+  const ombudsNote = useMemo<OmbudsmanNote | null>(
+    () => readJson<OmbudsmanNote | null>(browserStore(), OM_KEY, null).value, []);
   const useSeeded = cohort === "seeded" || deviceFold.visits < MIN_DEVICE_VISITS;
   const fold: PulseFold = useSeeded ? seededFold : deviceFold;
 
@@ -280,6 +295,79 @@ export function Ops() {
     const offering = councilOfferings.find((o) => o.id === desk.proposalId);
     writeJson(browserStore(), RX_FORECAST_KEY,
       decision === "adopt" && offering ? forecastFrom(replay, offering, locale) : null);
+  };
+
+  // M1226 · the model audits its OWN earlier forecast: it must name the deterministic grade,
+  // write a three-part minute, and pass the shared replay numeral door before the human may
+  // publish or contest it. The minute compares prediction and observation, never a cause.
+  const askOmbudsman = async () => {
+    if (ombudsBusy || !councilForecast || !councilScore) return;
+    setOmbudsBusy(true);
+    setOmbudsTrace(null);
+    setOmbudsAnswer("");
+    setOmbudsBadge(null);
+    setOmbudsViolations(null);
+    const fallback = auditFoldText(t, councilScore);
+    const enter = (desk: OmbudsmanState, text: string, badge: "verified" | "folded" | "invalid" | "abstained" | "mismatched") => {
+      setOmbudsDesk(desk);
+      setOmbudsTrace(desk.trace);
+      setOmbudsAnswer(text);
+      setOmbudsBadge(badge);
+      setOmbudsBusy(false);
+    };
+    const sealed = auditPreflight(createOmbudsman(locale), councilForecast, replay);
+    if (sealed.status === "refused") { enter(sealed, fallback, "folded"); return; }
+    const desk = auditBuild(sealed);
+    if (!LLM_CONFIG.hasKey) { enter(auditFold(desk, fallback), fallback, "folded"); return; }
+    const envelope = auditEnvelope(councilForecast, replay, COUNCIL_LAW);
+    const system = withWorldBook([
+      "You are the Forecast Ombudsman of Football OS. Audit the prediction the council recorded earlier.",
+      "FIRST LINE: exactly GRADE:hit, GRADE:near or GRADE:miss, the grade the deterministic comparison already proves. Or write ABSTAIN alone when the envelope cannot support a minute.",
+      "AFTER THAT: at most 80 words, in the visitor's language, with FORECAST: / OBSERVATION: / BOUNDARY: in that order. Compare a prediction with an observation; never claim the prescription caused the measurement, and never invent a numeral.",
+      "",
+      "EXPECTED GRADE:", councilScore.verdict,
+      "OFFERED GRADES:", AUDIT_GRADES.join(", "),
+      "",
+      "AUDIT ENVELOPE:",
+      JSON.stringify(envelope, null, 2),
+    ].join("\n"));
+    const result = await callLlmStream(t("ops.ombudsman.ask"), [], () => {}, { system });
+    if (!result.ok) { enter(auditFold(desk, fallback), fallback, "folded"); return; }
+    const directive = parseAuditDirective(result.text);
+    if (!directive) { enter(auditInvalid(desk, fallback), fallback, "invalid"); return; }
+    if (directive.route === "abstain" || directive.grade === null) {
+      enter(auditAbstained(desk, fallback), fallback, "abstained");
+      return;
+    }
+    if (directive.grade !== councilScore.verdict) {
+      enter(auditGradeMismatch(auditModelGraded(desk, directive.grade), fallback), fallback, "mismatched");
+      return;
+    }
+    const graded = auditModelGraded(desk, directive.grade);
+    const prose = stripAuditDirective(result.text);
+    if (!verifyAuditStructure(prose)) { enter(auditStructureRefused(graded, fallback), fallback, "invalid"); return; }
+    const found = verifyReplayText(prose, envelope);
+    if (found.length > 0) {
+      setOmbudsViolations(found);
+      enter(auditNumeralsRefused(auditStructurePassed(graded), fallback), fallback, "folded");
+      return;
+    }
+    enter(auditNumeralsPassed(auditStructurePassed(graded)), prose, "verified");
+  };
+
+  const decideOmbudsman = (decision: AuditDecision) => {
+    const desk = ombudsDesk;
+    if (!desk || desk.status !== "commit" || desk.decision !== null || !councilForecast || !councilScore) return;
+    const next = decision === "publish" ? auditPublish(desk, desk.answer) : auditContest(desk, desk.answer);
+    setOmbudsDesk(next);
+    setOmbudsTrace(next.trace);
+    setOmbudsBadge(decision === "publish" ? "published" : "contested");
+    const note: OmbudsmanNote = {
+      grade: councilScore.verdict, forecast: councilScore.forecast, actual: councilScore.actual,
+      delta: councilScore.delta, rxId: councilForecast.rxId, anomaly: councilForecast.anomaly,
+      at: replay.windowEnd, locale, decision,
+    };
+    writeJson(browserStore(), OM_KEY, note);
   };
 
   // The forecast, the fold and the projection are the same pulse — one pass, no new data invented.
@@ -1132,6 +1220,88 @@ export function Ops() {
           </div>
         )}
         <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.rxCouncil.method")}</p>
+      </Panel>
+
+      {/* M1226 · The Forecast Ombudsman — an honest grade of the council's own forecast */}
+      <Panel className="p-4">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.ombudsman.kicker")}</h2>
+            <p className="mt-0.5 max-w-2xl text-[11px] leading-snug text-foreground/90">{t("ops.ombudsman.title")}</p>
+            <p className="mt-1 max-w-2xl text-[10px] leading-snug text-muted-foreground">{t("ops.ombudsman.subtitle")}</p>
+          </div>
+          <span className={cn("inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[9px] font-semibold uppercase tracking-widest", LLM_CONFIG.hasKey ? CHIP_CLASS.badgeInfoStrong : CHIP_CLASS.warning)}>
+            {LLM_CONFIG.hasKey && <span aria-hidden className="fo-live-dot inline-flex h-1.5 w-1.5 rounded-full bg-info" />}
+            {LLM_CONFIG.hasKey ? t("ai.via.live", { model: LLM_CONFIG.model }) : t("ai.via.local")}
+          </span>
+        </div>
+        {!councilForecast || !councilScore ? (
+          <p className="mt-3 text-[10px] text-muted-foreground">{t("ops.ombudsman.empty")}</p>
+        ) : (
+          <>
+            <div className="mt-3 flex flex-wrap gap-1 font-mono text-[9px] uppercase tracking-widest">
+              <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">{t("ops.ombudsman.expected")}:{councilScore.verdict}</span>
+              <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">{t("ops.ombudsman.forecast")}:{councilScore.forecast}</span>
+              <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">{t("ops.ombudsman.observation")}:{councilScore.actual}</span>
+              <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">Δ{councilScore.delta}</span>
+              <span className="rounded-md border border-border/60 bg-muted/30 px-2 py-1">{councilForecast.rxId}</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => void askOmbudsman()}
+              disabled={ombudsBusy}
+              className="fo-lift mt-3 inline-flex items-center rounded-lg border px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted disabled:opacity-60"
+            >
+              {ombudsBusy ? t("pressroom.answering") : t("ops.ombudsman.ask")}
+            </button>
+            {ombudsAnswer && <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">{ombudsAnswer}</p>}
+            {ombudsBadge && (
+              <span className={cn("mt-2 inline-flex rounded-full border px-2 py-0.5 font-mono text-[9px] uppercase tracking-widest",
+                ombudsBadge === "verified" || ombudsBadge === "published" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+                {t(`ops.ombudsman.badge.${ombudsBadge}`)}
+              </span>
+            )}
+            {ombudsViolations && ombudsViolations.length > 0 && (
+              <p className="mt-2 font-mono text-[9px] text-warning">{t("ops.ombudsman.violations")} · {ombudsViolations.join(" · ")}</p>
+            )}
+            {ombudsDesk?.status === "commit" && ombudsDesk.decision === null && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                <button type="button" onClick={() => decideOmbudsman("publish")}
+                  className="fo-lift rounded-lg border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-primary transition-colors hover:bg-muted">
+                  {t("ops.ombudsman.publish")}
+                </button>
+                <button type="button" onClick={() => decideOmbudsman("contest")}
+                  className="fo-lift rounded-lg border px-3 py-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground transition-colors hover:bg-muted">
+                  {t("ops.ombudsman.contest")}
+                </button>
+              </div>
+            )}
+            {ombudsNote && (
+              <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                {t("ops.ombudsman.recorded")} · {ombudsNote.decision} · {ombudsNote.grade} · {ombudsNote.rxId}
+              </p>
+            )}
+            {ombudsTrace && (
+              <div className="mt-4 border-t border-border/60 pt-3">
+                <span className="font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.ombudsman.trace.label")}</span>
+                <div className="mt-1 flex flex-wrap gap-1">
+                  {ombudsTrace.map((entry, index) => (
+                    <span key={`${entry.stage}-${index}`} title={t(`ops.ombudsman.note.${entry.note}`)}
+                      className={cn("rounded-md border px-2 py-1 font-mono text-[9px] uppercase tracking-widest",
+                        entry.verdict === "pass" ? CHIP_CLASS.badgeSuccess : CHIP_CLASS.badgeWarning)}>
+                      {t(`ops.replay.stage.${entry.stage}`)}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-2 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">
+                  {t("ops.ombudsman.stategraph")} · {ombudsDesk?.status ?? t("ops.replay.stage.preflight")}
+                  {" · "}{t("ops.ombudsman.decision")}:{ombudsDesk?.decision ?? ABSENT}
+                </p>
+              </div>
+            )}
+          </>
+        )}
+        <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.ombudsman.method")}</p>
       </Panel>
 
       {/* 14-day rhythm */}

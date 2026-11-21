@@ -6,6 +6,10 @@ export type Verdict = "pass" | "refused";
 /** The studio-family FSM stages — spelled once, consumed by both engines as `StudioStage` / `ConsultStage`. */
 export type FsmStage = "preflight" | "build" | "model" | "precommit" | "commit" | "refused" | "done";
 
+/** The two verifier stages and their notes, shared by every two-step door (M1224/M1226). */
+export type VerifierStage = "structure" | "numerals";
+export type VerifierNote = "structurePassed" | "structureRefused" | "numeralsPassed" | "numeralsRefused";
+
 export interface TraceEntry<E extends string, N extends string> {
   readonly stage: E;
   readonly verdict: Verdict;
