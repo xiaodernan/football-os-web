@@ -79,6 +79,8 @@ const LeadRetention = lazy(() => import("@/features/analytics/LeadRetention").th
 const Streaks = lazy(() => import("@/features/analytics/Streaks").then((m) => ({ default: m.Streaks })));
 // M1231: the keepers' union — the world's goalkeepers, named.
 const KeepersUnion = lazy(() => import("@/features/keepers/KeepersUnion").then((m) => ({ default: m.KeepersUnion })));
+// M1232: the congested calendar — the fixture spacing board.
+const CongestedCalendar = lazy(() => import("@/features/congestion/CongestedCalendar").then((m) => ({ default: m.CongestedCalendar })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) => ({ default: m.LeagueRules })));
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
@@ -252,6 +254,7 @@ function Routes() {
   else if (path === "/leads") inner = <LeadRetention />;
   else if (path === "/streaks") inner = <Streaks />;
   else if (path === "/keepers") inner = <KeepersUnion />;
+  else if (path === "/congestion") inner = <CongestedCalendar />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
   else if (path === "/messaging") inner = <QueueObservatory />;
