@@ -214,6 +214,12 @@ const LOCAL_SPLITS = {
   // five setState calls are the shared terminal shape, not a shared rule between two doors.
   "features/chronicle/LongChronicler.tsx:enter|features/wirediary/Cartographer.tsx:enter":
     "each imprisoned door commits its own typed state into its own screen; the five setters are the framework's terminal shape, and the two FSMs and panels remain distinct",
+  // M1225 The Prescription Council: the three doors commit their own traced-FSM state into
+  // their own React panel; the setters are the shared terminal shape, not a shared rule.
+  "features/chronicle/LongChronicler.tsx:enter|features/ops/Ops.tsx:enter":
+    "the Chronicler and the Prescription Council are separate imprisoned doors; the five setters are the framework's terminal shape, and the two FSMs and panels remain distinct",
+  "features/ops/Ops.tsx:enter|features/wirediary/Cartographer.tsx:enter":
+    "the Prescription Council and the Wire Diary are separate imprisoned doors; the five setters are the framework's terminal shape, and the two FSMs and panels remain distinct",
 };
 const localUndeclared = localPairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)
@@ -261,6 +267,14 @@ const SAME_FILE_SPLITS = {
     "both verifier stages refuse through the same traced FSM helper; the structure and numerals stages are separate transitions with their own notes",
   "domain/chronicler.ts:chapterStructurePassed|domain/chronicler.ts:chapterNumeralsPassed":
     "both verifier stages mark their own proof flag in state before advancing; the flags are consumed by different stages and are pinned separately",
+  // M1225 The Prescription Council: the two proposal-side refusals and the two operator-side
+  // commits are the same traced-FSM terminal shape, but each names a different edge and note.
+  "domain/rxCouncil.ts:councilProposalInvalid|domain/rxCouncil.ts:councilProposalRefused":
+    "both are model-side refusals with one voice; the first rejects a foreign first line, the second a numeral that cannot anchor",
+  "domain/rxCouncil.ts:councilAbstained|domain/rxCouncil.ts:councilFold":
+    "both are honest fold arms on the same refused stage; the abstention is the model's word, the fold is the on-device answer",
+  "domain/rxCouncil.ts:councilAdopt|domain/rxCouncil.ts:councilReject":
+    "both are operator edges into the same commit stage; the traced decision and the recorded forecast differ by design",
 };
 const sfUndeclared = sameFilePairs
   .map(([a, b]) => `${a.f}:${a.name}|${b.f}:${b.name}`)

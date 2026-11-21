@@ -1134,6 +1134,15 @@ const SPACES = new Map([
   ["ops.replay.badge.|replayBadge", { name: "replay verdict badges", values: ["verified", "folded", "invalid", "abstained"] }],
   ["ops.replay.stage.|entry.stage", { name: "replay trace stages", values: ["preflight", "build", "model", "precommit", "commit", "refused", "done"] }],
   ["ops.replay.note.|entry.note", { name: "replay trace notes", values: ["windowSealed", "modelChoseAnomaly", "anomalyInvalid", "modelAbstained", "commitOk", "precommitRefused", "foldOk"] }],
+  // M1225 The Prescription Council: offered anomalies come from the domain table itself.
+  ["ops.replay.anomaly.|o.anomaly", { name: "offered anomaly ids", values: spaceOf("domain/replay.ts", /export const REPLAY_ANOMALIES = \[[^\]]*\] as const/, quoted) }],
+  ["ops.replay.anomaly.|councilForecast.anomaly", { name: "council forecast anomalies", values: spaceOf("domain/replay.ts", /export const REPLAY_ANOMALIES = \[[^\]]*\] as const/, quoted) }],
+  ["ops.replay.anomaly.|councilScore.anomaly", { name: "council grade anomalies", values: spaceOf("domain/replay.ts", /export const REPLAY_ANOMALIES = \[[^\]]*\] as const/, quoted) }],
+  // M1225 The Prescription Council: the badge union, the two operator edges, and the two grade codes.
+  ["ops.rxCouncil.badge.|councilBadge", { name: "council badges", values: ["verified", "folded", "invalid", "abstained", "adopted", "rejected"] }],
+  ["ops.rxCouncil.badge.|councilDesk.decision", { name: "council operator edges", values: ["adopt", "reject"] }],
+  ["ops.rxCouncil.score.|councilScore.verdict", { name: "council grade codes", values: ["hit", "near", "miss"] }],
+  ["ops.rxCouncil.note.|entry.note", { name: "council trace notes", values: ["offeringSealed", "modelProposed", "proposalInvalid", "modelAbstained", "proposalVerified", "proposalRefused", "adopted", "rejected", "foldOk"] }],
   // M1185 The Analyst: the admin reasoning strip, keyed off its own note/stage enums.
   ["ops.analyst.stage.|entry.stage", { name: "analyst trace stages", values: ["preflight", "build", "precommit", "commit", "refused"] }],
   ["ops.analyst.note.|entry.note", { name: "analyst trace notes", values: ["analystOn", "evidenceSealed", "commitOk", "foldOk", "precommitRefused"] }],

@@ -123,17 +123,25 @@ export const councilBuild = (s: CouncilState): CouncilState =>
 export const councilModelProposed = (s: CouncilState, id: string): CouncilState =>
   step({ ...s, proposalId: id }, { stage: "model", verdict: "pass", note: "modelProposed" }, "precommit");
 
-export const councilProposalInvalid = (s: CouncilState, answer: string): CouncilState =>
-  fsmRefused({ ...s, answer }, answer, { stage: "model", verdict: "refused", note: "proposalInvalid" });
+export const councilProposalInvalid = (s: CouncilState, answer: string): CouncilState => {
+  const refused = fsmRefused({ ...s, answer }, answer, { stage: "model", verdict: "refused", note: "proposalInvalid" });
+  return refused;
+};
 
-export const councilAbstained = (s: CouncilState, answer: string): CouncilState =>
-  fsmRefused({ ...s, answer }, answer, { stage: "refused", verdict: "refused", note: "modelAbstained" });
+export const councilAbstained = (s: CouncilState, answer: string): CouncilState => {
+  const abstained = fsmRefused({ ...s, answer }, answer, { stage: "refused", verdict: "refused", note: "modelAbstained" });
+  return abstained;
+};
 
-export const councilVerified = (s: CouncilState): CouncilState =>
-  step({ ...s, forecastOk: true }, { stage: "precommit", verdict: "pass", note: "proposalVerified" }, "commit");
+export const councilVerified = (s: CouncilState): CouncilState => {
+  const proved = step({ ...s, forecastOk: true }, { stage: "precommit", verdict: "pass", note: "proposalVerified" }, "commit");
+  return proved;
+};
 
-export const councilProposalRefused = (s: CouncilState, answer: string): CouncilState =>
-  fsmRefused({ ...s, answer }, answer, { stage: "precommit", verdict: "refused", note: "proposalRefused" });
+export const councilProposalRefused = (s: CouncilState, answer: string): CouncilState => {
+  const refused = fsmRefused({ ...s, answer }, answer, { stage: "precommit", verdict: "refused", note: "proposalRefused" });
+  return refused;
+};
 
 export const councilAdopt = (s: CouncilState, answer: string): CouncilState =>
   fsmCommit({ ...s, answer, decision: "adopt" }, answer, { stage: "commit", verdict: "pass", note: "adopted" });
@@ -141,8 +149,10 @@ export const councilAdopt = (s: CouncilState, answer: string): CouncilState =>
 export const councilReject = (s: CouncilState, answer: string): CouncilState =>
   fsmCommit({ ...s, answer, decision: "reject" }, answer, { stage: "commit", verdict: "pass", note: "rejected" });
 
-export const councilFold = (s: CouncilState, answer: string): CouncilState =>
-  fsmRefused({ ...s, answer }, answer, { stage: "refused", verdict: "refused", note: "foldOk" });
+export const councilFold = (s: CouncilState, answer: string): CouncilState => {
+  const folded = fsmRefused({ ...s, answer }, answer, { stage: "refused", verdict: "refused", note: "foldOk" });
+  return folded;
+};
 
 // ── the forecast the next replay must answer to ──────────────────────────────────────────────
 export interface RxForecast {
@@ -161,7 +171,6 @@ export interface RxScore {
   readonly verdict: "hit" | "near" | "miss";
 }
 
-export type ForecastVerdict = RxScore["verdict"];
 
 /** A forecast is only born after the graph has proved a proposal and the operator adopted it. */
 export function forecastFrom(snapshot: ReplaySnapshot, offering: RxOffering, locale: Locale): RxForecast {
