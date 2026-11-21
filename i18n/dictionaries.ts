@@ -5848,7 +5848,7 @@ const zhCN: Dict = {
   "tomorrow.modelSays": "模型对今晚的读法",
   "tomorrow.sideMetrics": "主队 λ {h} / 客队 λ {a}",
   "tomorrow.openFixture": "打开今晚的比赛详情",
-  "tomorrow.method": "本章节从种子里自己的俱乐部总评选出——综合评分最高的两队——并用 Prophet 同款泊松模型来叙述；书写明夜的，是种子的口碑，不是这一页的文采",
+  "tomorrow.method": "本章节从种子里自己的俱乐部总评选出——综合评分最高的两队——并用 Prophet 同款泊松模型来叙述；书写明夜的，是种子的口碑，不是这一页的文笔",
   "nav.upsets": "冷门之夜",
   "upsets.title": "冷门之夜",
   "upsets.subtitle": "世界冲过了自己的预测——那些被模型判给一方却拿到另一方的已完赛事，按种子里泊松之眼重新读出；最大的冷门排第一",
