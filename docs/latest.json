@@ -1,9 +1,9 @@
 {
-  "head": "3a32e84",
-  "total_commits": 1755,
-  "milestone": "M1225",
-  "milestone_full": "本提交落地后 M1225 The Prescription Council — the model proposes one move, the operator decides",
-  "pwa_kb": 852,
+  "head": "ca1d61c",
+  "total_commits": 1757,
+  "milestone": "M1226",
+  "milestone_full": "本提交落地后 M1226 The Forecast Ombudsman — the model audits its own recorded forecast against a later measured hour",
+  "pwa_kb": 855,
   "assets": 117,
   "screens": 86,
   "screens_label": "86+ screens",
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-21T10:39:09.613Z"
+  "generated_at": "2026-11-21T13:09:50.597Z"
 }
