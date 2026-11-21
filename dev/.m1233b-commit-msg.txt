@@ -1,0 +1,10 @@
+M1233 The Selection Chair: the live witness, and the debug spec retired
+
+- scripts/verify-chair-live.mjs (new, 9/9): ONE real gpt-6.2-sol call through the
+  shipped proxy. The model's first line was a lawful XI — eleven distinct pool
+  players, exactly one keeper — the prose rode the shared numeral law, and the
+  committed state carries the selection. The planted ghost player is charged.
+  Measured: 200 in 12679ms on the 235,772-char world book with the 24h lane warm
+  (cached_tokens=142529). Key never printed; not part of npm run proof.
+- tests/e2e/chair-dump.spec.ts retired: a throwaway debug capture that was
+  committed by accident with M1233; the real chair spec covers the screen.
