@@ -14,6 +14,8 @@ import { useRouter } from "@/lib/router";
 import { useI18n } from "@/i18n";
 import { useTheme } from "@/lib/theme";
 import { useOs } from "@/store/useFootballOS";
+import { useLocalStorage } from "@/lib/hooks";
+import { TOUR_KEY, initialTour, tourRestart, type TourState } from "@/domain/firstRunGuide";
 import { globalSearch } from "@/data/footballService";
 import { rowLine, searchKindLabel } from "@/domain/rowText";
 import { MODES } from "@/domain/types";
@@ -44,6 +46,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
   const { t } = useI18n();
   const { theme, toggle } = useTheme();
   const { state, setMode } = useOs();
+  const [, setTour] = useLocalStorage<TourState>(TOUR_KEY, initialTour());
   const [query, setQuery] = useState("");
   const dq = useDebounced(query, 160);
 
@@ -163,6 +166,9 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
       // call 浅色 something the settings page calls 亮色.
       { id: "theme", label: t("cmd.theme", { theme: theme === "dark" ? t("set.theme.light") : t("set.theme.dark") }), hint: t("cmd.appearance"), group: "actions", run: () => { toggle(); } },
       { id: "ask", label: t("cmd.ask"), hint: t("cmd.from", { path }), group: "actions", run: nav("/ai") },
+      // M1230: replay the quick tour — restarts the first-run guide and lands on the board it
+      // walks, so the action works from any screen the palette is opened on.
+      { id: "tour", label: t("guide.replay"), hint: t("guide.replayHint"), group: "actions", run: () => { setTour(tourRestart()); nav("/")(); } },
     );
     if (state.onboarded) {
       MODES.forEach((m) =>

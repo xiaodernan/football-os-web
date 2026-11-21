@@ -578,7 +578,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
 // M1188: +1 domain/dispatch.ts (the one order the model names; the reader rides it on /ops).
-const APP_SRC_PIN = 228; // M1229 The Teaching Hints: 226 -> 228 — domain/teachHint.ts and ui/TeachHint.tsx join the reader. // M1225 The Prescription Council: 225 -> 226 — domain/rxCouncil.ts joins the reader (Ops.tsx already counted). // M1224 The Long-Context Chronicler: 223 -> 225 — domain/chronicler.ts + features/chronicle/LongChronicler.tsx join the reader. // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const APP_SRC_PIN = 230; // M1230 The First-Run Guide: 228 -> 230 — domain/firstRunGuide.ts and ui/FirstRunGuide.tsx join the reader. // M1229 The Teaching Hints: 226 -> 228 — domain/teachHint.ts and ui/TeachHint.tsx join the reader. // M1225 The Prescription Council: 225 -> 226 — domain/rxCouncil.ts joins the reader (Ops.tsx already counted). // M1224 The Long-Context Chronicler: 223 -> 225 — domain/chronicler.ts + features/chronicle/LongChronicler.tsx join the reader. // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -616,7 +616,7 @@ const APP_SRC_PIN = 228; // M1229 The Teaching Hints: 226 -> 228 — domain/teac
 // M1169 The Grand Dispatch: +1 TSX.
 // M1173 The Golden Hour: +1 TSX (GoldenHour.tsx).
 // M1175 The Wire Diary: +1 TSX (WireDiary.tsx).
-const TSX_PIN = 117; // M1229 The Teaching Hints: +1 ui/TeachHint.tsx. // M1224: +1 features/chronicle/LongChronicler.tsx. M1219: +1 features/wirediary/Cartographer.tsx. M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk. · M1199 The Frozen Dispatch: 111 -> 112 — features/wirediary/FrozenDispatch.tsx joins the .tsx walk. · M1201 The Frozen Diary: 112 -> 113 — features/wirediary/FrozenDiary.tsx joins the .tsx walk.
+const TSX_PIN = 118; // M1230 The First-Run Guide: +1 ui/FirstRunGuide.tsx. // M1229 The Teaching Hints: +1 ui/TeachHint.tsx. // M1224: +1 features/chronicle/LongChronicler.tsx. M1219: +1 features/wirediary/Cartographer.tsx. M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk. · M1199 The Frozen Dispatch: 111 -> 112 — features/wirediary/FrozenDispatch.tsx joins the .tsx walk. · M1201 The Frozen Diary: 112 -> 113 — features/wirediary/FrozenDiary.tsx joins the .tsx walk.
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -671,7 +671,7 @@ const TSX_PIN = 117; // M1229 The Teaching Hints: +1 ui/TeachHint.tsx. // M1224:
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 231; // M1229 The Teaching Hints: 229 -> 231 — domain/teachHint.ts and ui/TeachHint.tsx join the dictionary-table reader. // M1225 The Prescription Council: 228 -> 229 — domain/rxCouncil.ts joins the dictionary-table reader. // M1224 The Long-Context Chronicler: 226 -> 228 — the chronicler's domain + screen join the dictionary-table reader. // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const SRC_PIN = 233; // M1230 The First-Run Guide: 231 -> 233 — domain/firstRunGuide.ts and ui/FirstRunGuide.tsx join the dictionary-table reader. // M1229 The Teaching Hints: 229 -> 231 — domain/teachHint.ts and ui/TeachHint.tsx join the dictionary-table reader. // M1225 The Prescription Council: 228 -> 229 — domain/rxCouncil.ts joins the dictionary-table reader. // M1224 The Long-Context Chronicler: 226 -> 228 — the chronicler's domain + screen join the dictionary-table reader. // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -3431,6 +3431,9 @@ const KEY_ROW_CONSUMERS = [
   // M1150 The Journey: the nine chapter registry hands its titleKey/hintKey rows out; the Journey screen renders them through t().
   { path: "domain/journey.ts", prop: "titleKey", consumer: "features/journey/Journey.tsx" },
   { path: "domain/journey.ts", prop: "hintKey", consumer: "features/journey/Journey.tsx" },
+  // M1230 The First-Run Guide: the step table's titleKey/bodyKey rows are rendered by the guide itself.
+  { path: "domain/firstRunGuide.ts", prop: "titleKey", consumer: "ui/FirstRunGuide.tsx" },
+  { path: "domain/firstRunGuide.ts", prop: "bodyKey", consumer: "ui/FirstRunGuide.tsx" },
 ];
 const badKeys = [], unresolved = [];
 let keySites = 0;
@@ -3537,7 +3540,7 @@ const DUP_VALUES_PIN = 164; // M1222: the replay source labels reuse one short s
 // M1175 The Wire Diary: one shared English excess key joins the ratchet; 263 -> 264.
 // M1194 The Gate Lane: the same shared FSM stage identifiers pay the excess end of the ratchet
 // too — three keys ride values the dictionaries already carry — 265 -> 268, paid as measured.
-const DUP_EXCESS_KEYS_PIN = 271; // M1222: 33 replay keys × 3 locales, minus the three sentences shared on purpose.
+const DUP_EXCESS_KEYS_PIN = 272; // M1222: 33 replay keys × 3 locales, minus the three sentences shared on purpose.
 // Build a reverse map once: English value → the keys that carry it.
 const enPairs = pairsOf(0);
 const valueToKeys = new Map();
@@ -5040,7 +5043,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // (badges, verdict grades, trace notes, forecast labels). Measured on this tree: 3738 / 189.
   // M1226 the Forecast Ombudsman adds 22 literal and 3 template t() sites on the same door
   // (badges, trace notes, grade labels, the fold sentence). Measured: 3760 / 192.
-  shapeCounts.literal === 3766 && shapeCounts.template === 192 && shapeCounts.expression === 71
+  shapeCounts.literal === 3776 && shapeCounts.template === 192 && shapeCounts.expression === 74
     && shapeCounts.computed === 27 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5226,11 +5229,11 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // placeholders over — four more sites, 579 -> 583, measured on this tree.
   // M1225: the council forecast and trace labels carry two more placeholder sites (583 -> 585).
   // M1226: the ombudsman fold sentence and the live model badge carry two more (585 -> 587).
-  litVarSites === 588 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 589 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
-  exprWithObj.length === 0 && shapeCounts.expression === 71 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 74 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three
@@ -5255,7 +5258,7 @@ const filmKindKeys = [...filmKindBlock.matchAll(/"([A-Za-z0-9_.$-]+)"/g)].map((x
 // M776: foundKeys left the pin with the population. It is `scripts/browser-walk.spec.ts`'s collection
 // of raw keys found on the page — a test harness array, not a pool a screen hands to t(); the reader
 // cannot reach that spec, and the pool this clause audits is the pool the app renders.
-const POOL_FIELDS_PIN = ["bodyKeys", "hintKey", "keywordKey", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
+const POOL_FIELDS_PIN = ["bodyKey", "bodyKeys", "hintKey", "keywordKey", "labelKey", "optionKeys", "qKey", "summaryKey", "titleKey"];
 const poolFieldsGot = [...poolFields, ...poolArrFields].sort();
 const poolVars = [...poolKeys, ...filmKindKeys].filter((k) => L.some((loc) => phList(D[loc.id][k] ?? "").length > 0));
 const plantPool = L.some((loc) => phList((loc.id === "en" ? D.en["learn.l.xg.title"] + " {n}" : D[loc.id]["learn.l.xg.title"]) ?? "").length > 0);
@@ -6714,7 +6717,7 @@ ok(`the forms 37f's quoted-only read leaves outside are held too: ${ariaKeyed} a
 // M1201 The Frozen Diary: the print button's aria-label + the loading region's aria-label name themselves through t() — 42 -> 44.
 //                      shapes census: literal 3600 -> 3621 (all Frozen Diary literal sites, measured on this tree)
 // M1217 The Witness Bench: the three-lens buttons name themselves through t() — 44 -> 45 (measured).
-ariaKeyed === 46 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
+ariaKeyed === 47 && ariaFwd === 1 && ariaSource === 1 && ariaPlant === 1 &&
   sqHits.length === 0 && tlHits.length === 0 && sqPlant === 1 && tlPlant === 1);
 
 // 37h. M274. The seed news sentence class. The seed composes every headline from five English

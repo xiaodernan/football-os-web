@@ -133,7 +133,7 @@ export function Dashboard() {
         </div>
       </div>
 
-      <Panel className="fo-lift p-4">
+      <Panel className="fo-lift p-4" data-tour="next-steps">
         <SectionTitle title={t("dash.nextTitle")} hint={t("dash.nextHint")} />
         <div className="mt-2 flex flex-col gap-1.5">
           {steps.map((kind, i) => (
@@ -389,7 +389,7 @@ export function Dashboard() {
             )}
           </Panel>
 
-          <Panel className="p-4">
+          <Panel className="p-4" data-tour="modules">
             <SectionTitle title={t("dash.modules")} hint={t("dash.modulesHint")} />
             <div className="mt-1 grid grid-cols-2 gap-1.5">
               {MODULE_LINKS.map((m) => (

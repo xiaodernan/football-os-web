@@ -1,0 +1,41 @@
+M1230 The First-Run Guide: six coach-marks, once per device, never in the way
+
+The master directive's seventh point asked for a quick-start demo for new
+users. This lands it: the first time a visitor reaches the main board, six
+coach-marks walk them across it - the ranked next moves, the twenty-two module
+doors, the palette, the mode switch, and the manual as the way out.
+
+- domain/firstRunGuide.ts (new, pure): the six-step table and the state
+  arithmetic - advancing past the last step FINISHES the tour rather than
+  falling off the table, backing is bounded, skipping preserves the step, and
+  parseTour degrades every corrupt stored shape to the initial state.
+- ui/FirstRunGuide.tsx (new): a spotlight ring frames the step's control
+  (box-shadow carves it out of the dim), the card sits under the ring or
+  centred, Escape or Skip dismisses for good. NON-MODAL by design: the dim is
+  visual, the page underneath stays clickable - a guide you cannot click out
+  of is a jail, not a tutorial. This was a real defect the batched E2E run
+  caught: a full-modal overlay intercepted every interaction after first
+  landing.
+- The guide is one shell-level singleton reading one storage key
+  (football-os.tour.v1, registered as a preference). Because a same-tab
+  storage write updates nobody's React state, the guide re-reads its key on
+  every route change and on the storage event - without that sync, a replay
+  from the settings row or the palette would only take effect after a reload
+  (the second real defect the E2E caught).
+- Replay is reachable twice: the settings row beside the teaching hints, and
+  a palette action that restarts the tour and lands on the board it walks.
+- scripts/proof-firstrunguide.mjs (new, 10/10): table shape and trilingual
+  placeholders, exact visibility, the walk/back/skip arithmetic, corrupt-store
+  degradation, the localStorage round-trip, the four data-tour anchors with
+  the singleton mounted once, both replay entries, the storage registration;
+  the two zero-asserting clauses carry positive pins per the census rule.
+- Gates: proof-i18n 453/453 (literal 3766->3776, expression 71->74, litVar
+  588->589, ariaKeyed 46->47, APP_SRC 228->230, TSX 117->118, SRC 231->233,
+  excess-key 271->272, POOL_FIELDS gains bodyKey, KEY_ROW_CONSUMERS declares
+  the guide's titleKey/bodyKey renderer), proof-storage 63/63 (225->226),
+  proof-coverage 26/26 (POP 232->234), proof-app-tree 13/13 (231->233),
+  proof-router 29/29 (222->223), proof-pwa 4/4 (bundle 860->863 KB,
+  baseline re-recorded), proof-i18n-scan 1/1; tsc clean, build exit 0.
+  New E2E tests/e2e/first-run-guide.spec.ts 2/2; teach-hints/ops/
+  command-center re-run green; all-routes 94/94 (one /football page crash
+  under machine memory pressure, green in isolation).

@@ -11,6 +11,7 @@ import { cn, pctLabel } from "@/lib/utils";
 import { DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { CommandPalette } from "@/features/command/CommandPalette";
 import { TeachHint } from "@/ui/TeachHint";
+import { FirstRunGuide } from "@/ui/FirstRunGuide";
 import { MODES, type Mode } from "@/domain/types";
 
 interface NavItem {
@@ -220,7 +221,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <Group label="">{search.map((n) => renderLink(n))}</Group>
       </nav>
 
-      <div className="mt-2 flex items-center justify-between border-t border-sidebar-border pt-3">
+      <div className="mt-2 flex items-center justify-between border-t border-sidebar-border pt-3" data-tour="modes">
         <ModeSwitch />
         <Controls />
       </div>
@@ -230,6 +231,8 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-dvh">
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} />
+      {/* M1230: the first-run guide — six coach-marks over the board, once per device. */}
+      <FirstRunGuide />
       {/* desktop rail */}
       <aside className="fixed inset-y-0 left-0 z-30 hidden w-60 border-r border-sidebar-border lg:block">{sidebar}</aside>
 
@@ -249,8 +252,8 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Sheet>
 
           {/* M1229: the palette trigger carries its own one-line lesson, the way every module
-              tile on the dashboard does. */}
-          <div className="ml-auto flex items-center gap-1.5">
+              tile on the dashboard does. M1230: it is also the first-run guide's anchor. */}
+          <div className="ml-auto flex items-center gap-1.5" data-tour="palette">
             <Button
               variant="outline"
               size="sm"

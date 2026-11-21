@@ -8,6 +8,7 @@ import { DEMO_MODE, footballProvider } from "@/data/footballService";
 import { MODES } from "@/domain/types";
 import { useLocalStorage } from "@/lib/hooks";
 import { TEACH_SEEN_KEY, resetSeen } from "@/domain/teachHint";
+import { TOUR_KEY, initialTour, tourRestart, type TourState } from "@/domain/firstRunGuide";
 import { unreadTeachCount } from "@/ui/TeachHint";
 import { Panel, SectionTitle, DemoBadge, PANEL_CLASS, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
@@ -23,6 +24,7 @@ export function SettingsPage() {
   // M1229: the teaching-hint ledger — how many dashboard lessons are still unread, and the
   // control that puts every "?" back to its unread pulse.
   const [teachSeen, setTeachSeen] = useLocalStorage<string[]>(TEACH_SEEN_KEY, []);
+  const [tour, setTour] = useLocalStorage<TourState>(TOUR_KEY, initialTour());
   const unreadLessons = unreadTeachCount(teachSeen);
 
   const inv = useMemo(() => inventory(browserStore()), [state]);
@@ -219,6 +221,18 @@ export function SettingsPage() {
             onClick={() => { setTeachSeen(resetSeen()); toast(t("teach.resetDone")); }}
           >
             {t("teach.reset")}
+          </Button>
+        </div>
+        {/* M1230: the quick tour's replay lives beside the lessons — both are the front door's
+            teaching furniture, and a visitor who skipped it once can ask for it again. */}
+        <div className="mt-2 flex items-center justify-between gap-2">
+          <span className="text-sm">{t("guide.replayHint")}</span>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => { setTour(tourRestart()); toast(t("guide.replay")); }}
+          >
+            {t("guide.replay")}
           </Button>
         </div>
       </Panel>
