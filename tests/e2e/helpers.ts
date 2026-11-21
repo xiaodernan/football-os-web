@@ -1,5 +1,14 @@
 import { expect, type Page } from "@playwright/test";
 
+// M1230/M1233: a fresh device's first landing opens the first-run guide, whose card can sit over
+// the board and intercept a click on the control underneath it. Specs that click main content
+// dismiss it first — the tour is a known first-run overlay, not a defect to route around.
+export async function dismissTour(page: Page) {
+  const skip = page.getByRole("button", { name: "Skip" });
+  if (await skip.count() > 0) await skip.click();
+  await expect(page.getByRole("dialog", { name: "Welcome to Football OS" })).toHaveCount(0);
+}
+
 // The onboarding walk every spec starts from: the visitor picks Player, names themself, picks
 // striker and first-touch, skips the favourites and enters. Written once so a change to the
 // flow is one edit, not four.

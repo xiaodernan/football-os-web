@@ -81,6 +81,8 @@ const Streaks = lazy(() => import("@/features/analytics/Streaks").then((m) => ({
 const KeepersUnion = lazy(() => import("@/features/keepers/KeepersUnion").then((m) => ({ default: m.KeepersUnion })));
 // M1232: the congested calendar — the fixture spacing board.
 const CongestedCalendar = lazy(() => import("@/features/congestion/CongestedCalendar").then((m) => ({ default: m.CongestedCalendar })));
+// M1233: the selection chair — the sixteenth imprisoned door, the first that decides.
+const SelectionChair = lazy(() => import("@/features/chair/SelectionChair").then((m) => ({ default: m.SelectionChair })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) => ({ default: m.LeagueRules })));
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
@@ -255,6 +257,7 @@ function Routes() {
   else if (path === "/streaks") inner = <Streaks />;
   else if (path === "/keepers") inner = <KeepersUnion />;
   else if (path === "/congestion") inner = <CongestedCalendar />;
+  else if (path === "/chair") inner = <SelectionChair />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
   else if (path === "/messaging") inner = <QueueObservatory />;

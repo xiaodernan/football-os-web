@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { completeOnboarding } from "./helpers";
+import { completeOnboarding, dismissTour } from "./helpers";
 
 // M1231 — the keepers' union: the world's goalkeepers, named, each with the club's own
 // clean-sheet record read from the shared wall fold. The screen walks its tiles, its board and
@@ -7,6 +7,7 @@ import { completeOnboarding } from "./helpers";
 test("the keepers' union names a number one per club with the wall behind him", async ({ page }) => {
   await completeOnboarding(page, "Keeper Visitor");
   await page.goto("/#/keepers");
+  await dismissTour(page);
 
   await expect(page.getByRole("heading", { name: "The Keepers' Union" })).toBeVisible();
   await expect(page.getByText("Every club's number one, and the wall they stand behind.")).toBeVisible();

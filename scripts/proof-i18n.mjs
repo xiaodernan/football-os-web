@@ -578,7 +578,7 @@ const appSrc = new Map(files.filter((f) => !rel(f).startsWith("i18n/") && reader
 // M1173 The Golden Hour: 195 -> 197 (goldHour fold + screen).
 // M1175 The Wire Diary: 197 -> 199 (wireDiary fold + screen).
 // M1188: +1 domain/dispatch.ts (the one order the model names; the reader rides it on /ops).
-const APP_SRC_PIN = 234; // M1232 The Congested Calendar: 232 -> 234 — domain/congestion.ts and features/congestion/CongestedCalendar.tsx join the reader. // M1231 The Keepers' Union: 230 -> 232 — domain/keepers.ts and features/keepers/KeepersUnion.tsx join the reader. // M1230 The First-Run Guide: 228 -> 230 — domain/firstRunGuide.ts and ui/FirstRunGuide.tsx join the reader. // M1229 The Teaching Hints: 226 -> 228 — domain/teachHint.ts and ui/TeachHint.tsx join the reader. // M1225 The Prescription Council: 225 -> 226 — domain/rxCouncil.ts joins the reader (Ops.tsx already counted). // M1224 The Long-Context Chronicler: 223 -> 225 — domain/chronicler.ts + features/chronicle/LongChronicler.tsx join the reader. // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const APP_SRC_PIN = 236; // M1233 The Selection Chair: 234 -> 236 — domain/selectionChair.ts and features/chair/SelectionChair.tsx join the reader. // M1232 The Congested Calendar: 232 -> 234 — domain/congestion.ts and features/congestion/CongestedCalendar.tsx join the reader. // M1231 The Keepers' Union: 230 -> 232 — domain/keepers.ts and features/keepers/KeepersUnion.tsx join the reader. // M1230 The First-Run Guide: 228 -> 230 — domain/firstRunGuide.ts and ui/FirstRunGuide.tsx join the reader. // M1229 The Teaching Hints: 226 -> 228 — domain/teachHint.ts and ui/TeachHint.tsx join the reader. // M1225 The Prescription Council: 225 -> 226 — domain/rxCouncil.ts joins the reader (Ops.tsx already counted). // M1224 The Long-Context Chronicler: 223 -> 225 — domain/chronicler.ts + features/chronicle/LongChronicler.tsx join the reader. // M1222 The Replay Room: 222 -> 223 — domain/replay.ts joins the reader. // M1219: +1 features/wirediary/Cartographer.tsx — door 14 joins the reader. M1188: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — two app modules join the walk. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 // M453: 50 -> 52 — TrainingTree.tsx and PotentialRadar.tsx are new .tsx modules.
 // M523: 52 -> 53 — features/coach/CoachProfile.tsx is a new .tsx module.
 // M526: 53 -> 54 — SquadPlanning.tsx is the new .tsx module.
@@ -616,7 +616,7 @@ const APP_SRC_PIN = 234; // M1232 The Congested Calendar: 232 -> 234 — domain/
 // M1169 The Grand Dispatch: +1 TSX.
 // M1173 The Golden Hour: +1 TSX (GoldenHour.tsx).
 // M1175 The Wire Diary: +1 TSX (WireDiary.tsx).
-const TSX_PIN = 120; // M1232 The Congested Calendar: +1 features/congestion/CongestedCalendar.tsx. // M1231 The Keepers' Union: +1 features/keepers/KeepersUnion.tsx. // M1230 The First-Run Guide: +1 ui/FirstRunGuide.tsx. // M1229 The Teaching Hints: +1 ui/TeachHint.tsx. // M1224: +1 features/chronicle/LongChronicler.tsx. M1219: +1 features/wirediary/Cartographer.tsx. M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk. · M1199 The Frozen Dispatch: 111 -> 112 — features/wirediary/FrozenDispatch.tsx joins the .tsx walk. · M1201 The Frozen Diary: 112 -> 113 — features/wirediary/FrozenDiary.tsx joins the .tsx walk.
+const TSX_PIN = 121; // M1233 The Selection Chair: +1 features/chair/SelectionChair.tsx. // M1232 The Congested Calendar: +1 features/congestion/CongestedCalendar.tsx. // M1231 The Keepers' Union: +1 features/keepers/KeepersUnion.tsx. // M1230 The First-Run Guide: +1 ui/FirstRunGuide.tsx. // M1229 The Teaching Hints: +1 ui/TeachHint.tsx. // M1224: +1 features/chronicle/LongChronicler.tsx. M1219: +1 features/wirediary/Cartographer.tsx. M1195: 110 -> 111 — features/dashboard/Counselor.tsx joins the .tsx walk. · M1199 The Frozen Dispatch: 111 -> 112 — features/wirediary/FrozenDispatch.tsx joins the .tsx walk. · M1201 The Frozen Diary: 112 -> 113 — features/wirediary/FrozenDiary.tsx joins the .tsx walk.
 // M444: 100 -> 101, the same app-file debt as APP_SRC_PIN above (lib/context.ts).
 // M453: 101 -> 104, the same debt again (playerCareer, TrainingTree, PotentialRadar).
 // M459: 104 -> 110, the same six E2E files the APP_SRC_PIN above paid for.
@@ -671,7 +671,7 @@ const TSX_PIN = 120; // M1232 The Congested Calendar: +1 features/congestion/Con
 // M1173 The Golden Hour: 198 -> 200 (the two new modules the reader reaches).
 // M1175 The Wire Diary: 200 -> 202 (the two new modules the reader reaches).
 // M1178 The Consultation: 205 -> 206 (domain/consult.ts rides the same census; the reader now walks one more module).
-const SRC_PIN = 237; // M1232 The Congested Calendar: 235 -> 237 — domain/congestion.ts and features/congestion/CongestedCalendar.tsx join the dictionary-table reader. // M1231 The Keepers' Union: 233 -> 235 — domain/keepers.ts and features/keepers/KeepersUnion.tsx join the dictionary-table reader. // M1230 The First-Run Guide: 231 -> 233 — domain/firstRunGuide.ts and ui/FirstRunGuide.tsx join the dictionary-table reader. // M1229 The Teaching Hints: 229 -> 231 — domain/teachHint.ts and ui/TeachHint.tsx join the dictionary-table reader. // M1225 The Prescription Council: 228 -> 229 — domain/rxCouncil.ts joins the dictionary-table reader. // M1224 The Long-Context Chronicler: 226 -> 228 — the chronicler's domain + screen join the dictionary-table reader. // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
+const SRC_PIN = 239; // M1233 The Selection Chair: 237 -> 239 — domain/selectionChair.ts and features/chair/SelectionChair.tsx join the dictionary-table reader. // M1232 The Congested Calendar: 235 -> 237 — domain/congestion.ts and features/congestion/CongestedCalendar.tsx join the dictionary-table reader. // M1231 The Keepers' Union: 233 -> 235 — domain/keepers.ts and features/keepers/KeepersUnion.tsx join the dictionary-table reader. // M1230 The First-Run Guide: 231 -> 233 — domain/firstRunGuide.ts and ui/FirstRunGuide.tsx join the dictionary-table reader. // M1229 The Teaching Hints: 229 -> 231 — domain/teachHint.ts and ui/TeachHint.tsx join the dictionary-table reader. // M1225 The Prescription Council: 228 -> 229 — domain/rxCouncil.ts joins the dictionary-table reader. // M1224 The Long-Context Chronicler: 226 -> 228 — the chronicler's domain + screen join the dictionary-table reader. // M1222 The Replay Room: 225 -> 226 — domain/replay.ts joins the dictionary-table reader. // M1219: +1 features/wirediary/Cartographer.tsx. M1188 The Dispatch: +1 domain/dispatch.ts · M1195: +1 domain/counsel.ts + features/dashboard/Counselor.tsx — the reader reaches both. · M1197 The World Desk: +1 domain/worldLibrarian.ts — the desk's own imprisoned engine rides the walk. · M1199 The Frozen Dispatch: +1 domain/frozenDispatch.ts + features/wirediary/FrozenDispatch.tsx — the twelfth door rides the walk. · M1201 The Frozen Diary: +1 domain/frozenDiary.ts + features/wirediary/FrozenDiary.tsx — the frozen diary rides the walk. · M1201 refactor: +1 domain/releaseArtifact.ts — the shared door rides the walk.
 
 // The unreached ledger: REPORT-ONLY by design. The farm lands unrouted components faster than a lane
 // can sweep them, and a pin on this number is the hostage this milestone retires. What is asserted is
@@ -998,6 +998,9 @@ const DYN_SITES = [
   { path: "features/learn/LearnHub.tsx", expr: "c", prefix: "learn.cat.", suffix: "" },
   { path: "features/learn/LearnHub.tsx", expr: "l.level.toLowerCase()", prefix: "learn.level.", suffix: "" },
   { path: "features/learn/LearnHub.tsx", expr: "lesson.level.toLowerCase()", prefix: "learn.level.", suffix: "" },
+  // M1233 The Selection Chair: the refusal badges interpolate a ChairViolation code, whose value
+  // space is the union in domain/selectionChair.ts — read out of the table, not written down again.
+  { path: "features/chair/SelectionChair.tsx", expr: "v", prefix: "chair.v.", suffix: "" },
 ];
 // One space per (prefix, expression) pair: the two `prof.mode.` sites take the
 // same prefix from different code, which is why the space is not keyed on the
@@ -1163,6 +1166,9 @@ const SPACES = new Map([
   ["ops.consult.note.|entry.note", { name: "consult trace notes", values: ["foldInHand", "envelopeSealed", "commitOk", "foldOk", "precommitRefused"] }],
   ["ops.consult.violation.|v", { name: "consult violation codes", values: ["wrongNumbers", "prediction"] }],
   ["liveWire.askViolation.|code", { name: "ask-desk violation codes", values: spaceOf("domain/askDesk.ts", /export type AskViolationCode =[\s\S]*?;/, /"([^"]+)"/g) }],
+  // M1233 The Selection Chair: the refusal badges interpolate a ChairViolation code; the space is
+  // the union in domain/selectionChair.ts, read out of the source rather than written down twice.
+  ["chair.v.|v", { name: "chair violation codes", values: spaceOf("domain/selectionChair.ts", /export type ChairViolation =[\s\S]*?;/, /"([^"]+)"/g) }],
   ["liveWire.askTrace.note.|entry.note", { name: "ask-desk trace notes", values: spaceOf("domain/askDesk.ts", /export type AskNote =[\s\S]*?;/, /"([^"]+)"/g) }],
   ["course.|c.key", { name: "training courses", values: COURSE_KEYS }],
   ["course.|m", { name: "training courses", values: COURSE_KEYS }],
@@ -5043,7 +5049,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // (badges, verdict grades, trace notes, forecast labels). Measured on this tree: 3738 / 189.
   // M1226 the Forecast Ombudsman adds 22 literal and 3 template t() sites on the same door
   // (badges, trace notes, grade labels, the fold sentence). Measured: 3760 / 192.
-  shapeCounts.literal === 3806 && shapeCounts.template === 192 && shapeCounts.expression === 74
+  shapeCounts.literal === 3827 && shapeCounts.template === 193 && shapeCounts.expression === 77
     && shapeCounts.computed === 27 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5229,11 +5235,11 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // placeholders over — four more sites, 579 -> 583, measured on this tree.
   // M1225: the council forecast and trace labels carry two more placeholder sites (583 -> 585).
   // M1226: the ombudsman fold sentence and the live model badge carry two more (585 -> 587).
-  litVarSites === 595 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 596 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
-  exprWithObj.length === 0 && shapeCounts.expression === 74 && exprObjPlant.args[1].trim().startsWith("{"));
+  exprWithObj.length === 0 && shapeCounts.expression === 77 && exprObjPlant.args[1].trim().startsWith("{"));
 // The pools: a key that a bare field or table hands to t() at runtime, where there is no call
 // site naming it for any check to read. The FIELD SET is pinned — a new *Key/*Keys field must
 // land here and prove its values var-free in the same commit — and the check runs on all three

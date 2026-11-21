@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { completeOnboarding } from "./helpers";
+import { completeOnboarding, dismissTour } from "./helpers";
 
 // M1232 — the congested calendar: the fixture spacing board. The tiles carry the world's real
 // turnaround figures, the board ranks tightest-first, and the method line is honest about what a
@@ -7,6 +7,7 @@ import { completeOnboarding } from "./helpers";
 test("the congested calendar ranks the tightest turnarounds", async ({ page }) => {
   await completeOnboarding(page, "Congestion Visitor");
   await page.goto("/#/congestion");
+  await dismissTour(page);
 
   await expect(page.getByRole("heading", { name: "The Congested Calendar" })).toBeVisible();
   await expect(page.getByText("The turnaround each club's legs actually get — the distance between its fixtures.")).toBeVisible();

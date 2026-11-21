@@ -1,0 +1,38 @@
+M1233 The Selection Chair: the sixteenth door, and the first that decides
+
+Every other imprisoned door answers a question. This one makes a decision:
+the model names a World XI from the world's strongest sixty, and the door
+re-proves every choice against the pool before a human may see it.
+
+- domain/selectionChair.ts (new): the strict `XI:<id>,…` first-line parser
+  (eleven players, exactly one keeper, no repeats, all inside the pool — six
+  violation codes), the numeral law over the prose, the fold's own
+  deterministic XI (one keeper plus a 4-3-3's worth of the best-rated
+  outfielders; a thin squad fills the rest best-rated first), the world pool
+  cut with the digest's OWN byOverall comparator so door and world book can
+  never drift, and the classic eight-groups-to-four-lines mapping. The shared
+  traced FSM walks preflight -> build -> model -> precommit -> commit with
+  the selection, or a refused arm answered by the fold's XI, openly.
+- features/chair/SelectionChair.tsx (new screen): the pool panel, the ask
+  control, the model's XI and the fold's XI side by side, violation badges
+  and trace chips — every figure the squad carries, nothing invented.
+- The proof caught two real defects on the way: the thin-squad fill counted
+  the line leftovers AND the unpicked set, putting the same player in the XI
+  twice; and the club-roster pool the door was first built on cannot field
+  an XI anywhere in this world (measured: one club in seventy-three has
+  eleven players), which is why the chair selects a World XI from the
+  strongest sixty — the world book's own LEDGER, extended into a decision.
+- scripts/proof-selectionchair.mjs (new, 8/8): the lawful parse, each
+  unlawful shape by code, the prose law, the fold's determinism, the thin
+  fill, the machine's two arms, the group mapping and the pool's comparator.
+- Gates: proof-i18n 454/454 (literal 3806->3827, template 192->193,
+  expression 74->77, litVar 595->596, APP_SRC 234->236, TSX 120->121, SRC
+  237->239; the chair.v. dynamic site and its value space declared from the
+  domain union; three line labels de-duplicated), proof-storage 63/63
+  (230->232), proof-coverage 26/26 (POP 238->240, deep 110->112),
+  proof-app-tree 13/13 (237->239), proof-router 29/29 (227->229),
+  proof-screens 32/32, proof-pwa 4/4 (bundle 867->871 KB, baseline
+  re-recorded); tsc clean, build exit 0. E2E chair 1/1 and all-routes 97/97.
+- Test hygiene: a dismissTour helper — the first-run guide's card can sit
+  over the board and intercept a click, so the new screen specs skip it
+  first, the way a real visitor would.

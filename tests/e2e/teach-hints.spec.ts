@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { completeOnboarding } from "./helpers";
+import { completeOnboarding, dismissTour } from "./helpers";
 
 // M1229 The Teaching Hints: every module tile on the dashboard wears a one-line lesson behind a
 // "?", the lesson never navigates, reading it marks it on the device, and the settings row counts
@@ -7,6 +7,7 @@ import { completeOnboarding } from "./helpers";
 // teaching contract is walked.
 test("the dashboard's module tiles each carry a lesson that teaches without navigating", async ({ page }) => {
   await completeOnboarding(page, "Teach Visitor");
+  await dismissTour(page);
 
   // Fresh device: every lesson is unread, so every "?" announces itself as an unread lesson.
   // Scoped to the main board: the palette trigger in the header wears one of its own.
