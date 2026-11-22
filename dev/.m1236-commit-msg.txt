@@ -1,0 +1,42 @@
+M1236 The Match Reporter: door 18, the one that writes the game
+
+The chronicler seals a micro-chapter from the whole tape. This one takes ONE
+real finished fixture and writes its report the way a journalist who watched
+it would — with every numeral proved against that fixture's own envelope.
+
+- domain/matchReporter.ts (new, pure — the screen passes the club names in,
+  the domain never reaches the data layer): sealFixture turns a finished
+  fixture with events into the reporter's envelope (score, events, the
+  engine's 24 stat figures); the REPORT:<id> directive must name the very
+  fixture on the desk; the fixture numeral law refuses any figure the
+  envelope and the world book cannot both carry; the length budget is
+  ENFORCED, not declared; foldReport returns structured DATA (score,
+  scorers in minute order, the engine's tallies).
+- The domain-prose ceiling (zero) caught the first cut: foldReport composed
+  English sentences inside the domain. The honest repair is architectural —
+  the fold returns data and the screen words it through four new dictionary
+  sentence keys, so a refusal's report is translated like everything else.
+- features/reporter/MatchReporter.tsx (new screen): the desk opens on the
+  most recent finished fixture with events (deterministic, no RNG), the goal
+  chips, the ask control, the model's report and the fold's side by side,
+  violation badges and trace chips.
+- scripts/proof-matchreporter.mjs (new, 8/8): the seal (finished + events,
+  else null), the directive's three states, the envelope law, the fold's
+  data shape and determinism, the goalless empty list, the enforced budget,
+  and the machine's two arms.
+- Gates: proof-i18n 457/457 (literal 3870->3895, template 197->198, litVar
+  603->608, APP_SRC 240->242, TSX 123->124, SRC 243->245, SK_TEXT_CHILD_PIN
+  30->31; the rep.v. dynamic site and value space declared; tooLong
+  implemented rather than merely declared; the dead via.local key removed;
+  the prediction badge re-worded so it no longer shares a sentence with the
+  desk's), proof-storage 63/63 (236->238), proof-coverage 26/26 (POP
+  244->246, deep 110->115), proof-app-tree 13/13 (243->245), proof-router
+  29/29 (233->235), proof-screens 32/32, proof-pwa 4/4 (bundle 878->882 KB,
+  baseline re-recorded); tsc clean, build exit 0. E2E reporter 1/1 and
+  all-routes 100/100.
+- Live witness scripts/verify-reporter-live.mjs (new, 10/10): ONE real
+  gpt-6.2-sol call on a real fixture — 200 in 9758ms, first line
+  REPORT:M1414 naming the very fixture on the desk, the whole 311-char
+  report riding the envelope law and the budget, the planted wrong fixture
+  and the planted invented figure both charged, the 24h lane warm
+  (cached_tokens=142529). Key never printed; not part of npm run proof.
