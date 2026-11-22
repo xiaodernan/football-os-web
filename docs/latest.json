@@ -1,12 +1,12 @@
 {
-  "head": "95772dd",
-  "total_commits": 1759,
-  "milestone": "M1227",
-  "milestone_full": "本提交落地后 M1227 The Wheel-Direction Gate — a regression proof that native scroll direction is preserved",
-  "pwa_kb": 855,
-  "assets": 117,
-  "screens": 86,
-  "screens_label": "86+ screens",
+  "head": "9dc5ca4b",
+  "total_commits": 1782,
+  "milestone": "M1242",
+  "milestone_full": "本提交落地后 M1242 The Dressing Room — a regression proof that native scroll direction is preserved",
+  "pwa_kb": 898,
+  "assets": 126,
+  "screens": 95,
+  "screens_label": "95+ screens",
   "locales": 3,
   "feature_surface": [
     "The Chronicle — the epic fixture, AI-narrated",
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-21T13:54:25.501Z"
+  "generated_at": "2026-11-22T12:13:58.461Z"
 }
