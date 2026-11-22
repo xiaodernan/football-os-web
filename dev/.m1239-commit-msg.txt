@@ -1,0 +1,30 @@
+M1239 The Two-Cache Wire: the live wire reads the whole cache tier
+
+The cache-service carries TWO caches — the league summary and the league
+tables read-through — and the live wire read only the first one's stats. Half
+a story: the tables read-through is where a season's worth of table reads
+actually lands.
+
+- scripts/llm-proxy.mjs: probeService now reads BOTH /stats endpoints in
+  PARALLEL (each leg independently aborted at 1.2s — the wall clock is the
+  slowest leg, not the sum, the same bound-your-blocking discipline the
+  fleet probe applies), and the envelope carries stats AND tables.
+- Each leg reads its own body behind its own guard: the new proof's first
+  run caught a real robustness defect — one leg answering a body that will
+  not parse took the WHOLE probe down (it fell through to "unreachable").
+  Now that leg reads null and the other still reports.
+- features/cache/CacheObservatory.tsx: the live panel shows both censuses
+  side by side — requests, hits, misses, hit-rate, origin loads, coalesced
+  for the summary AND the tables.
+- scripts/proof-cache-wire.mjs (NEW, 15/15 — this wire's first offline
+  proof): an injected fetch recorder covers every probe path — unconfigured
+  never dials, health-down stops there, both-good carries both censuses,
+  the two legs genuinely run in parallel (peak in-flight 2), a 500 leg and
+  an unparseable leg each read null alone, AbortError and throw answer
+  their own reasons, the sentinel base URL is never echoed, the 405/next()
+  contract holds, the Java side really exposes /table/stats, the screen
+  reads and renders both censuses, and the d.mts aligns.
+- Gates: proof-i18n 460/460 (literal 3938->3941, litVar 616->617),
+  proof-llm 48/48, proof-cache-probe 9/9, proof-cache-parity 24/24,
+  proof-screens 32/32; tsc clean, build exit 0, proof-pwa 4/4 with the
+  bundle HELD at 889 KB (no pin moved). Cache E2E 1/1.

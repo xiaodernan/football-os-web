@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1238` The Transfer Broker — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1239` The Two-Cache Wire — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1238–M1206 · Latest ledger (newest first)
+## M1239–M1206 · Latest ledger (newest first)
+
+- **M1239 The Two-Cache Wire — 双缓存活线。** 用户第三条（Spring/Redis/前后端协同）的运营可视化深化：cache-service 里有两个缓存（联赛摘要 + 联赛积分榜只读），活线此前只读摘要的 /stats——半块故事。`scripts/llm-proxy.mjs` 的 probeService 现在并行读取两个 /stats（各自 1.2s abort，墙钟是最慢的一条腿而非总和——与舰队探针同一条「界定阻塞」纪律），信封同时带 stats 与 tables；**每腿独立容错**：一条腿的 body 解析失败只把那一条读成 null，不炸掉整个探针（证词首跑抓到的真实鲁棒性缺陷）。`features/cache/CacheObservatory.tsx` 活线面板并排显示两个缓存的请求/命中/未命中/命中率/源回/合并普查。三语各 +2 标签键。`scripts/proof-cache-wire.mjs`（**新，15/15——这道活线的第一道离线证词**）：注入 fetch 记录器覆盖全部路径——未配置不拨号、health 503 即停、双缓存 200 双 census、**两腿并行**（峰值在途 2）、tables 腿 500 只空那一条、坏 body 只空那一条、AbortError→timeout、throw→unreachable、哨兵 URL 零回显、405/next()/GET 契约、Java 侧 /table/stats 路由真实存在、屏幕双 census 读写、.d.mts 对齐。门禁：proof-i18n 460/460（literal 3938→3941、litVar 616→617）、proof-llm 48/48（代理改动无漂移）、proof-cache-probe 9/9、proof-cache-parity 24/24、proof-screens 32/32、tsc 0、build 0、proof-pwa 4/4（**bundle 守在 889 KB 未动**）、cache E2E 1/1。
+
 
 - **M1238 The Transfer Broker — 转会经纪人（/broker），第十九道禁闭门，会「给一个人定价』的那道。** 用户第四条纵深：选人席点名、处方席开方，这道**裁交易**——桌上摆着对世界最贵球员的报价，模型必须裁 ACCEPT / REJECT / COUNTER，还价必须带自己的金额。`domain/broker.ts`（新）——`RULING:` 指令行码按词读再查表（**证词抓到 badCode 不可达：旧正则只匹配三个合法码，未知码落进 noDirective——两种不同失败不该混为一谈，已放宽正则让 badCode 成为真实分支**）；counter 必须带 `FEE:<eur>`（缺失/零值拒）；交易数字法（身价/综合/年龄/桌上报价 + 世界书）；`foldRuling` 折叠算术（≥1.5x 接受、≤0.8x 拒绝、其间按身价 1.2x 取整到百万还价——**拒绝走的是一个数字，不是耸肩**）。FSM 同门。`features/broker/TransferBroker.tsx`（新屏）——交易三牌（身价/球员/桌上报价）+ 六档报价倍数切换 + 裁决徽章（三色）+ 模型与折叠并列 + 轨迹芯片。三语 27 键。`scripts/proof-broker.mjs`（新，7/7）：三种合法裁决、四种违规逐码、交易数字法、折叠算术五档对账（含 1.5x/0.8x 边界）、取整到百万与确定性、零身价/零报价预检拒绝、FSM 双臂。门禁：proof-i18n 460/460（literal 3911→3938、template 198→201、litVar 612→616、APP_SRC 244→246、TSX 125→126、SRC 247→249；三个动态站点 + 两个 value space（RULING_CODES 表与 BrokerViolation 联合，均从域层读取）；两处撞值差异化：brk.v.prediction 与 chair 的同句、brk.tileValue 与 compare 的同值）、proof-storage 63/63（240→242）、proof-coverage 26/26（POP 248→250、domain 100→101、features 100→101、deep 110→117）、proof-app-tree 13/13（247→249）、proof-router 29/29（237→239）、proof-screens 32/32、proof-pwa 4/4（bundle 884→889 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E broker 1/1 + all-routes 102/102。**活体见证 10/10**（verify-broker-live.mjs）：真实调用 200/6361ms，对 Noah Roche（身价 399.8M）摆 520M（1.30x）报价——**模型裁 ACCEPT**（「1.3 倍已是强劲回报」，散文引用 520M/399.8M/22 岁/79 综合全是档案真实数字），**折叠算术要 COUNTER @ 480M**——两者诚实分歧，正证明模型的判断是独立输入而非算术的橡皮图；种植的未知码与 987654 均被 charge；24h 道温热（cached=142529）。
 

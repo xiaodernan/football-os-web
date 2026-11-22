@@ -5072,7 +5072,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // (badges, verdict grades, trace notes, forecast labels). Measured on this tree: 3738 / 189.
   // M1226 the Forecast Ombudsman adds 22 literal and 3 template t() sites on the same door
   // (badges, trace notes, grade labels, the fold sentence). Measured: 3760 / 192.
-  shapeCounts.literal === 3938 && shapeCounts.template === 201 && shapeCounts.expression === 77
+  shapeCounts.literal === 3941 && shapeCounts.template === 201 && shapeCounts.expression === 77
     && shapeCounts.computed === 27 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without
@@ -5258,7 +5258,7 @@ ok(`every call that names its keys in front of check 24's regex still hands over
   // placeholders over — four more sites, 579 -> 583, measured on this tree.
   // M1225: the council forecast and trace labels carry two more placeholder sites (583 -> 585).
   // M1226: the ombudsman fold sentence and the live model badge carry two more (585 -> 587).
-  litVarSites === 616 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
+  litVarSites === 617 && computedVarSites === 9 && shortSupply.length === 0 && droppedSupply.length === 0
     && plantShort && plantDropped);
 ok(`a call whose key is an expression passes no variables it cannot know (${shapeCounts.expression} sites${exprWithObj.length ? ` — ${exprWithObj.slice(0, 3).join(" | ")}` : ", none with an object"})`,
   // M1129: /about reports three interpolated dynamic sites through the same census: 35 -> 37.
