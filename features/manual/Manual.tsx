@@ -29,6 +29,7 @@ const SECTION_IDS = [
   { id: "modes", key: "manual.modesTitle" },
   { id: "explore", key: "manual.exploreTitle" },
   { id: "epics", key: "manual.epicsTitle" },
+  { id: "decide", key: "manual.decideTitle" },
   { id: "spring", key: "manual.springTitle" },
   { id: "honesty", key: "manual.honestyTitle" },
   { id: "print", key: "manual.printTitle" },
@@ -63,6 +64,13 @@ export function Manual() {
     { to: "/pressroom", label: t("nav.pressroom") },
     { to: "/dossier", label: t("nav.dossier") },
     { to: "/dream-team", label: t("nav.dreamTeam") },
+    { to: "/keepers", label: t("nav.keepers") },
+    { to: "/congestion", label: t("nav.congestion") },
+    { to: "/depth", label: t("nav.depth") },
+    { to: "/nations", label: t("nav.nations") },
+    { to: "/chair", label: t("nav.chair") },
+    { to: "/desk", label: t("nav.desk") },
+    { to: "/broker", label: t("nav.broker") },
     { to: "/journey", label: t("nav.journey") },
     { to: "/library", label: t("nav.library") },
     { to: "/live-wire", label: t("nav.liveWire") },
@@ -221,6 +229,19 @@ export function Manual() {
           <li>{t("manual.epicsStep3")}</li>
           <li>{t("manual.epicsStep4")}</li>
         </ol>
+      </section>
+
+      {/* Chapter 4.5 — the doors that decide: the model's three ruling desks and the boards
+          that read them. Every one of them imprisons the model to the world's own numbers. */}
+      <section id="decide" aria-labelledby="manual-decide" className="rounded-xl border p-5 print:border-0 print:px-0">
+        <SectionTitle title={t("manual.decideTitle")} />
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed">{t("manual.decideBody")}</p>
+        <ul className="mt-2 space-y-1.5 pl-5 text-sm">
+          <li>{t("manual.decideChair")}</li>
+          <li>{t("manual.decideDesk")}</li>
+          <li>{t("manual.decideBroker")}</li>
+        </ul>
+        <p className="mt-2 max-w-3xl text-xs text-muted-foreground">{t("manual.decideBoards")}</p>
       </section>
 
       {/* Chapter 5 — spring */}

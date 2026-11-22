@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1239` The Two-Cache Wire — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1240` The Manual Catches Up — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1239–M1206 · Latest ledger (newest first)
+## M1240–M1206 · Latest ledger (newest first)
+
+- **M1240 The Manual Catches Up — 手册追上世界。** 用户第七条（说明书覆盖所有完整功能）：本日新增 8 块屏幕（四榜 + 三门），手册此前的探索章链接与章节都停在旧世界。`features/manual/Manual.tsx`——探索章接入 8 条新链接（keepers/congestion/depth/nations/chair/desk/broker + depth）；新增第八章「会做决定的門」：三段正文教三张席子（选人席点名世界十一人、处方席的处方可直接采纳进计划、经纪人的三向裁决）+ 一段导读四块新榜。三语 18 键（manual.decide.*）。**命名冲突一次**：手册已有「问答之门」章节占用 manual.doors* 命名空间，新章改用 manual.decide*（tsc 的重复键错误当场抓住）。`tests/e2e/manual-doors.spec.ts`（新，1/1）：新章标题、三段正文、四块榜导读、探索链接可达。门禁：proof-i18n 460/460（literal 3941→3954）、tsc 0、build 0、proof-pwa 4/4（bundle 889→891 KB 诚实步进 + baseline 重录）；all-routes 101/101（批量跑中 2 条路由在 25 分钟重负载下抖动失败，单独重跑即过——本机另一项目占 CPU 的环境抖动，非代码缺陷）。
+
 
 - **M1239 The Two-Cache Wire — 双缓存活线。** 用户第三条（Spring/Redis/前后端协同）的运营可视化深化：cache-service 里有两个缓存（联赛摘要 + 联赛积分榜只读），活线此前只读摘要的 /stats——半块故事。`scripts/llm-proxy.mjs` 的 probeService 现在并行读取两个 /stats（各自 1.2s abort，墙钟是最慢的一条腿而非总和——与舰队探针同一条「界定阻塞」纪律），信封同时带 stats 与 tables；**每腿独立容错**：一条腿的 body 解析失败只把那一条读成 null，不炸掉整个探针（证词首跑抓到的真实鲁棒性缺陷）。`features/cache/CacheObservatory.tsx` 活线面板并排显示两个缓存的请求/命中/未命中/命中率/源回/合并普查。三语各 +2 标签键。`scripts/proof-cache-wire.mjs`（**新，15/15——这道活线的第一道离线证词**）：注入 fetch 记录器覆盖全部路径——未配置不拨号、health 503 即停、双缓存 200 双 census、**两腿并行**（峰值在途 2）、tables 腿 500 只空那一条、坏 body 只空那一条、AbortError→timeout、throw→unreachable、哨兵 URL 零回显、405/next()/GET 契约、Java 侧 /table/stats 路由真实存在、屏幕双 census 读写、.d.mts 对齐。门禁：proof-i18n 460/460（literal 3938→3941、litVar 616→617）、proof-llm 48/48（代理改动无漂移）、proof-cache-probe 9/9、proof-cache-parity 24/24、proof-screens 32/32、tsc 0、build 0、proof-pwa 4/4（**bundle 守在 889 KB 未动**）、cache E2E 1/1。
 

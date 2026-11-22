@@ -5072,7 +5072,7 @@ ok(`every t() call in the ${appSrc.size} app modules is one of four known shapes
   // (badges, verdict grades, trace notes, forecast labels). Measured on this tree: 3738 / 189.
   // M1226 the Forecast Ombudsman adds 22 literal and 3 template t() sites on the same door
   // (badges, trace notes, grade labels, the fold sentence). Measured: 3760 / 192.
-  shapeCounts.literal === 3941 && shapeCounts.template === 201 && shapeCounts.expression === 77
+  shapeCounts.literal === 3954 && shapeCounts.template === 201 && shapeCounts.expression === 77
     && shapeCounts.computed === 27 && shapeCounts.unknown === 0 && plantUnknown);
 // M253: the three backtick-written literals are not a fifth shape — they are literal sites,
 // and this clause names them rather than counting them, so a fourth cannot arrive without

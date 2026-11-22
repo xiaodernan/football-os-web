@@ -1,0 +1,26 @@
+M1240 The Manual Catches Up: the booklet teaches the new world
+
+Eight screens landed today — four boards and three ruling desks — and the
+manual's explore links and chapters still described the old world. A manual
+that names features which exist is honest; one that misses the newest ones
+is not yet finished.
+
+- features/manual/Manual.tsx: the explore chapter links the eight new
+  surfaces (keepers, congestion, depth, nations, chair, desk, broker), and a
+  new chapter — "the doors that decide" — teaches the three ruling desks (the
+  Chair names a World XI; the Desk's prescription can be ADOPTED into a real
+  plan; the Broker rules a three-way deal) and orients the four new boards.
+- One naming conflict caught by the compiler itself: the manual already had
+  an answer-doors chapter owning manual.doors.*, so the new chapter speaks
+  through manual.decide.* — tsc's duplicate-key error named the collision
+  before any gate had to.
+- 18 trilingual keys; the new chapter carries the print stylesheet like
+  every other chapter, so the booklet still prints as a booklet.
+- tests/e2e/manual-doors.spec.ts (new, 1/1): the chapter's title, its three
+  desk paragraphs and the boards paragraph are on the page, and the explore
+  links reach the new surfaces.
+- Gates: proof-i18n 460/460 (literal 3941->3954); tsc clean, build exit 0,
+  proof-pwa 4/4 (bundle 889->891 KB, baseline re-recorded). all-routes
+  101/101 — two routes flaked under a 25-minute run on a machine loaded by
+  another project's dev server and passed in isolation; recorded honestly
+  as environment noise, not as green.
