@@ -18,6 +18,7 @@ import {
 } from "@/domain/replay";
 import { ABSENT, fmt1, fmt2, pctOf, round2, safeDiv, signed1 } from "@/lib/utils";
 import { foldPrescription, type Prescription } from "@/domain/prescription";
+import { trendRead, type TrendRead } from "@/domain/opsTrend";
 import {
   RX_FORECAST_KEY, councilAbstained, councilAdopt, councilBuild, councilEnvelope,
   councilFold, councilFoldText, councilModelProposed, councilPreflight, councilProposalInvalid, councilProposalRefused, createCouncil,
@@ -143,6 +144,15 @@ export function Ops() {
     () => readJson<OmbudsmanNote | null>(browserStore(), OM_KEY, null).value, []);
   const useSeeded = cohort === "seeded" || deviceFold.visits < MIN_DEVICE_VISITS;
   const fold: PulseFold = useSeeded ? seededFold : deviceFold;
+  // M1241 — the trend read: the fortnight's momentum projected forward, and the advice the
+  // fold's own measured numbers rule. Deterministic; the model's version of this advice is the
+  // prescription council's job, this is the arithmetic one.
+  const trend: TrendRead = useMemo(() => trendRead({
+    trend: fold.trend,
+    bounceRate: fold.bounceRate,
+    avgDepth: fold.avgDepth,
+    loopRate: fold.loopRate,
+  }), [fold.trend, fold.bounceRate, fold.avgDepth, fold.loopRate]);
 
   const submit = (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -1309,12 +1319,17 @@ export function Ops() {
         <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.ombudsman.method")}</p>
       </Panel>
 
-      {/* 14-day rhythm */}
+      {/* The fortnight, its projection, and what to do about it */}
       <Panel className="p-4">
-        <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.panel.trend")}</h2>
+        <div className="flex flex-wrap items-end justify-between gap-2">
+          <h2 className="text-[10px] uppercase tracking-widest text-muted-foreground">{t("ops.panel.trend")}</h2>
+          <span className="font-mono text-[10px] text-muted-foreground">
+            {t("ops.trend.weekAvg", { n: fmt2(trend.weekAvg) })} · {t("ops.trend.slope", { p: signed1(trend.slopePct) })}
+          </span>
+        </div>
         <div className="mt-2 flex h-28 items-end gap-1">
           {fold.trend.map((d) => {
-            const max = Math.max(1, ...fold.trend.map((x) => x.visits));
+            const max = Math.max(1, ...fold.trend.map((x) => x.visits), ...trend.forecast.map((x) => x.visits));
             return (
               <div key={d.day} className="flex flex-1 flex-col items-center justify-end gap-1">
                 <div className="w-full rounded-t bg-info/80" style={{ height: `${(d.visits / max) * 88}%` }} title={formatDate(locale, d.day)} />
@@ -1324,6 +1339,33 @@ export function Ops() {
           })}
           {fold.trend.length === 0 ? <span className="text-xs text-muted-foreground">{t("ops.empty")}</span> : null}
         </div>
+        {/* The projection: the same scale, drawn lighter and dashed at the top, labelled. */}
+        {fold.trend.length > 0 && (
+          <div className="mt-2 border-t border-dashed border-border pt-2">
+            <div className="text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.trend.forecastTitle")}</div>
+            <div className="mt-1 flex h-14 items-end gap-1">
+              {trend.forecast.map((d) => {
+                const max = Math.max(1, ...fold.trend.map((x) => x.visits), ...trend.forecast.map((x) => x.visits));
+                return (
+                  <div key={d.day} className="flex flex-1 flex-col items-center justify-end gap-1" title={formatDate(locale, d.day)}>
+                    <div className="w-full rounded-t border border-dashed border-primary/60 bg-primary/15" style={{ height: `${(d.visits / max) * 80}%` }} />
+                    <span className="text-[8px] text-muted-foreground">{d.day.slice(5)}</span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+        {/* The advice: codes worded through the dictionary, each with the number it fired on. */}
+        <ul className="mt-3 space-y-1">
+          {trend.advice.map((a) => (
+            <li key={a.code} className="flex items-baseline gap-2 text-xs">
+              <span className="font-mono text-primary">{t(`ops.trend.advice.${a.code}`)}</span>
+              <span className="text-muted-foreground">{t(`ops.trend.advice.${a.code}.note`, { n: a.measure })}</span>
+            </li>
+          ))}
+        </ul>
+        <p className="mt-2 text-[10px] text-muted-foreground">{t("ops.trend.method")}</p>
       </Panel>
 
       {/* The model's ledger */}

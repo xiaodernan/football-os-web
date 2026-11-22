@@ -1,0 +1,38 @@
+M1241 The Ops Trend: the console now forecasts and prescribes
+
+The directive asks the admin surface for analysis, a trend forecast AND the
+next optimisation measures. The tide panel drew the fortnight and said rising
+or falling — no projection, no advice. This lands both.
+
+- domain/opsTrend.ts (new, pure): trendRead answers the week's mean, the
+  previous window's, and the slope between them (a zero previous window
+  reads 0 rather than dividing by zero); the PROJECTION walks the week's mean
+  along the slope day by day, clamped at zero, with UTC day labels that cross
+  months and years correctly; the ADVICE is five deterministic rules, each
+  firing on the fold's own measured number (bounce >= 50 onboarding, depth
+  < 2 navigation, slope <= -10% content, loop >= 20% engagement, else
+  healthy).
+- One honest guard the proof's empty arm forced: a series with NO history
+  prescribes NOTHING — a zero depth is not a low depth, and a world with no
+  data must not be told to fix its navigation.
+- features/ops/Ops.tsx: the trend panel keeps the history bars, adds the
+  projected week on the same scale in dashed outline (labelled as a
+  straight-line read of the series' own momentum, not a model's guess), and
+  lists the advice with the number each rule fired on.
+- scripts/proof-opstrend.mjs (new, 9/9): a hand-counted fortnight
+  (80/100/-20%), the projection's seven-step arithmetic, rising and flat
+  directions, the zero-previous-window guard, each advice rule by code, the
+  healthy answer, exact boundaries (50% and 20% fire; -9.99% does not), the
+  empty series, nextDay across month and year ends, the static labels in
+  three locales with agreeing placeholders, and the ten advice keys behind
+  the two dynamic prefixes keyed everywhere.
+- Gates: proof-i18n 462/462 (literal 3954->3958, template 201->203, litVar
+  617->619, APP_SRC 246->247, SRC 249->250; the two advice dynamic sites and
+  their value space read from the domain's union), proof-storage 63/63
+  (242->243), proof-coverage 26/26 (POP 250->251, domain 101->102),
+  proof-app-tree 13/13 (249->250), proof-router 29/29 (239->240),
+  proof-screens 32/32, proof-pwa 4/4 (bundle 891->893 KB, baseline
+  re-recorded); tsc clean, build exit 0. ops E2E 3/3 — one case flaked
+  under a four-minute loaded run and passed on re-run, with the page
+  verified rendering both the census and the projection with zero console
+  errors; recorded as environment noise, not as green.
