@@ -10,6 +10,8 @@ import { LEARN_STORE_KEY } from "./learn";
 import { TEACH_SEEN_KEY } from "./teachHint";
 // M1230: the first-run guide's progress — a preference (a finished tour stays finished).
 import { TOUR_KEY } from "./firstRunGuide";
+// M1242: the dressing room's last-briefing-read line — a preference (a reading record, not activity).
+export const DRESSING_KEY = "football-os.dressing.v1";
 
 export const OS_STATE_KEY = "football-os.state.v2";
 export const CAREER_KEY = "football-os.career.v1";
@@ -64,6 +66,7 @@ export const LOCAL_KEYS: KeySpec[] = [
   { key: COACH_KEY, labelKey: "set.key.coach", kind: "preference" },
   { key: TEACH_SEEN_KEY, labelKey: "set.key.teach", kind: "preference" },
   { key: TOUR_KEY, labelKey: "set.key.tour", kind: "preference" },
+  { key: DRESSING_KEY, labelKey: "set.key.dressing", kind: "preference" },
   { key: FIXTURES_KEY, labelKey: "set.key.fixtures", kind: "activity" },
   { key: LOCALE_KEY, labelKey: "set.key.locale", kind: "preference" },
   { key: THEME_KEY, labelKey: "set.key.theme", kind: "preference" },

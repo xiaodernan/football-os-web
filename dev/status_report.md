@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1241` The Ops Trend — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1242` The Dressing Room — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1241–M1206 · Latest ledger (newest first)
+## M1242–M1206 · Latest ledger (newest first)
+
+- **M1242 The Dressing Room — 更衣室（/dressing），第二十道禁闭门，会「给下一场写简报』的那道。** 用户第四条纵深：比赛记者写的是已经踢完的比赛，这道为**下一场的对手**写更衣室简报——只从对手自己打出来的赛季里写。`domain/dressingRoom.ts`（新）——`opponentRecord` 从世界完赛折叠对手战绩（`creditRecord` + **`resultPoints` 走积分榜自己的门**，绝不自写 `points += 3`——M420 方言门会抓；证词首跑正是 points=0 抓住我第一版用了吃字母的 leaguePoints）、近五场字母、危险人物（综合最高球员）；`BRIEF:<id>` 指令必须点名桌上对手；记录数字法（战绩/综合 + 世界书）；**长度预算真实执行**；**预言拒绝**（模型只许描述对手已经做的事，对即将到来的比赛的断言拒——`next match|they are going to` 等未来时态）；`foldBrief` 返回结构化数据（域层零散文，屏幕造句）。FSM 同门 + `createDressing`（档案克隆）。`features/dressing/DressingRoom.tsx`（新屏）——对手三牌（战绩/进失球/危险人物）+ 近五场 + 问柜 + 模型简报与折叠简报并列 + 违规徽章 + 轨迹芯片 + **「最近读过的简报」本地记录**（DRESSING_KEY，localData 注册为 preference）。三语 26 键 + nav.dressing + set.key.dressing。`scripts/proof-dressingroom.mjs`（新，7/7）：手工对账对手（5 场 3W1D1L 9:5 10 分 WWDLW Palmer 85）、排定赛不是结果、无完赛读 null、指令三态、记录数字法、折叠数据结构与确定性、预算执行、FSM 双臂与无记录预检拒绝。门禁：proof-i18n 463/463（literal 3958→3991、template 203→204、litVar 619→625、APP_SRC 247→249、TSX 126→127、SRC 250→252；补 nav.dressing 漏键；dress.v. 动态站点 + value space；**tooLong 从「声明未建键」补成实现+键**；三处撞值差异化：overallN/playedN/briefing）、proof-storage 63/63（243→245）、proof-coverage 26/26（POP 251→253、domain 102→103、features 101→102、deep 110→118）、proof-app-tree 13/13（250→252）、proof-router 29/29（240→242）、proof-screens 32/32、proof-pwa 4/4（bundle 893→898 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E dressing 1/1 + all-routes 103/103。**活体见证 10/10**（verify-dressing-live.mjs）：真实调用 200/7178ms，模型首行 `BRIEF:juv` 正确点名桌上对手（尤文——世界完赛最多的俱乐部），385 字符全篇过记录数字法与预算，种植的错对手与 987654 均被 charge，24h 道温热（cached=142529）。
+
 
 - **M1241 The Ops Trend — 运营台趋势预测与优化建议。** 用户第九条点名要「分析和趋势预测，并根据这些数据给出下一步应该采取的深度优化措施」——潮汐面板此前只画 14 天柱状图说涨跌，不给预测也不给措施。`domain/opsTrend.ts`（新，纯折叠）——`trendRead`：七日均值、前窗均值、斜率（prevAvg 为 0 时读 0 不除零）；**投影**让七日均值沿斜率日行（下限零，UTC 步日，跨月跨年正确）；**建议**五条规则各触发于折叠自己的实测数字（bounce≥50→onboarding、depth<2→navigation、斜率≤-10→content、loop≥20→engagement、否则 healthy）。**空序列不处方**：证词的空臂抓到 depth=0 会被当成「低深度」误触发导航建议——没有数据的世界不该被劝修导航，已加守卫。`features/ops/Ops.tsx` 趋势面板——历史柱 + 虚线框投影柱（同尺度、明确标注「序列自身动量的直线读数，不是模型的猜测」）+ 建议列表（每条带它触发的数字）+ 方法句。三语 16 键。`scripts/proof-opstrend.mjs`（新，9/9）：手工对账双周（80/100/-20%）、投影七步算术、升/平两向、零前窗不除零、四条建议规则逐码、healthy、边界精确（50% 与 20% 触发、-9.99% 不触发）、空序列、nextDay 跨月跨年、静态键三语占位符 + 两个动态前缀的空间（10 个建议键）三语校验。门禁：proof-i18n 462/462（literal 3954→3958、template 201→203、litVar 617→619、APP_SRC 246→247、SRC 249→250；两个动态站点 + value space 从域层联合类型读取）、proof-storage 63/63（242→243）、proof-coverage 26/26（POP 250→251、domain 101→102）、proof-app-tree 13/13（249→250）、proof-router 29/29（239→240）、proof-screens 32/32、proof-pwa 4/4（bundle 891→893 KB 诚实步进 + baseline 重录）；tsc 0、build 0；ops E2E 3/3（首跑 1 条在 4 分钟重负载下抖动，页面实测渲染正常、零 console 错误，复跑即过——环境噪声如实记录）。
 

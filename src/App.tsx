@@ -93,6 +93,8 @@ const MatchReporter = lazy(() => import("@/features/reporter/MatchReporter").the
 const TalentMap = lazy(() => import("@/features/nations/TalentMap").then((m) => ({ default: m.TalentMap })));
 // M1238: the transfer broker — the nineteenth imprisoned door, the one that prices a man.
 const TransferBroker = lazy(() => import("@/features/broker/TransferBroker").then((m) => ({ default: m.TransferBroker })));
+// M1242: the dressing room — the twentieth imprisoned door, the one that briefs the next match.
+const DressingRoom = lazy(() => import("@/features/dressing/DressingRoom").then((m) => ({ default: m.DressingRoom })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) => ({ default: m.LeagueRules })));
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
@@ -273,6 +275,7 @@ function Routes() {
   else if (path === "/reporter") inner = <MatchReporter />;
   else if (path === "/nations") inner = <TalentMap />;
   else if (path === "/broker") inner = <TransferBroker />;
+  else if (path === "/dressing") inner = <DressingRoom />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
   else if (path === "/messaging") inner = <QueueObservatory />;

@@ -1,0 +1,41 @@
+M1242 The Dressing Room: door 20, the one that briefs the next match
+
+The Reporter wrote the game that was played. This one briefs the dressing
+room on the NEXT opponent — read entirely from that opponent's own
+demonstrated season, never from a prediction.
+
+- domain/dressingRoom.ts (new): opponentRecord folds the opponent's finished
+  fixtures into their record (played, W-D-L, goals, points through the
+  ladder's OWN resultPoints door — the proof's first run caught a version
+  that read points=0 because it called the letter-shaped leaguePoints), the
+  last five results as letters, and the danger (their highest-rated player);
+  the BRIEF:<id> directive must name the very opponent on the desk; the
+  record numeral law refuses any figure the record and the world book cannot
+  both carry; the length budget is ENFORCED; and a claim about the coming
+  match is REFUSED — the model may describe what the opponent has already
+  done, nothing more. foldBrief returns the briefing as DATA.
+- features/dressing/DressingRoom.tsx (new screen): the opponent's three
+  tiles, the last-five form, the ask control, the model's briefing and the
+  fold's side by side, violation badges, trace chips, and a local record of
+  the last briefing read (DRESSING_KEY, registered as a preference).
+- scripts/proof-dressingroom.mjs (new, 7/7): a hand-counted opponent
+  (5 played, 3W 1D 1L, 9:5, 10 points, WWDLW, Palmer 85), a scheduled
+  fixture is not a result, a club with none reads null, the directive's
+  three states, the record law, the fold's data and determinism, the
+  enforced budget, and the machine's two arms with the no-record preflight
+  refusal.
+- Gates: proof-i18n 463/463 (literal 3958->3991, template 203->204, litVar
+  619->625, APP_SRC 247->249, TSX 126->127, SRC 250->252; the missing
+  nav.dressing key added; the dress.v. dynamic site and its value space
+  declared; tooLong implemented AND keyed; three value collisions
+  differentiated), proof-storage 63/63 (243->245), proof-coverage 26/26
+  (POP 251->253, deep 110->118), proof-app-tree 13/13 (250->252),
+  proof-router 29/29 (240->242), proof-screens 32/32, proof-pwa 4/4
+  (bundle 893->898 KB, baseline re-recorded); tsc clean, build exit 0.
+  E2E dressing 1/1 and all-routes 103/103.
+- Live witness scripts/verify-dressing-live.mjs (new, 10/10): ONE real
+  gpt-6.2-sol call — 200 in 7178ms, first line BRIEF:juv naming the very
+  opponent on the desk (Juventus, the world's most-fixtured club), the whole
+  385-char briefing riding the record law and the budget, the planted wrong
+  opponent and the planted invented figure both charged, the 24h lane warm
+  (cached_tokens=142529). Key never printed; not part of npm run proof.
