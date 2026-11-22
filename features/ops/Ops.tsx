@@ -720,7 +720,7 @@ export function Ops() {
           </dl>
         </div>
         <p className="mt-3 text-[11px] leading-relaxed text-foreground/90">{t(`ops.tide.recommendation.${tide.cls}`)}</p>
-        <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.tide.forecast", { d: tide.dayCount, d1: tide.forecast[0], d2: tide.forecast[1], d3: tide.forecast[2] })}</p>
+        <p className="mt-1 font-mono text-[9px] uppercase tracking-widest text-muted-foreground">{t("ops.tide.forecast", { window: `${tide.dayCount} ${tide.dayCount === 1 ? "day" : "days"}`, d1: tide.forecast[0], d2: tide.forecast[1], d3: tide.forecast[2] })}</p>
       </Panel>
 
       <div className="grid gap-4 lg:grid-cols-2">

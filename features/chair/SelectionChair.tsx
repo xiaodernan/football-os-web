@@ -170,7 +170,7 @@ export function SelectionChair() {
           <div className="mt-2 space-y-2">
             {GROUPS.map((g) => (
               <div key={g} className="flex items-baseline gap-2 text-xs">
-                <span className="w-8 shrink-0 text-muted-foreground">{t(GROUP_KEY[g])}</span>
+                <span className="w-20 shrink-0 text-muted-foreground">{t(GROUP_KEY[g])}</span>
                 <span className="font-mono">{fold.byPosition[g].map((id) => squad.players.find((q) => q.id === id)?.name ?? id).join(" · ")}</span>
               </div>
             ))}

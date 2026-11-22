@@ -1,0 +1,24 @@
+M1244 The Fresh-Eyes Pass: eleven new surfaces under the eye
+
+The directive's fifth point asks for a systematic sweep for overlap, squeezed
+blocks and typos — "有则改之无则加勉". Since the last sweep the world grew by
+eleven surfaces: four boards (keepers, congestion, depth, nations), four
+doors (chair, desk, reporter, dressing, broker), the deepened ops console
+and the dual-cache observatory. All eleven were captured at desktop width
+and inspected one by one.
+
+Two real defects found and fixed:
+- The Selection Chair's fold panel gave its group label a 32px box; the
+  word "Midfielders" overflows that width and physically touched the player
+  names beside it — the exact "blocks squeezing each other" class the
+  directive names. The box is now 80px and the two columns read apart.
+- The tide forecast read "after 1 days" — a count and a plural noun with no
+  pluralisation between them. The screen now builds the window phrase
+  ("1 day" / "9 days") and the sentence carries it.
+
+Every other surface — the boards, the three other doors, the ops console
+with its new forecast and advice, the cache observatory — inspected clean:
+no overlap, no font distortion, no visible typos. tsc clean, build exit 0,
+proof-i18n 463/463, the bundle HELD at 898 KB, and the two affected
+screens' E2E 4/4. The capture specs were throwaway and are retired; the
+evidence is this record.
