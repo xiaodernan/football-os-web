@@ -89,6 +89,8 @@ const SquadDepth = lazy(() => import("@/features/depth/SquadDepth").then((m) => 
 const TrainingDesk = lazy(() => import("@/features/desk/TrainingDesk").then((m) => ({ default: m.TrainingDesk })));
 // M1236: the match reporter — the eighteenth imprisoned door, the one that writes the game.
 const MatchReporter = lazy(() => import("@/features/reporter/MatchReporter").then((m) => ({ default: m.MatchReporter })));
+// M1237: the talent map — the world by nation.
+const TalentMap = lazy(() => import("@/features/nations/TalentMap").then((m) => ({ default: m.TalentMap })));
 const Briefing = lazy(() => import("@/features/analytics/Briefing").then((m) => ({ default: m.Briefing })));
 const LeagueRules = lazy(() => import("@/features/league/LeagueRules").then((m) => ({ default: m.LeagueRules })));
 const AcademyPage = lazy(() => import("@/features/academy/AcademyPage").then((m) => ({ default: m.AcademyPage })));
@@ -267,6 +269,7 @@ function Routes() {
   else if (path === "/depth") inner = <SquadDepth />;
   else if (path === "/desk") inner = <TrainingDesk />;
   else if (path === "/reporter") inner = <MatchReporter />;
+  else if (path === "/nations") inner = <TalentMap />;
   else if (path === "/briefing") inner = <Briefing />;
   else if (path === "/form") inner = <FormTable />;
   else if (path === "/messaging") inner = <QueueObservatory />;

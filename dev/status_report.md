@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1236` The Match Reporter — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1237` The Talent Map — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1236–M1206 · Latest ledger (newest first)
+## M1237–M1206 · Latest ledger (newest first)
+
+- **M1237 The Talent Map — 人才版图（/nations）。** 内容流水线第五屏：此前的榜都排俱乐部和球员，没有一块问过「人才从哪里来」。`domain/nations.ts`（新，纯折叠）——按国籍读世界地理：球员人数、最佳综合及其姓名、均值（round2）；排序最佳降 → 人数降 → 国名；最强国籍/最厚国籍两块头条（后者的平局看最佳再国名）；世界总均值；空国籍是跳过的记录不是空行。`features/nations/TalentMap.tsx`（新屏）——三块牌 + 国籍榜（均值为刻度条）+ 诚实方法句。三语 13 键。`scripts/proof-nations.mjs`（新，6/6）：手工对账（Brazil 3/91/82.00、Spain 2/88/81.50、Japan 1/70/70.00、世界 79.83）、排序与两块头条、最佳球员姓名、空国籍与空世界、平局落国名、屏幕键三语占位符 + 路由。门禁：proof-i18n 457/457（literal 3895→3911、litVar 608→612、APP_SRC 242→244、TSX 124→125、SRC 245→247；nat.tileAvg 与 con.tileAvg 撞值改 The world's mean）、proof-storage 63/63（238→240）、proof-coverage 26/26（POP 246→248、domain 99→100、features 99→100、deep 110→116）、proof-app-tree 13/13（245→247）、proof-router 29/29（235→237）、proof-screens 32/32、proof-pwa 4/4（bundle 882→884 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E nations 1/1 + all-routes 101/101。
+
 
 - **M1236 The Match Reporter — 比赛记者（/reporter），第十八道禁闭门，会「写比赛』的那一道。** 用户第四条纵深：编年史从整卷磁带里封一章，这道为**一场**真实比赛写报道。`domain/matchReporter.ts`（新，纯域——屏幕传队名进来，不 import 数据层）——`sealFixture` 把一场带事件的完赛封成信封（比分、事件、24 个统计数字）；`REPORT:<id>` 指令行必须点名桌上那一场；信封数字法（比分/事件分钟/统计数字，外加世界书）；长度预算**真实执行**（超 900 字符拒，tooLong 码）；`foldReport` 返回**结构化数据**（比分、进球者分钟序、射门/扑救计数）——**域层零散文铁律**：初版在域层拼英文句子被 proof-i18n 的 domain-prose 门（ceiling 0）当场抓住，重构为「域出数据、屏幕用字典造句」（rep.foldScore/foldGoals/foldNoGoals/foldTallies 四句式键）。FSM 同门。`features/reporter/MatchReporter.tsx`（新屏）——桌上比赛（最新一场带事件完赛，byKickoff 确定性挑选）+ 写报道 + 模型报道与折叠报道并列 + 违规徽章 + 轨迹芯片。三语 25 键。`scripts/proof-matchreporter.mjs`（新，8/8）：信封封印（完赛+有事件，否则 null）、指令三态（对/错场/无）、信封数字法、折叠数据结构与确定性、无进球读空列表、预算执行、FSM 双臂。门禁：proof-i18n 457/457（literal 3870→3895、template 197→198、litVar 603→608、APP_SRC 240→242、TSX 123→124、SRC 243→245、SK_TEXT_CHILD_PIN 30→31（进球芯片的 map 读 e.type 经 filter，非裸码）；补 rep.v. 动态站点 + value space；rep.v.tooLong 从「声明未实现」补成真实执行；rep.via.local 重构后成死键已删；rep.v.prediction 与 desk.v.prediction 同句撞门——改为「对尚未进行的比赛的断言」）、proof-storage 63/63（236→238）、proof-coverage 26/26（POP 244→246、domain 98→99、features 98→99、deep 110→115）、proof-app-tree 13/13（243→245）、proof-router 29/29（233→235）、proof-screens 32/32、proof-pwa 4/4（bundle 878→882 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E reporter 1/1 + all-routes 100/100。**活体见证 10/10**（verify-reporter-live.mjs）：真实调用 200/9758ms，模型首行 `REPORT:M1414` 正确点名桌上比赛，311 字符全篇过信封数字法与预算，种植的错场与 987654 均被 charge，24h 道温热（cached=142529）。
 

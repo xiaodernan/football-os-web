@@ -1,0 +1,28 @@
+M1237 The Talent Map: where the world's talent comes from
+
+Every board in this world ranks clubs and players; none has ever asked the
+geographic question. The seed carries a nation on every player, so the fold
+reads the world's map: who supplies the most, who supplies the best, and what
+the average side of a nation looks like.
+
+- domain/nations.ts (new, pure): per nation the player count, the best overall
+  with its player's NAME (so a row can point at a person), and the mean across
+  everyone from it; ranked best desc, depth desc, name; the strongest and
+  deepest headline reads; the world's own mean. A blank nation is a record
+  skipped, not an empty row.
+- features/nations/TalentMap.tsx (new screen): three tiles, the nation board
+  ranked strongest-first with the mean as the bar's scale, and the honest
+  method line naming exactly what a nation's three numbers are.
+- scripts/proof-nations.mjs (new, 6/6): a hand-counted world (Brazil
+  3/91/82.00, Spain 2/88/81.50, Japan 1/70/70.00, world 79.83), the ordering
+  and both headline reads, the best player's name, the blank nation and the
+  empty world, the name tie-break, and the screen's trilingual keys with the
+  route mounted.
+- Gates: proof-i18n 457/457 (literal 3895->3911, litVar 608->612, APP_SRC
+  242->244, TSX 124->125, SRC 245->247; the world-average tile took its own
+  word rather than sharing the congestion screen's), proof-storage 63/63
+  (238->240), proof-coverage 26/26 (POP 246->248, deep 110->116),
+  proof-app-tree 13/13 (245->247), proof-router 29/29 (235->237),
+  proof-screens 32/32, proof-pwa 4/4 (bundle 882->884 KB, baseline
+  re-recorded); tsc clean, build exit 0. E2E nations 1/1 and all-routes
+  101/101 with the new route in the net.
