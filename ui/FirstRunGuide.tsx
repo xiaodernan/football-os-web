@@ -9,7 +9,7 @@ import { useLocalStorage } from "@/lib/hooks";
 import { useRouter } from "@/lib/router";
 import { browserStore, readJson } from "@/domain/localData";
 import {
-  TOUR_KEY, TOUR_STEPS, currentStep, initialTour, parseTour, tourAdvance, tourBack, tourProgress, tourSkip,
+  TOUR_KEY, currentStep, initialTour, parseTour, tourAdvance, tourBack, tourProgress, tourSkip,
   type TourState,
 } from "@/domain/firstRunGuide";
 import { Button } from "@/components/ui/button";

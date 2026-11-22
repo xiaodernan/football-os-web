@@ -1,0 +1,14 @@
+M1243 The Dead Import Sweep: the nine declarations nothing read
+
+The unused-locals gate — which compiles the real tree with noUnusedLocals and
+charges any declaration no code reads — found nine the recent doors left
+behind: the broker's destructured fee (the deal builds its own from the
+multiple, so the memo's was dead), three unread imports in the Dressing
+Room (playersByClub, createDressing, toast), CHIP_CLASS in two screens, cn
+in the Reporter, the tour local in Settings, and TOUR_STEPS in the guide.
+
+All nine are removed; the broker's memo now returns the dossier directly
+rather than a pair whose second half nothing read. tsc clean with
+noUnusedLocals, the gate 5/5, build exit 0, the bundle HELD at 898 KB (the
+dead code was not shipping weight, but it was reading weight), and the six
+affected screens' E2E 9/9.

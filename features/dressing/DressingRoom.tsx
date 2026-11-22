@@ -1,20 +1,19 @@
 import { useMemo, useState } from "react";
 import { useI18n } from "@/i18n";
-import { footballProvider, getClub, playersByClub } from "@/data/footballService";
+import { footballProvider, getClub } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { upcomingMatchesForClub } from "@/data/footballService";
 import {
-  createDressing, dressingBuild, dressingCommit, dressingPrecommit, dressingPreflight, dressingRefused,
+  dressingBuild, dressingCommit, dressingPrecommit, dressingPreflight, dressingRefused,
   foldBrief, opponentRecord, parseDressingBrief, verifyDressingText,
   type DressingTraceEntry, type DressingViolation, type DressingState, type OpponentRecord,
 } from "@/domain/dressingRoom";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
-import { Panel, SectionTitle, DemoBadge, StatTile, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, DemoBadge, StatTile } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocalStorage } from "@/lib/hooks";
 import { DRESSING_KEY } from "@/domain/localData";
-import { toast } from "sonner";
 
 // M1242 · The Dressing Room — door 20, the one that briefs the next match. The desk takes the
 // OPPONENT's own demonstrated season — their record, their form, their best player — and the model

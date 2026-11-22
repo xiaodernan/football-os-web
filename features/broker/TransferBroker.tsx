@@ -31,17 +31,18 @@ export function TransferBroker() {
 
   // The desk's player: the world's most valuable — deterministic, so the same visit opens the
   // same deal. The dossier is the roster's own facts.
-  const { dossier, fee } = useMemo(() => {
+  // The desk's player: the world's most valuable — deterministic, so the same visit opens the
+  // same deal. The dossier is the roster's own facts.
+  const dossier = useMemo<BrokerDossier>(() => {
     const players = footballProvider.players();
     const p = [...players].sort((a, b) => b.value - a.value || a.id.localeCompare(b.id))[0];
-    const d: BrokerDossier = {
+    return {
       playerName: p.name,
       clubName: getClub(p.clubId)?.name ?? p.clubId,
       overall: p.overall,
       age: p.age,
       value: p.value,
     };
-    return { dossier: d, fee: Math.round((p.value * 1.3) / 1e6) * 1e6 };
   }, []);
 
   const deal: BrokerDeal = { dossier, fee: Math.round((dossier.value * multiple) / 1e6) * 1e6 };

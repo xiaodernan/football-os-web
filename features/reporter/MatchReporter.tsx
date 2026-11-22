@@ -9,7 +9,6 @@ import {
 } from "@/domain/matchReporter";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
-import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 

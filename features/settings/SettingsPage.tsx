@@ -24,7 +24,7 @@ export function SettingsPage() {
   // M1229: the teaching-hint ledger — how many dashboard lessons are still unread, and the
   // control that puts every "?" back to its unread pulse.
   const [teachSeen, setTeachSeen] = useLocalStorage<string[]>(TEACH_SEEN_KEY, []);
-  const [tour, setTour] = useLocalStorage<TourState>(TOUR_KEY, initialTour());
+  const [, setTour] = useLocalStorage<TourState>(TOUR_KEY, initialTour());
   const unreadLessons = unreadTeachCount(teachSeen);
 
   const inv = useMemo(() => inventory(browserStore()), [state]);

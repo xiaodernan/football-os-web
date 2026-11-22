@@ -9,7 +9,7 @@ import {
   type DeskAttribute, type DeskDossier, type DeskPrescription, type DeskTraceEntry, type DeskViolation,
 } from "@/domain/trainingDesk";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
-import { Panel, SectionTitle, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
+import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/router";
