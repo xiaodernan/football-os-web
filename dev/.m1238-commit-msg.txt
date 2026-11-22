@@ -1,0 +1,42 @@
+M1238 The Transfer Broker: door 19, the one that prices a man
+
+The Chair names a XI and the Desk prescribes a week. This one rules on a
+DEAL: a fee is on the table for the world's most valuable player, and the
+model must rule ACCEPT, REJECT or COUNTER — with the money answered in the
+model's own figures, every one proved against the dossier.
+
+- domain/broker.ts (new): the RULING directive read as a WORD and checked
+  against the code list, so an unknown ruling ("RULING:maybe") is charged
+  badCode rather than falling through to noDirective — the proof caught that
+  the first regex made the branch unreachable, and two different failures
+  deserve to be told apart; a counter must carry FEE:<eur>; the deal numeral
+  law (value, overall, age, the fee on the table); foldRuling is real
+  arithmetic — accept at 1.5x, reject at 0.8x, between them a counter at
+  value x 1.2 rounded to the million, so a refusal walks to a number, not a
+  shrug.
+- features/broker/TransferBroker.tsx (new screen): the deal's three tiles,
+  six switchable fee multiples, the ruling badge in three tones, the model's
+  ruling and the fold's side by side, violation badges and trace chips.
+- scripts/proof-broker.mjs (new, 7/7): the three lawful rulings, each
+  unlawful shape by code, the deal law, the fold's arithmetic on five
+  fee/value bands including both boundaries, the million rounding and
+  determinism, the zero-value/zero-fee preflight refusal, and the machine's
+  two arms.
+- Gates: proof-i18n 460/460 (literal 3911->3938, template 198->201, litVar
+  612->616, APP_SRC 244->246, TSX 125->126, SRC 247->249; three dynamic
+  sites and two value spaces declared from the broker's own lists; two
+  value collisions fixed — the prediction badge and the valuation tile each
+  took their own words), proof-storage 63/63 (240->242), proof-coverage
+  26/26 (POP 248->250, deep 110->117), proof-app-tree 13/13 (247->249),
+  proof-router 29/29 (237->239), proof-screens 32/32, proof-pwa 4/4
+  (bundle 884->889 KB, baseline re-recorded); tsc clean, build exit 0.
+  E2E broker 1/1 and all-routes 102/102.
+- Live witness scripts/verify-broker-live.mjs (new, 10/10): ONE real
+  gpt-6.2-sol call on a real deal — 200 in 6361ms on Noah Roche (value
+  399.8M) with a 520M fee (1.30x). The model ruled ACCEPT, its prose citing
+  the dossier's own figures; the fold rules COUNTER @ 480M. The two rulings
+  DISAGREE, and the witness reports the disagreement honestly — the model's
+  judgment is an independent input, not a rubber stamp of the arithmetic.
+  The planted unknown code and the planted invented figure were charged;
+  the 24h lane stayed warm (cached_tokens=142529). Key never printed; not
+  part of npm run proof.

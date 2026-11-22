@@ -168,6 +168,7 @@ export function AppShell({ children }: { children: ReactNode }) {
     { to: "/desk", label: t("nav.desk"), icon: I.trek, match: ["/desk"] },
     { to: "/reporter", label: t("nav.reporter"), icon: I.broadsheet, match: ["/reporter"] },
     { to: "/nations", label: t("nav.nations"), icon: I.signal, match: ["/nations"] },
+    { to: "/broker", label: t("nav.broker"), icon: I.curtains, match: ["/broker"] },
     { to: "/form", label: t("nav.form"), icon: I.chart, match: ["/form"] },
     { to: "/briefing", label: t("nav.briefing"), icon: I.review, match: ["/briefing"] },
     { to: "/community", label: t("nav.community"), icon: I.chat, match: ["/community"] },

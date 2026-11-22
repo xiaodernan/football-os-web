@@ -2,12 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1237` The Talent Map — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
+**当前HEAD**: 本提交落地后 `M1238` The Transfer Broker — a regression proof that native scroll direction is preserved（此前基线 `M1226` The Forecast Ombudsman · `M1225` The Prescription Council — the model proposes one move, the operator decides · `M1224` The Long-Context Chronicler）
 **总提交数**: 1759（本提交落地后）
 **开发状态**: 持续进行中，无阻塞（M1189 The Parallel-Miss Lane：并行相同流式请求冷车道折叠单上游；用户被允许的怀疑——「并行会话搞乱缓存」——已抓到并修复，实测 6 并发 = 1 次真上游 + 5 次 coalesced，第 7 问直接 memo 命中）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1237–M1206 · Latest ledger (newest first)
+## M1238–M1206 · Latest ledger (newest first)
+
+- **M1238 The Transfer Broker — 转会经纪人（/broker），第十九道禁闭门，会「给一个人定价』的那道。** 用户第四条纵深：选人席点名、处方席开方，这道**裁交易**——桌上摆着对世界最贵球员的报价，模型必须裁 ACCEPT / REJECT / COUNTER，还价必须带自己的金额。`domain/broker.ts`（新）——`RULING:` 指令行码按词读再查表（**证词抓到 badCode 不可达：旧正则只匹配三个合法码，未知码落进 noDirective——两种不同失败不该混为一谈，已放宽正则让 badCode 成为真实分支**）；counter 必须带 `FEE:<eur>`（缺失/零值拒）；交易数字法（身价/综合/年龄/桌上报价 + 世界书）；`foldRuling` 折叠算术（≥1.5x 接受、≤0.8x 拒绝、其间按身价 1.2x 取整到百万还价——**拒绝走的是一个数字，不是耸肩**）。FSM 同门。`features/broker/TransferBroker.tsx`（新屏）——交易三牌（身价/球员/桌上报价）+ 六档报价倍数切换 + 裁决徽章（三色）+ 模型与折叠并列 + 轨迹芯片。三语 27 键。`scripts/proof-broker.mjs`（新，7/7）：三种合法裁决、四种违规逐码、交易数字法、折叠算术五档对账（含 1.5x/0.8x 边界）、取整到百万与确定性、零身价/零报价预检拒绝、FSM 双臂。门禁：proof-i18n 460/460（literal 3911→3938、template 198→201、litVar 612→616、APP_SRC 244→246、TSX 125→126、SRC 247→249；三个动态站点 + 两个 value space（RULING_CODES 表与 BrokerViolation 联合，均从域层读取）；两处撞值差异化：brk.v.prediction 与 chair 的同句、brk.tileValue 与 compare 的同值）、proof-storage 63/63（240→242）、proof-coverage 26/26（POP 248→250、domain 100→101、features 100→101、deep 110→117）、proof-app-tree 13/13（247→249）、proof-router 29/29（237→239）、proof-screens 32/32、proof-pwa 4/4（bundle 884→889 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E broker 1/1 + all-routes 102/102。**活体见证 10/10**（verify-broker-live.mjs）：真实调用 200/6361ms，对 Noah Roche（身价 399.8M）摆 520M（1.30x）报价——**模型裁 ACCEPT**（「1.3 倍已是强劲回报」，散文引用 520M/399.8M/22 岁/79 综合全是档案真实数字），**折叠算术要 COUNTER @ 480M**——两者诚实分歧，正证明模型的判断是独立输入而非算术的橡皮图；种植的未知码与 987654 均被 charge；24h 道温热（cached=142529）。
+
 
 - **M1237 The Talent Map — 人才版图（/nations）。** 内容流水线第五屏：此前的榜都排俱乐部和球员，没有一块问过「人才从哪里来」。`domain/nations.ts`（新，纯折叠）——按国籍读世界地理：球员人数、最佳综合及其姓名、均值（round2）；排序最佳降 → 人数降 → 国名；最强国籍/最厚国籍两块头条（后者的平局看最佳再国名）；世界总均值；空国籍是跳过的记录不是空行。`features/nations/TalentMap.tsx`（新屏）——三块牌 + 国籍榜（均值为刻度条）+ 诚实方法句。三语 13 键。`scripts/proof-nations.mjs`（新，6/6）：手工对账（Brazil 3/91/82.00、Spain 2/88/81.50、Japan 1/70/70.00、世界 79.83）、排序与两块头条、最佳球员姓名、空国籍与空世界、平局落国名、屏幕键三语占位符 + 路由。门禁：proof-i18n 457/457（literal 3895→3911、litVar 608→612、APP_SRC 242→244、TSX 124→125、SRC 245→247；nat.tileAvg 与 con.tileAvg 撞值改 The world's mean）、proof-storage 63/63（238→240）、proof-coverage 26/26（POP 246→248、domain 99→100、features 99→100、deep 110→116）、proof-app-tree 13/13（245→247）、proof-router 29/29（235→237）、proof-screens 32/32、proof-pwa 4/4（bundle 882→884 KB 诚实步进 + baseline 重录）；tsc 0、build 0；E2E nations 1/1 + all-routes 101/101。
 
