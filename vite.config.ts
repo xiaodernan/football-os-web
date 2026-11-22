@@ -40,6 +40,11 @@ export default defineConfig(({ mode }) => {
     },
   };
   return {
+    // The proof runner injects a per-script FOOTBALLOS_PROOF_CACHE_DIR so each Vite
+    // SSR server in the suite owns a scratch cache it creates but never bulk-cleans
+    // (see scripts/run-proofs.mjs M1245). Unset for dev/build, so this is a no-op
+    // and Vite keeps its normal node_modules/.vite behaviour.
+    ...(process.env.FOOTBALLOS_PROOF_CACHE_DIR ? { cacheDir: process.env.FOOTBALLOS_PROOF_CACHE_DIR } : {}),
     plugins: [react(), llmPlugin],
     // M1148: a per-build stamp carried into the service-worker registration URL so a stale
     // worker never serves a cached shell against this build's fresh chunk names again.

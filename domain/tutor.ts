@@ -5,7 +5,7 @@
 // and it tells the student so every time, honestly.
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
-import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { fsmPreflightGate, fsmOpen, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit, type PreflightEntry } from "@/domain/tracedFsm";
 import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 
 export type TutorStage = FsmStage;
@@ -42,12 +42,10 @@ export const TUTOR_FOLD_ENTRY = { stage: "refused", verdict: "refused", note: "f
 export const TUTOR_PRECOMMIT_PASS = { stage: "precommit", verdict: "pass", note: "commitOk" } as const;
 export const TUTOR_PRECOMMIT_REFUSED = { stage: "precommit", verdict: "refused", note: "precommitRefused" } as const;
 
-export const createTutor = (corpus: TutorCorpus, locale: Locale): TutorState => ({
-  // The FSM imprisons the model to this lesson's own words — clone them so
-  // a caller can never swap the page's sentences from under the proof mid-run.
-  corpus: { ...corpus, body: [...corpus.body] },
-  locale, status: "preflight", trace: [], answer: "",
-});
+// The FSM imprisons the model to this lesson's own words — the corpus and its quiz are both
+// cloned so a caller can never swap the page's sentences from under the proof mid-run.
+export const createTutor = (corpus: TutorCorpus, locale: Locale): TutorState =>
+  fsmOpen({ corpus: { ...corpus, body: [...corpus.body], quizOptions: [...corpus.quizOptions] }, locale });
 
 export type TutorViolation = "offLesson" | "prediction";
 
@@ -82,10 +80,14 @@ export function verifyTutorText(text: string, corpus: TutorCorpus): TutorViolati
 }
 
 // ---- the state machine --------------------------------------------------
-export const tutorPreflight = (s: TutorState): TutorState =>
-  s.corpus.body.length > 0 && s.corpus.title.trim().length > 0
-    ? step(s, { stage: "preflight", verdict: "pass", note: "lessonInHand" }, "build")
-    : step({ ...s }, { stage: "preflight", verdict: "refused", note: "lessonInHand" }, "refused");
+/** The preflight's own fact and entries: the lesson is in hand, or it is not. */
+export const TUTOR_PREFLIGHT: PreflightEntry<TutorState> = {
+  open: (s) => s.corpus.body.length > 0 && s.corpus.title.trim().length > 0,
+  pass: { stage: "preflight", verdict: "pass", note: "lessonInHand" },
+  refused: { stage: "preflight", verdict: "refused", note: "lessonInHand" },
+};
+
+export const tutorPreflight = (s: TutorState): TutorState => fsmPreflightGate(s, TUTOR_PREFLIGHT);
 
 export const tutorBuild = (s: TutorState): TutorState =>
   fsmBuild(s, TUTOR_BUILD_ENTRY, "model");

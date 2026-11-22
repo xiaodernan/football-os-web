@@ -8,7 +8,8 @@ import {
   type ReporterFixture, type ReporterTraceEntry, type ReporterViolation,
 } from "@/domain/matchReporter";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
-import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
+import { SEPARATOR } from "@/lib/utils";
+import { Panel, SectionTitle, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -136,7 +137,7 @@ export function MatchReporter() {
         />
         <div className="mt-2 flex items-center gap-3">
           <span className="font-mono text-2xl font-bold text-primary">
-            {fixture.homeGoals}–{fixture.awayGoals}
+            {fixture.homeGoals}{SEPARATOR}{fixture.awayGoals}
           </span>
           <span className="text-sm text-muted-foreground">{fixture.homeName} v {fixture.awayName}</span>
         </div>
@@ -162,7 +163,7 @@ export function MatchReporter() {
           {violations && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {violations.map((v) => (
-                <Badge key={v} variant="outline" className="border-warning text-warning">{t(`rep.v.${v}`)}</Badge>
+                <Badge key={v} variant="outline" className={CHIP_CLASS.badgeWarningStrong}>{t(`rep.v.${v}`)}</Badge>
               ))}
             </div>
           )}

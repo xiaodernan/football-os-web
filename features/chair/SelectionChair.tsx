@@ -7,6 +7,7 @@ import {
   type ChairSelection, type ChairTraceEntry, type ChairViolation, type ChairSquad,
 } from "@/domain/selectionChair";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
+import { POSITION_BUCKETS } from "@/domain/scouting";
 import { Panel, SectionTitle, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -17,9 +18,7 @@ import { toast } from "sonner";
 // The model names a starting XI from the club's own squad; the door re-proves every choice
 // against the roster before a human may see it, and a refusal speaks with the fold's own
 // deterministic XI, openly, beside whatever the model said.
-const GROUPS = ["GK", "DEF", "MID", "ATT"] as const;
-type Group = (typeof GROUPS)[number];
-const GROUP_KEY: Record<Group, string> = { GK: "chair.gk", DEF: "chair.def", MID: "chair.mid", ATT: "chair.att" };
+const GROUP_KEY: Record<(typeof POSITION_BUCKETS)[number], string> = { GK: "chair.gk", DEF: "chair.def", MID: "chair.mid", ATT: "chair.att" };
 
 export function SelectionChair() {
   const { t, locale } = useI18n();
@@ -111,7 +110,7 @@ export function SelectionChair() {
           {!LLM_CONFIG.hasKey && <span className="text-xs text-muted-foreground">{t("chair.noKey")}</span>}
         </div>
         <div className="mt-3 grid grid-cols-2 gap-1.5 sm:grid-cols-4">
-          {GROUPS.map((g) => (
+          {POSITION_BUCKETS.map((g) => (
             <div key={g} className={cn("rounded-lg px-2.5 py-2", CHIP_CLASS.muted)}>
               <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t(GROUP_KEY[g])}</div>
               <div className="font-mono text-primary">{squad.players.filter((p) => p.positionGroup === g).length}</div>
@@ -126,13 +125,13 @@ export function SelectionChair() {
           {violations && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {violations.map((v) => (
-                <Badge key={v} variant="outline" className="border-warning text-warning">{t(`chair.v.${v}`)}</Badge>
+                <Badge key={v} variant="outline" className={CHIP_CLASS.badgeWarningStrong}>{t(`chair.v.${v}`)}</Badge>
               ))}
             </div>
           )}
           {selection && (
             <div className="mt-3 space-y-2">
-              {GROUPS.map((g) => (
+              {POSITION_BUCKETS.map((g) => (
                 <div key={g}>
                   <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{t(GROUP_KEY[g])}</div>
                   <div className="mt-1 flex flex-wrap gap-1.5">
@@ -168,7 +167,7 @@ export function SelectionChair() {
         <Panel className="p-4">
           <SectionTitle title={t("chair.foldTitle")} hint={t("chair.foldHint")} />
           <div className="mt-2 space-y-2">
-            {GROUPS.map((g) => (
+            {POSITION_BUCKETS.map((g) => (
               <div key={g} className="flex items-baseline gap-2 text-xs">
                 <span className="w-20 shrink-0 text-muted-foreground">{t(GROUP_KEY[g])}</span>
                 <span className="font-mono">{fold.byPosition[g].map((id) => squad.players.find((q) => q.id === id)?.name ?? id).join(" · ")}</span>

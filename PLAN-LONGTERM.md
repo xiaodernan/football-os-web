@@ -1325,3 +1325,14 @@ M1149: The Pulse lands (/ops) — the operator console: how this world behaves w
 - M1242 The Dressing Room — door 20, the one that briefs the next match: the model briefs the dressing room on the next fixture's opponent from that opponent's OWN demonstrated season (record through the ladder's resultPoints door, last-five form, the danger), every numeral proved against the record, futurology refused; domain/dressingRoom.ts + features/dressing/DressingRoom.tsx + proof-dressingroom 7/7 + dressing E2E 1/1 + live witness 10/10 (BRIEF:juv correct); all-routes 103/103; pins paid (bundle 893 -> 898 KB).
 - M1243 The Dead Import Sweep — proof-unused-locals charged 9 unread declarations the recent doors left behind (TransferBroker's dead fee, three unread imports in the Dressing Room, plus CHIP_CLASS/cn/toast/TOUR_STEPS/tour); all nine removed, the broker's memo now returns the dossier directly; tsc 0, unused-locals 5/5, build 0, bundle held at 898 KB, the six affected screens' E2E 9/9.
 - M1244 The Fresh-Eyes Pass — a visual QA over the eleven surfaces added since the last sweep (four boards, four doors, the ops console, the cache observatory): caught and fixed two real defects — the Selection Chair's fold panel label box was 32px wide so "Midfielders" overflowed it and touched the player names (now 80px), and the tide forecast read "after 1 days" (the window phrase is pluralised by the screen); every other surface inspected clean; build 0, i18n 463/463, bundle held at 898 KB.
+
+## The long road after M1245 (standing orders, M1246+)
+
+Each line below is a milestone-sized promise, not a wish: a pure fold, a screen, a proof with planted
+arms, and a measured gate. The order is the order of work.
+
+- M1246 The Prompt Budget — a pure fold that measures every door's assembled context (world book, history window, envelope), the cached prefix share and a token estimate, printed on /cache beside the live tier; proof-prompt-budget plants an unstable prefix, a shrinking window and a mis-split envelope, and refuses a zero-token claim.
+- M1247 The Parallel Lane — prove that concurrent asks from different doors share one hash-identical warm lane (byte-stable prefix + the content-derived prompt_cache_key) and that a parallel sibling never evicts it; an offline lane census plus a live witness through the proxy.
+- M1248 The Runbook Bell — the ops console reads the live witness ledgers (LLM, Redis, Rabbit, Spring) and prescribes the next probe from measured staleness; a missing witness is printed as missing, never as green.
+- M1249 The Stress Bench — a measured concurrency bench over the same-origin proxy (ramp 1→64 askers, p50/p95, single-flight coalesced ratio, degraded-answer count) with a pass envelope on the frozen world.
+- M1250 The Release Relay — publish a build to the personal Pages entry only when the measured suite delta clears a bar, on a schedule and by hand, never on every commit.

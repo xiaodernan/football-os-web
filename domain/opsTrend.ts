@@ -4,7 +4,8 @@
 // labelled), and what to do about it (rules over the fold's own measured numbers — the model's
 // version of this advice lives in the prescription council; this is the arithmetic one). Pure,
 // deterministic, no prose: the screen words every code.
-import { round2 } from "@/lib/utils";
+import { DAY_MS, isRealInstant, round2 } from "@/lib/utils";
+import { last, sum } from "./attributes";
 
 /** The projection window: seven days, the same length as the window it projects from. */
 export const FORECAST_WINDOW = 7;
@@ -47,13 +48,13 @@ export interface TrendRead {
   days: number;
 }
 
-const mean = (xs: readonly number[]): number => (xs.length ? round2(xs.reduce((s, x) => s + x, 0) / xs.length) : 0);
+const mean = (xs: readonly number[]): number => (xs.length ? round2(sum(xs, (x) => x) / xs.length) : 0);
 
 /** The day after `day` (YYYY-MM-DD), in UTC so no timezone can move a projection's label. */
 export const nextDay = (day: string): string => {
   const t = Date.parse(`${day}T00:00:00Z`);
-  if (Number.isNaN(t)) return day;
-  return new Date(t + 86_400_000).toISOString().slice(0, 10);
+  if (!isRealInstant(t)) return day;
+  return new Date(t + DAY_MS).toISOString().slice(0, 10);
 };
 
 export function trendRead(input: TrendInput): TrendRead {
@@ -67,7 +68,7 @@ export function trendRead(input: TrendInput): TrendRead {
   // The projection: the week's mean walking the slope, day by day, clamped at zero — a
   // straight-line read of the series' own momentum, never a model's guess.
   const perDay = prevAvg > 0 ? (weekAvg - prevAvg) / FORECAST_WINDOW : 0;
-  const lastDay = series.length ? series[series.length - 1].day : "1970-01-01";
+  const lastDay = last(series)?.day ?? "1970-01-01";
   const forecast: TrendDay[] = [];
   let cursor = lastDay;
   for (let i = 1; i <= FORECAST_WINDOW; i++) {

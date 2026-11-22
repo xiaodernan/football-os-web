@@ -210,7 +210,7 @@ export function marketValue(overall: number, age: number): number {
  *  spelled `X.length ? (the total of X's overall figures) / X.length : Y` inline — the same
  *  "average overall with a fallback" primitive the comparators M376–M381 retired in other forms, so it is
  *  a door now. The callers build the list differently and pass their own fallback (or round the result). */
-export function meanOverall(players: { overall: number }[], fallback: number): number {
+export function meanOverall(players: readonly { overall: number }[], fallback: number): number {
   return players.length ? sum(players, (p) => p.overall) / players.length : fallback;
 }
 

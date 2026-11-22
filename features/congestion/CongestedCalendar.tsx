@@ -2,8 +2,9 @@ import { useMemo } from "react";
 import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { fixtureCongestion } from "@/domain/congestion";
+import { sum } from "@/domain/attributes";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, StatTile, BAR_FILL } from "@/ui/primitives";
-import { fmt2 } from "@/lib/utils";
+import { ABSENT, fmt2 } from "@/lib/utils";
 
 // M1232 — the congested calendar: the fixture spacing board. Every other screen reads what
 // happened inside a match; this one reads the distance between them — the turnaround each club's
@@ -32,14 +33,14 @@ export function CongestedCalendar() {
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile
           label={t("con.tileTight")}
-          value={fold.tightest ? `${fold.tightest.minRest}d` : "—"}
+          value={fold.tightest ? `${fold.tightest.minRest}d` : ABSENT}
           sub={fold.tightest ? (getClub(fold.tightest.clubId)?.name ?? fold.tightest.clubId) : t("con.none")}
           tone="down"
         />
         <StatTile label={t("con.tileAvg")} value={`${fmt2(fold.leagueAvg)}d`} sub={t("con.gapsN", { n: fold.gaps })} />
         <StatTile
           label={t("con.tileCrowded")}
-          value={fold.rows.reduce((s, r) => s + r.crowded, 0)}
+          value={sum(fold.rows, (r) => r.crowded)}
           sub={t("con.crowdedHint")}
         />
       </div>

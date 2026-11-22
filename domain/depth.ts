@@ -4,6 +4,7 @@
 // player to its eleventh, the average of the rest, and the bench that has to carry the season
 // when the starters cannot. Pure, deterministic, over the roster the world already carries.
 import type { Club, PlayerRef } from "./types";
+import { byOverall, last, meanOverall, sum } from "./attributes";
 import { round2 } from "@/lib/utils";
 
 export interface DepthRow {
@@ -47,16 +48,16 @@ export function squadDepth(players: readonly PlayerRef[], clubs: readonly Club[]
   const rows: DepthRow[] = [];
   for (const [clubId, list] of byClub) {
     if (list.length < 2) continue; // one player is a name, not a depth
-    const ranked = [...list].sort((a, b) => b.overall - a.overall || a.id.localeCompare(b.id));
+    const ranked = [...list].sort((a, b) => byOverall(a, b) || a.id.localeCompare(b.id));
     const xi = ranked.slice(0, ELEVEN);
     const bench = ranked.slice(ELEVEN);
     rows.push({
       clubId,
       squad: list.length,
       best: ranked[0].overall,
-      xiAvg: round2(xi.reduce((s, p) => s + p.overall, 0) / xi.length),
-      benchAvg: bench.length ? round2(bench.reduce((s, p) => s + p.overall, 0) / bench.length) : 0,
-      cliff: ranked[0].overall - xi[xi.length - 1].overall,
+      xiAvg: round2(meanOverall(xi, 0)),
+      benchAvg: round2(meanOverall(bench, 0)),
+      cliff: ranked[0].overall - (last(xi)?.overall ?? ranked[0].overall),
     });
   }
   rows.sort(
@@ -73,6 +74,6 @@ export function squadDepth(players: readonly PlayerRef[], clubs: readonly Club[]
     rows,
     steepest: rows[0] ?? null,
     shallowest,
-    leagueAvg: rows.length ? round2(rows.reduce((s, r) => s + r.cliff, 0) / rows.length) : 0,
+    leagueAvg: rows.length ? round2(sum(rows, (r) => r.cliff) / rows.length) : 0,
   };
 }

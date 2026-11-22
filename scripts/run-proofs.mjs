@@ -22,6 +22,7 @@
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
+import { tmpdir } from "node:os";
 import { VERDICT, classifyProofRun, findProofs, tallyOf } from "./lib/proofRunner.mjs";
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -60,6 +61,16 @@ const timeoutMs = Number(process.env.PROOF_TIMEOUT_MS) || 600_000;
 // never re-run (a counted red must not be able to flake away). PROOF_ATTEMPTS overrides
 // the budget for scripts/proof-runner.mjs, which counts actual spawns.
 const maxAttempts = Number(process.env.PROOF_ATTEMPTS) || 2;
+// M1245: give each proof its OWN Vite cacheDir. The 178 proof scripts each spin
+// up a Vite SSR server with a different inline config; sharing the default
+// node_modules/.vite makes Vite invalidate/rebuild deps between proofs, and the
+// sandbox's safe-delete guard kills any proof that bulk-removes >50 cached files
+// on boot. That made a full 225/225-green suite die on its last script with a
+// non-contract error. A per-proof, per-run dir under tmpdir means each server
+// creates a fresh cache it never has to clean up — no bulk delete, no shared
+// deps, deterministic under a concurrent lane or a self-hosted runner. Scripts
+// that already pass their own cacheDir keep it (their inline config wins).
+const proofCacheRoot = join(tmpdir(), `footballos-proof-cache-${process.pid}`);
 // The tally of a script that never reported one says so in words, so the line
 // reads "(no tally)" rather than "(no tally checks)".
 const label = (row) => (row.checks === "no tally" ? "no tally" : `${row.checks} checks`);
@@ -73,7 +84,11 @@ for (const file of proofs) {
   let out = "";
   for (;;) {
     attempts += 1;
-    const res = spawnSync(process.execPath, [join(target, file)], { encoding: "utf8", timeout: timeoutMs });
+    const res = spawnSync(process.execPath, [join(target, file)], {
+      encoding: "utf8",
+      timeout: timeoutMs,
+      env: { ...process.env, FOOTBALLOS_PROOF_CACHE_DIR: join(proofCacheRoot, file.replace(/\.mjs$/, "")) },
+    });
     out = `${res.stdout ?? ""}${res.stderr ?? ""}`;
     row = classifyProofRun({ status: res.status, signal: res.signal, error: res.error, out, timeoutMs });
     // Only a script that produced NO evidence is worth a second try.

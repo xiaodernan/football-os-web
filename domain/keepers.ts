@@ -6,6 +6,7 @@
 // everything through the dictionary.
 import type { Club, Match, PlayerRef } from "./types";
 import { leagueWall } from "./analytics";
+import { byOverall } from "./attributes";
 
 export interface KeeperRow {
   playerId: string;
@@ -64,7 +65,7 @@ export function keeperUnion(players: PlayerRef[], clubs: Club[], matches: Match[
       cleanSheets: w?.cleanSheets ?? 0, played: w?.played ?? 0, rate: w?.rate ?? 0,
     };
   });
-  rows.sort((a, b) => b.overall - a.overall || b.rate - a.rate || a.clubId.localeCompare(b.clubId));
+  rows.sort((a, b) => byOverall(a, b) || b.rate - a.rate || a.clubId.localeCompare(b.clubId));
 
   // The best wall is a record, not a rating: a club that has never kept a sheet has no wall to
   // be best of, however highly its keeper is rated.

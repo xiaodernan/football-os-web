@@ -12,8 +12,9 @@ const fsm = readFileSync("domain/tracedFsm.ts", "utf8");
 const tutor = readFileSync("domain/tutor.ts", "utf8");
 const hub = readFileSync("features/learn/LearnHub.tsx", "utf8");
 
-ok("domain/tutor.ts imports the shared traced-FSM body",
-  /import \{ step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit \} from "@\/domain\/tracedFsm"/.test(tutor) &&
+ok("domain/tutor.ts imports the shared traced-FSM bodies",
+  /import \{[^}]*fsmPreflightGate[^}]*fsmOpen[^}]*fsmBuild[^}]*fsmCommit[^}]*fsmRefused[^}]*fsmPrecommit[^}]*\} from "@\/domain\/tracedFsm"/.test(tutor) &&
+  !/function step\s*[<(]/.test(tutor) &&
   /export const tutorBuild/.test(tutor) && /export const tutorCommit/.test(tutor) &&
   /export const tutorRefused/.test(tutor));
 

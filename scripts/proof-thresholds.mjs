@@ -121,7 +121,8 @@ const DECLARED = {
   "> 0.6": { kind: "one", home: "domain/career.ts", door: "fatigueIsHigh", why: "the exhausted-squad line — the match prep and the fatigue tile ask the same question, so the door answers it" },
   "< 0.35": { kind: "one", home: "domain/rowText.ts", door: "levelWord", why: "the low band of a 0..1 level — the Manager OS's two words and the Simulation Lab's two captions share one bound" },
   "< 0.7": { kind: "one", home: "domain/rowText.ts", door: "levelWord", why: "the middle band's ceiling — the same level, the same two bounds, one place" },
-  "< 2": { kind: "split", sites: 8, files: 7, why: "the smallest sample a rate needs, asked of five different things — a league table of one club is no table, one analysed clip is no rate, one session is no monotony, one drill is no pool, and a side with one match played has no form — plus the onboarding step's own index, which is a step number and not a sample at all, and the after-a-defeat board's own gate, read as the smallest sample a response may be printed from" },
+  ">= 50": { kind: "split", sites: 2, files: 2, why: "two different fifties: the operation fold's bounce rate is a percentage of visitors who left before the fold could be read, and the player's attribute badge turns informational at fifty — a rate of departures and an attribute level are not one decision" },
+  "< 2": { kind: "split", sites: 10, files: 9, why: "the smallest sample a rate needs, asked of seven different things — a league table of one club is no table, one analysed clip is no rate, one session is no monotony, one drill is no pool, one congestion calendar entry or one depth ladder row is no distribution, and a side with one match played has no form — plus the onboarding step's own index, which is a step number and not a sample at all, and the after-a-defeat board's own gate, read as the smallest sample a response may be printed from" },
     // M1154 Seven Wires adds one more site in data/liveWire.ts (the league array guard) — 9 -> 10.
 ">= 2": { kind: "split", sites: 11, files: 9, why: "M1152 adds the live wire's shape guard (a table with fewer than two clubs is no table) and counts it in the same honest census — " + "the same sample rule, written the other way round: a team with two games has a metrics row (analytics), a training log with two sessions has a focus (filmInsights), two metrics make a clash (community), and a run of two matches is worth naming on the record's edge — M1057 adds the fixture graph's degree gate, a club only earns a clustering coefficient with at least two opponents — and M1183 adds the fold that draws THE WIDE MARGINS: the two-goal census line inside the digest itself" },
   ">= 3": { kind: "split", sites: 8, files: 8, why: "seven unrelated floors that happen to be three: a midfield edge of three is a press, a career of three results is a record, three goals is an over, a streak of three is a streak, a three-letter word is worth keeping, three bookings is the smallest sample a per-card rhythm may read as settled, and M1224 adds the chronicler's sealed-tape floor — fewer than three finished fixtures is no chapter; M1151 adds the BM25 corpus token floor (>= 3 letters)" },
@@ -192,13 +193,13 @@ const splitBad = splitEntries.filter((k) => {
   return rows.length !== DECLARED[k].sites || files !== DECLARED[k].files;
 });
 ok(`every split keeps its shape: the sites and the files are pinned, and the reason says why the decisions differ (${splitEntries.length} split(s), ${splitBad.length} changed [${splitBad.join(", ")}])`,
-  splitEntries.length === 15 && splitBad.length === 0,
+  splitEntries.length === 16 && splitBad.length === 0,
   `changed: ${splitBad.join(", ")}`);
 
 // Every declaration says WHY, in a sentence a reader can weigh.
 const thin = declaredKeys.filter((k) => typeof DECLARED[k].why !== "string" || DECLARED[k].why.length < 40);
 ok(`every declaration says why, in a sentence a reader can weigh (${declaredKeys.length} declarations, ${thin.length} too short [${thin.join(", ")}])`,
-  thin.length === 0 && declaredKeys.length === 21,
+  thin.length === 0 && declaredKeys.length === 22,
   `too short: ${thin.join(", ")}`);
 
 // The doors behave like the inline forms they replaced, on every sample a reader could meet.

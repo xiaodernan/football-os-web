@@ -56,6 +56,8 @@ const CONSUMERS = [
   "domain/prescription.ts",
   // M1180 The Deep Digest: one literal door call (the EUR-millions line).
   "data/deepDigest.ts",
+  // M1245: the broker's fee-multiple caption reads one decimal through the door.
+  "features/broker/TransferBroker.tsx",
 ];
 // Exact per-file call pins — a call that moves files, not just a total that drifts, reddens below.
 const CALL_PINS = {
@@ -68,6 +70,9 @@ const CALL_PINS = {
   "domain/prescription.ts": 5,
   // M1180 The Deep Digest: one literal door call (the EUR-millions line).
   "data/deepDigest.ts": 1,
+  // M1245: the broker's fee-multiple caption reads one decimal through the door (the
+  // `fmt1(multiple)` in its StatTile sub), so it is a reader like the rest.
+  "features/broker/TransferBroker.tsx": 1,
 };
 // The home's own internal call: the money door's B line, one call, no import.
 const HOME_CALLS = 1;
@@ -268,7 +273,7 @@ const homeCalls = count(codeOf(HOME), CALL_FMT1);
 const homeImports = count(src[HOME], IMPORT_FMT1);
 const orphanCallers = treeCallers.filter((f) => f !== HOME && !CONSUMERS.includes(f));
 ok(`every consumer reads the door at their exact pinned counts, and the door's own HOME is a reader too (imports ${importing.length}/${CONSUMERS.length}, calls ${Object.entries(actualCalls).map(([f, n]) => `${f.split("/").pop()}=${n}`).join(", ")}, total ${totalCalls}, pinned ${totalCalls}; the home calls it ${homeCalls}x and imports it ${homeImports}x; tree callers ${treeCallers.length}, orphans ${orphanCallers.length} [${orphanCallers.join(",")}])`,
-  importing.length === CONSUMERS.length && pinsHold && totalCalls === 32 && // M1182: 28 held; M1222 adds the Replay Room's four literal calls (two fold-answer figures, two provenance figures per anomaly card) — re-measured, not waived.
+  importing.length === CONSUMERS.length && pinsHold && totalCalls === 33 && // M1182: 28 held; M1222 adds the Replay Room's four literal calls; M1245 adds the broker's fee-multiple caption — re-measured, not waived.
   homeCalls === HOME_CALLS && homeImports === 0 && orphanCallers.length === 0 &&
   treeCallers.length === CONSUMERS.length + 1);
 

@@ -8,6 +8,7 @@ import { useI18n } from "@/i18n";
 import { useLocalStorage } from "@/lib/hooks";
 import { TEACH_SEEN_KEY, isSeen, markSeen, teachHintKey, unseenIds } from "@/domain/teachHint";
 import { cn } from "@/lib/utils";
+import { CHIP_CLASS } from "@/ui/primitives";
 
 export function TeachHint({ id, className }: { id: string; className?: string }) {
   const { t } = useI18n();
@@ -43,7 +44,7 @@ export function TeachHint({ id, className }: { id: string; className?: string })
         aria-label={t(open ? "teach.close" : read ? "teach.open" : "teach.newUnread")}
         className={cn(
           "grid h-4 w-4 shrink-0 place-items-center rounded-full border text-[9px] font-bold leading-none transition-colors",
-          read ? "border-border text-muted-foreground hover:text-foreground" : "border-primary/60 text-primary",
+          read ? "border-border text-muted-foreground hover:text-foreground" : CHIP_CLASS.badgePrimaryEdge,
         )}
       >
         ?

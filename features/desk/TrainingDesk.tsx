@@ -9,7 +9,7 @@ import {
   type DeskAttribute, type DeskDossier, type DeskPrescription, type DeskTraceEntry, type DeskViolation,
 } from "@/domain/trainingDesk";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
-import { Panel, SectionTitle, DemoBadge } from "@/ui/primitives";
+import { Panel, SectionTitle, DemoBadge, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useRouter } from "@/lib/router";
@@ -165,7 +165,7 @@ export function TrainingDesk() {
           {violations && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {violations.map((v) => (
-                <Badge key={v} variant="outline" className="border-warning text-warning">{t(`desk.v.${v}`)}</Badge>
+                <Badge key={v} variant="outline" className={CHIP_CLASS.badgeWarningStrong}>{t(`desk.v.${v}`)}</Badge>
               ))}
             </div>
           )}

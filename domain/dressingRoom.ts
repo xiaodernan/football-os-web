@@ -6,9 +6,11 @@
 // predict a result, and the verifier says so.
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
-import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { fsmPreflightGate, fsmOpen, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit, type PreflightEntry } from "@/domain/tracedFsm";
 import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
-import { creditRecord, formLetter, recentResults, resultPoints, type SeasonRowFields } from "./attributes";
+import { byOverall, creditRecord, formLetter, recentResults, resultPoints } from "./attributes";
+import type { FormLetter, SeasonRowFields } from "./attributes";
+import { ABSENT } from "@/lib/utils";
 import { byKickoff } from "./analytics";
 import type { Match, PlayerRef } from "./types";
 
@@ -33,7 +35,7 @@ export interface OpponentRecord {
   readonly ga: number;
   readonly points: number;
   /** The last five finished results, oldest first, as letters. */
-  readonly form: readonly ("W" | "D" | "L")[];
+  readonly form: readonly FormLetter[];
   /** The opponent's best player by overall — the danger the briefing names. */
   readonly bestPlayer: string;
   readonly bestOverall: number;
@@ -70,7 +72,7 @@ export function opponentRecord(
     .sort(byKickoff);
   if (finished.length === 0) return null;
   const row: SeasonRowFields = { played: 0, won: 0, drawn: 0, lost: 0, gf: 0, ga: 0, points: 0 };
-  const letters: ("W" | "D" | "L")[] = [];
+  const letters: FormLetter[] = [];
   for (const m of finished) {
     const home = m.homeClubId === clubId;
     const ourGoals = home ? m.homeGoals! : m.awayGoals!;
@@ -82,7 +84,7 @@ export function opponentRecord(
     letters.push(formLetter(ourGoals, oppGoals));
   }
   const squad = players.filter((p) => p.clubId === clubId);
-  const best = [...squad].sort((a, b) => b.overall - a.overall || a.id.localeCompare(b.id))[0];
+  const best = [...squad].sort((a, b) => byOverall(a, b) || a.id.localeCompare(b.id))[0];
   return {
     clubId,
     clubName,
@@ -94,7 +96,7 @@ export function opponentRecord(
     ga: row.ga,
     points: row.points,
     form: recentResults(letters),
-    bestPlayer: best?.name ?? "",
+    bestPlayer: best?.name ?? ABSENT,
     bestOverall: best?.overall ?? 0,
   };
 }
@@ -159,16 +161,18 @@ export function foldBrief(o: OpponentRecord): FoldBrief {
 
 /** The door's own initial state — the opponent's record cloned in, so a caller can never swap
  *  the record from under the proof mid-run. */
-export const createDressing = (opponent: OpponentRecord, locale: Locale): DressingState => ({
-  opponent: { ...opponent, form: [...opponent.form] },
-  locale, status: "preflight", trace: [], answer: "",
-});
+export const createDressing = (opponent: OpponentRecord, locale: Locale): DressingState =>
+  fsmOpen({ opponent: { ...opponent, form: [...opponent.form] }, locale });
 
 // ---- the state machine --------------------------------------------------
-export const dressingPreflight = (s: DressingState): DressingState =>
-  s.opponent.played > 0
-    ? step(s, { stage: "preflight", verdict: "pass", note: "opponentInHand" }, "build")
-    : step({ ...s }, { stage: "preflight", verdict: "refused", note: "opponentInHand" }, "refused");
+/** The preflight's own fact and entries: the opponent is in hand, or it is not. */
+export const DRESSING_PREFLIGHT: PreflightEntry<DressingState> = {
+  open: (s) => s.opponent.played > 0,
+  pass: { stage: "preflight", verdict: "pass", note: "opponentInHand" },
+  refused: { stage: "preflight", verdict: "refused", note: "opponentInHand" },
+};
+
+export const dressingPreflight = (s: DressingState): DressingState => fsmPreflightGate(s, DRESSING_PREFLIGHT);
 
 export const dressingBuild = (s: DressingState): DressingState => fsmBuild(s, DRESSING_BUILD_ENTRY, "model");
 

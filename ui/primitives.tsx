@@ -130,7 +130,9 @@ export const CHIP_CLASS = {
   // out in seven places and the green one in five.
   badgeSuccess: "border-success/40 text-success",
   badgeWarning: "border-warning/40 text-warning",
+  badgeDestructive: "border-destructive/40 text-destructive",
   badgePrimary: "border-primary/40 text-primary",
+  badgePrimaryEdge: "border-primary/60 text-primary",
   badgeSuccessStrong: "border-success/50 text-success",
   badgeWarningStrong: "border-warning/50 text-warning",
   badgeInfoStrong: "border-info/50 text-info",

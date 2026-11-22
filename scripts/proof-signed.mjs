@@ -180,8 +180,9 @@ ok(`signed2's body IS the padded idiom and both cells left it (body line reads $
 // --- The one-decimal padded SIBLING, M1182. proof-fmt1 pins the fmt1 door's call counts per file,
 // --- and M1182's tide chip needed a signed figure without spending the budget those pins guard, so
 // --- it reads this door. Same conventions as signed2, one decimal: the SINGLE_SIGN census charges
-// --- the padded idiom; only the door body may spell it. Its ONE consumer tree-wide is the tide chip,
-// --- and that pair is pinned by name so a re-inline or an unannounced second caller reddens here.
+// --- the padded idiom; only the door body may spell it. Its consumers tree-wide are the tide chip
+// --- and the trend line beside it — the song and the slope, both one-decimal deltas on the same
+// --- panel — and that pair is pinned by name so a re-inline or an unannounced third caller reddens.
 const signed1Line = (src[HOME].match(/export const signed1[^\n]*/) || [""])[0];
 const singleByFile = carriers.filter((f) => (f === HOME ? count(signed1Line, SINGLE_SIGN) : count(src[f], SINGLE_SIGN)) > 0).sort();
 ok(`signed1's body IS the one-decimal padded idiom and the carriers name the door and nothing else (body line reads ${count(signed1Line, SINGLE_SIGN)}; single-decimal carriers ${singleByFile.join(",")}; planted one-decimal padded reads ${plantSingle})`,
@@ -190,9 +191,9 @@ ok(`signed1's body IS the one-decimal padded idiom and the carriers name the doo
   singleByFile.length === 1 && singleByFile[0] === HOME);
 const singleImporters = carriers.filter((f) => count(src[f], IMPORT_SIGNED1) > 0);
 const singleCallSites = carriers.map((f) => [f, count(src[f], CALL_SIGNED1)]).filter(([, n]) => n > 0);
-ok(`signed1 is imported and called tree-wide exactly where the tide chip lives (importers ${singleImporters.join(",")}; call sites ${singleCallSites.map(([f, n]) => f.split("/").pop() + " " + n).join(",")})`,
+ok(`signed1 is imported and called tree-wide exactly where the tide panel lives (importers ${singleImporters.join(",")}; call sites ${singleCallSites.map(([f, n]) => f.split("/").pop() + " " + n).join(",")})`,
   singleImporters.length === 1 && singleImporters[0] === "features/ops/Ops.tsx" &&
-  singleCallSites.length === 1 && singleCallSites[0][0] === "features/ops/Ops.tsx" && singleCallSites[0][1] === 1 &&
+  singleCallSites.length === 1 && singleCallSites[0][0] === "features/ops/Ops.tsx" && singleCallSites[0][1] === 2 &&
   count(src[HOME], /export const signed1\s*[=(]/g) === 1);
 
 // --- M424: the census above charges ONE spelling of the sign convention, and the app had twelve

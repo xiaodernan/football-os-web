@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { footballProvider } from "@/data/footballService";
 import { talentMap } from "@/domain/nations";
 import { Panel, SectionTitle, EmptyState, DemoBadge, StatTile, BAR_FILL } from "@/ui/primitives";
-import { fmt2 } from "@/lib/utils";
+import { ABSENT, fmt2 } from "@/lib/utils";
 
 // M1237 · The Talent Map — the world by nation. Every other board ranks clubs and players; this
 // one asks where the talent comes from: who supplies the most, who supplies the best, and what
@@ -28,13 +28,13 @@ export function TalentMap() {
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile
           label={t("nat.tileStrongest")}
-          value={fold.strongest?.nation ?? "—"}
+          value={fold.strongest?.nation ?? ABSENT}
           sub={fold.strongest ? t("nat.bestN", { n: fold.strongest.best, name: fold.strongest.bestName }) : t("nat.none")}
           tone="up"
         />
         <StatTile
           label={t("nat.tileDeepest")}
-          value={fold.deepest?.nation ?? "—"}
+          value={fold.deepest?.nation ?? ABSENT}
           sub={fold.deepest ? t("nat.playersN", { n: fold.deepest.players }) : t("nat.none")}
         />
         <StatTile label={t("nat.tileAvg")} value={fmt2(fold.worldAvg)} sub={t("nat.scaleN", { n: fold.nations, p: fold.players })} />

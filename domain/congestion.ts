@@ -5,6 +5,7 @@
 // the gaps are whole days between kickoff instants, and an unparseable kickoff is a record skipped
 // rather than a date at the epoch.
 import type { Club, Match } from "./types";
+import { sum } from "./attributes";
 import { epochMs, DAY_MS, round2 } from "@/lib/utils";
 
 export interface CongestionRow {
@@ -55,16 +56,16 @@ export function fixtureCongestion(matches: readonly Match[], clubs: readonly Clu
     if (list.length < 2) continue; // one fixture is a date, not a spacing
     const sorted = [...list].sort((a, b) => a - b);
     const gaps = sorted.slice(1).map((t, i) => wholeDays(sorted[i], t));
-    gapSum += gaps.reduce((s, g) => s + g, 0);
+    gapSum += sum(gaps, (g) => g);
     rows.push({
       clubId,
       fixtures: list.length,
       minRest: Math.min(...gaps),
-      avgRest: round2(gaps.reduce((s, g) => s + g, 0) / gaps.length),
+      avgRest: round2(sum(gaps, (g) => g) / gaps.length),
       crowded: gaps.filter((g) => g <= THREE_CROWDED_DAYS).length,
     });
   }
-  const gaps = rows.reduce((s, r) => s + r.fixtures - 1, 0);
+  const gaps = sum(rows, (r) => r.fixtures - 1);
   rows.sort(
     (a, b) =>
       a.minRest - b.minRest ||

@@ -4,12 +4,13 @@ import { footballProvider, getClub } from "@/data/footballService";
 import { useOs } from "@/store/useFootballOS";
 import { upcomingMatchesForClub } from "@/data/footballService";
 import {
-  dressingBuild, dressingCommit, dressingPrecommit, dressingPreflight, dressingRefused,
+  createDressing, dressingBuild, dressingCommit, dressingPrecommit, dressingPreflight, dressingRefused,
   foldBrief, opponentRecord, parseDressingBrief, verifyDressingText,
-  type DressingTraceEntry, type DressingViolation, type DressingState, type OpponentRecord,
+  type DressingTraceEntry, type DressingViolation, type OpponentRecord,
 } from "@/domain/dressingRoom";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
-import { Panel, SectionTitle, DemoBadge, StatTile } from "@/ui/primitives";
+import { ABSENT } from "@/lib/utils";
+import { Panel, SectionTitle, DemoBadge, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useLocalStorage } from "@/lib/hooks";
@@ -44,7 +45,7 @@ export function DressingRoom() {
 
   const ask = async () => {
     if (busy || !opponent) return;
-    const desk0: DressingState = { opponent, locale, status: "preflight", trace: [], answer: "" };
+    const desk0 = createDressing(opponent, locale);
     let desk = dressingBuild(dressingPreflight(desk0));
     setTrace(desk.trace);
     setViolations(null);
@@ -131,7 +132,7 @@ export function DressingRoom() {
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("dress.formLabel")}</span>
-          <span className="font-mono text-sm tracking-widest text-primary">{fold.form || "—"}</span>
+          <span className="font-mono text-sm tracking-widest text-primary">{fold.form || ABSENT}</span>
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <Button size="sm" onClick={ask} disabled={busy}>{busy ? t("dress.briefing") + "…" : t("dress.ask")}</Button>
@@ -149,7 +150,7 @@ export function DressingRoom() {
           {violations && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {violations.map((v) => (
-                <Badge key={v} variant="outline" className="border-warning text-warning">{t(`dress.v.${v}`)}</Badge>
+                <Badge key={v} variant="outline" className={CHIP_CLASS.badgeWarningStrong}>{t(`dress.v.${v}`)}</Badge>
               ))}
             </div>
           )}
@@ -169,7 +170,7 @@ export function DressingRoom() {
       <Panel className="p-4">
         <SectionTitle title={t("dress.foldTitle")} hint={t("dress.foldHint")} />
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {t("dress.foldLine", { club: opponent.clubName, w: fold.won, d: fold.drawn, l: fold.lost, gf: fold.gf, ga: fold.ga, pts: fold.points, form: fold.form || "—", player: fold.bestPlayer, overall: fold.bestOverall })}
+          {t("dress.foldLine", { club: opponent.clubName, w: fold.won, d: fold.drawn, l: fold.lost, gf: fold.gf, ga: fold.ga, pts: fold.points, form: fold.form || ABSENT, player: fold.bestPlayer, overall: fold.bestOverall })}
         </p>
         <p className="mt-3 text-[11px] text-muted-foreground">{t("dress.foldMethod")}</p>
       </Panel>

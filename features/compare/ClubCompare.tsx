@@ -55,8 +55,8 @@ export function ClubCompare() {
 
   const formLabel = (r: FormResult): string =>
     r === "win" ? t("compare.club.resultWin") : r === "loss" ? t("compare.club.resultLoss") : t("compare.club.resultDraw");
-  const formTone = (r: FormResult): string =>
-    r === "win" ? CHIP_CLASS.success : r === "loss" ? CHIP_CLASS.destructive : CHIP_CLASS.muted;
+  const FORM_TONE: Record<FormResult, string> = { win: CHIP_CLASS.success, loss: CHIP_CLASS.destructive, draw: CHIP_CLASS.muted };
+  const formTone = (r: FormResult): string => FORM_TONE[r];
 
   if (!a || !b) {
     return <EmptyState title={t("compare.club.title")} hint={t("compare.club.subtitle")} icon="⚖️" />;

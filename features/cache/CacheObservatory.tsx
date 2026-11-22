@@ -21,6 +21,11 @@ import {
   shardOf,
 } from "@/domain/cache";
 
+/** One cache's census row — the league summary or the league tables' read-through. */
+type CacheCensus = Record<string, number | string | boolean | null> | null;
+/** The live wire's envelope: both censuses, the reason when it is not armed, or nothing yet. */
+type CacheLive = { ok: boolean; enabled?: boolean; stats?: CacheCensus; tables?: CacheCensus; error?: string; reason?: string | null };
+
 /**
  * M1064: the cache observatory — the caching layer drawn from the same fold the proof recounts.
  * Nothing here re-derives a number: the LRU ladder, the LFU comparison, the TTL-jitter spread,
@@ -105,7 +110,7 @@ export function CacheObservatory() {
   // dev/preview server. 404 / 503 / unconfigured → the panel prints the honest "not armed" line.
   // M1239 — the envelope carries BOTH caches' censuses now (stats = the league summary,
   // tables = the league tables read-through), so the panel reads the whole cache tier, not half.
-  const [live, setLive] = useState(null as null | { ok: boolean; enabled?: boolean; stats?: Record<string, number | string | boolean | null> | null; tables?: Record<string, number | string | boolean | null> | null; error?: string; reason?: string | null });
+  const [live, setLive] = useState<null | CacheLive>(null);
   useEffect(() => {
     let alive = true;
     const tick = async () => {

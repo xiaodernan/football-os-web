@@ -5,6 +5,8 @@
 // and its arithmetic. The screen half lives in ui/TeachHint.tsx; the proof in
 // scripts/proof-teachhint.mjs replays every claim here without a browser.
 
+import { unique } from "./attributes";
+
 /** The one device key the seen-ledger lives under. A preference, not activity: what you have
  *  already read survives an activity reset the way the theme does. */
 export const TEACH_SEEN_KEY = "football-os.teachSeen.v1";
@@ -76,7 +78,7 @@ export const unseenIds = (seen: readonly string[]): string[] => TEACH_HINT_IDS.f
  *  A corrupt or hand-edited store degrades to the empty ledger, never to a crash. */
 export function parseSeen(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
-  return [...new Set(raw.filter((v): v is string => typeof v === "string" && KNOWN.has(v)))].sort();
+  return unique(raw.filter((v): v is string => typeof v === "string" && KNOWN.has(v))).sort();
 }
 
 /** The ledger a "reset my tutorials" control writes. */

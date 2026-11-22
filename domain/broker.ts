@@ -6,7 +6,7 @@
 // to a number, not a shrug. The model's freedom ends where the dossier's money begins.
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
-import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { step, fsmBuild, fsmCommit, fsmRefusedWith, fsmPrecommit } from "@/domain/tracedFsm";
 import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 
 export type BrokerStage = FsmStage;
@@ -34,9 +34,12 @@ export interface BrokerDeal {
   readonly fee: number;
 }
 
-/** A lawful ruling: one of three codes, and a counter-fee when the code is counter. */
+/** A lawful ruling: one of three codes, and a counter-fee when the code is counter. The set is
+ *  derived from RULING_CODES below, so the type and the list can never disagree. */
+export type BrokerRulingCode = (typeof RULING_CODES)[number];
+
 export interface BrokerRuling {
-  readonly code: "accept" | "reject" | "counter";
+  readonly code: BrokerRulingCode;
   readonly fee: number | null;
 }
 
@@ -79,11 +82,11 @@ export const createBroker = (deal: BrokerDeal, locale: Locale): BrokerState => (
 export type BrokerViolation = "noDirective" | "badCode" | "missingFee" | "offDeal" | "prediction";
 
 /** Parse the ruling's directive lines. Codes, not sentences. */
-export function parseBrokerRuling(text: string, deal: BrokerDeal): { ruling: BrokerRuling | null; violations: BrokerViolation[] } {
+export function parseBrokerRuling(text: string): { ruling: BrokerRuling | null; violations: BrokerViolation[] } {
   const m = RULING_LINE.exec(text);
   if (!m) return { ruling: null, violations: ["noDirective"] };
   const code = m[1].toLowerCase();
-  if (!RULING_CODES.includes(code as (typeof RULING_CODES)[number])) return { ruling: null, violations: ["badCode"] };
+  if (!RULING_CODES.includes(code as BrokerRulingCode)) return { ruling: null, violations: ["badCode"] };
   const feeLine = FEE_LINE.exec(text);
   if (code === "counter") {
     if (!feeLine) return { ruling: null, violations: ["missingFee"] };
@@ -91,7 +94,7 @@ export function parseBrokerRuling(text: string, deal: BrokerDeal): { ruling: Bro
     if (!Number.isFinite(fee) || fee <= 0) return { ruling: null, violations: ["missingFee"] };
     return { ruling: { code: "counter", fee }, violations: [] };
   }
-  return { ruling: { code: code as "accept" | "reject", fee: null }, violations: [] };
+  return { ruling: { code: code as Exclude<BrokerRulingCode, "counter">, fee: null }, violations: [] };
 }
 
 /** The numeral law over the prose: any figure must be the dossier's own (value, overall, age),
@@ -142,4 +145,4 @@ export const brokerCommit = (s: BrokerState, answer: string, ruling: BrokerRulin
   fsmCommit({ ...s, answer, ruling }, answer, BROKER_COMMIT_ENTRY);
 
 export const brokerRefused = (s: BrokerState, answer: string): BrokerState =>
-  fsmRefused({ ...s, answer, ruling: foldRuling(s.deal) }, answer, BROKER_FOLD_ENTRY);
+  fsmRefusedWith(s, answer, "ruling", foldRuling(s.deal), BROKER_FOLD_ENTRY);

@@ -4,6 +4,7 @@
 // and who the average side of a nation looks like. Pure, deterministic, over the roster the
 // world already carries.
 import type { PlayerRef } from "./types";
+import { byOverall, meanOverall } from "./attributes";
 import { round2 } from "@/lib/utils";
 
 export interface NationRow {
@@ -43,13 +44,13 @@ export function talentMap(players: readonly PlayerRef[]): NationsFold {
   }
 
   const rows: NationRow[] = [...byNation.entries()].map(([nation, list]) => {
-    const best = [...list].sort((a, b) => b.overall - a.overall || a.id.localeCompare(b.id))[0];
+    const best = [...list].sort((a, b) => byOverall(a, b) || a.id.localeCompare(b.id))[0];
     return {
       nation,
       players: list.length,
       best: best.overall,
       bestName: best.name,
-      avg: round2(list.reduce((s, p) => s + p.overall, 0) / list.length),
+      avg: round2(meanOverall(list, 0)),
     };
   });
   rows.sort(
@@ -66,7 +67,7 @@ export function talentMap(players: readonly PlayerRef[]): NationsFold {
     rows,
     strongest: rows[0] ?? null,
     deepest,
-    worldAvg: total ? round2(players.reduce((s, p) => s + p.overall, 0) / total) : 0,
+    worldAvg: round2(meanOverall(players, 0)),
     nations: rows.length,
     players: total,
   };

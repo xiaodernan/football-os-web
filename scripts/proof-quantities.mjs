@@ -39,6 +39,7 @@ const SPLITS = {
   home: "the xG the tactics board prints per venue (fmt2, Details.tsx xg.home) beside the same side's share on this Prophet slate's win band (pct, ProphetSlate) — two readings of the word 'home', not two readings of one answer",
   away: "the xG the tactics board prints per venue (fmt2, Details.tsx xg.away) beside the same side's share on this Prophet slate's win band (pct, ProphetSlate) — two readings of the word 'away', not two readings of one answer",
   drawPct: "a whole-number forecast read (pct, Programme.tsx, ManagerOS \`${width: pct?\`) beside a fraction scaled by the labelled door elsewhere (pctLabel, SimulationLab.tsx, ManagerOS.tsx) — pct assumes the 0-100 lattice, pctLabel assumes the 0-1 fraction; the same shape credibility and fatigue already document",
+  n: "two local parameters that happen to share the name n: the venue split's table cell formats its count as a fixed-two-decimal figure (fmt2), while the broker's euro helper hands its amount to the money door (fmtMoney) — a count and an amount, not one quantity read two ways",
 };
 
 const walk = (d) => readdirSync(d, { withFileTypes: true }).flatMap((e) =>

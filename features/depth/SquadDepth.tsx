@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { squadDepth } from "@/domain/depth";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, StatTile, BAR_FILL } from "@/ui/primitives";
-import { fmt2 } from "@/lib/utils";
+import { ABSENT, fmt2 } from "@/lib/utils";
 
 // M1234 · The Cliff — the squad depth board. Every other board ranks the top; this one measures
 // the drop from a club's best player to its eleventh — the distance between a table position and
@@ -28,13 +28,13 @@ export function SquadDepth() {
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile
           label={t("depth.tileSteep")}
-          value={fold.steepest ? `${fold.steepest.cliff}` : "—"}
+          value={fold.steepest ? `${fold.steepest.cliff}` : ABSENT}
           sub={fold.steepest ? (getClub(fold.steepest.clubId)?.name ?? fold.steepest.clubId) : t("depth.none")}
           tone="down"
         />
         <StatTile
           label={t("depth.tileShallow")}
-          value={fold.shallowest ? `${fold.shallowest.cliff}` : "—"}
+          value={fold.shallowest ? `${fold.shallowest.cliff}` : ABSENT}
           sub={fold.shallowest ? (getClub(fold.shallowest.clubId)?.name ?? fold.shallowest.clubId) : t("depth.none")}
           tone="up"
         />

@@ -7,7 +7,7 @@
 // fold's own deterministic prescription, openly.
 import type { Locale } from "@/i18n/dictionaries";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
-import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { fsmPreflightGate, fsmBuild, fsmCommit, fsmRefusedWith, fsmPrecommit, type PreflightEntry } from "@/domain/tracedFsm";
 import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 import { SUPPORTED_MINUTES } from "./training";
 import type { PositionGroup } from "./types";
@@ -132,10 +132,14 @@ export function foldRx(dossier: DeskDossier): DeskPrescription | null {
 }
 
 // ---- the state machine --------------------------------------------------
-export const deskPreflight = (s: DeskState): DeskState =>
-  s.dossier.attributes.length > 0 && s.dossier.playerName.trim().length > 0
-    ? step(s, { stage: "preflight", verdict: "pass", note: "dossierInHand" }, "build")
-    : step({ ...s }, { stage: "preflight", verdict: "refused", note: "dossierInHand" }, "refused");
+/** The preflight's own fact and entries: the dossier is in hand, or it is not. */
+export const DESK_PREFLIGHT: PreflightEntry<DeskState> = {
+  open: (s) => s.dossier.attributes.length > 0 && s.dossier.playerName.trim().length > 0,
+  pass: { stage: "preflight", verdict: "pass", note: "dossierInHand" },
+  refused: { stage: "preflight", verdict: "refused", note: "dossierInHand" },
+};
+
+export const deskPreflight = (s: DeskState): DeskState => fsmPreflightGate(s, DESK_PREFLIGHT);
 
 export const deskBuild = (s: DeskState): DeskState => fsmBuild(s, DESK_BUILD_ENTRY, "model");
 
@@ -146,4 +150,4 @@ export const deskCommit = (s: DeskState, answer: string, prescription: DeskPresc
   fsmCommit({ ...s, answer, prescription }, answer, DESK_COMMIT_ENTRY);
 
 export const deskRefused = (s: DeskState, answer: string): DeskState =>
-  fsmRefused({ ...s, answer, prescription: foldRx(s.dossier) }, answer, DESK_FOLD_ENTRY);
+  fsmRefusedWith(s, answer, "prescription", foldRx(s.dossier), DESK_FOLD_ENTRY);

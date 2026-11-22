@@ -103,6 +103,14 @@ const CONSUMERS = [
   "features/grandtour/GrandTour.tsx",
   // M1157 The Prescription: the fold's own numbers ride the door (avgDepth in the rx.depth body).
   "domain/prescription.ts",
+  // M1245: four folding screens print their measured rates through the same door — the
+  // congestion calendar (league average plus each row's rest), the depth ladder (league
+  // average plus each side's XI and bench means), the keepers' union (the best wall's rate
+  // and each row's rate) and the talent map (world average plus each nation's mean).
+  "features/congestion/CongestedCalendar.tsx",
+  "features/depth/SquadDepth.tsx",
+  "features/keepers/KeepersUnion.tsx",
+  "features/nations/TalentMap.tsx",
 ];
 // The four declared residue families, pinned file-first: [file, optionalBefore, optionalReceiver, parseFloat, padded].
 // FilmRoom left this table at M393 and career's padded cell left it at M399 — both folded onto the

@@ -357,7 +357,9 @@ const EXPECTED = {
   filterOff: "border-border/60 text-muted-foreground hover:border-primary/30",
   badgeSuccess: "border-success/40 text-success",
   badgeWarning: "border-warning/40 text-warning",
+  badgeDestructive: "border-destructive/40 text-destructive",
   badgePrimary: "border-primary/40 text-primary",
+  badgePrimaryEdge: "border-primary/60 text-primary",
   badgeSuccessStrong: "border-success/50 text-success",
   badgeWarningStrong: "border-warning/50 text-warning",
   badgeInfoStrong: "border-info/50 text-info",
@@ -382,7 +384,7 @@ const EXPECTED = {
   solidSidebarPrimary: "bg-sidebar-primary text-sidebar-primary-foreground",
 };
 const { CHIP_CLASS, ZONE_CLASS, PANEL_CLASS } = await server.ssrLoadModule("/ui/primitives.tsx");
-ok(`the palette holds the thirty-six chips, badges, labels, marks and solids the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
+ok(`the palette holds the thirty-eight chips, badges, labels, marks and solids the app wore (${CHIP_CLASS ? Object.keys(CHIP_CLASS).length : 0} entries)`,
   CHIP_CLASS !== null && Object.keys(EXPECTED).every((k) => CHIP_CLASS[k] === EXPECTED[k]) &&
     Object.keys(CHIP_CLASS).length === Object.keys(EXPECTED).length,
   CHIP_CLASS ? Object.keys(EXPECTED).filter((k) => CHIP_CLASS[k] !== EXPECTED[k]).join(", ") : "the palette did not load");

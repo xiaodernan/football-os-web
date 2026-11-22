@@ -4,13 +4,14 @@ import { footballProvider, getClub } from "@/data/footballService";
 import {
   brokerBuild, brokerCommit, brokerPrecommit, brokerPreflight, brokerRefused, createBroker,
   foldRuling, parseBrokerRuling, verifyBrokerText,
-  type BrokerDeal, type BrokerDossier, type BrokerRuling, type BrokerTraceEntry, type BrokerViolation,
+  type BrokerDeal, type BrokerDossier, type BrokerRuling, type BrokerRulingCode, type BrokerTraceEntry, type BrokerViolation,
 } from "@/domain/broker";
+import { byValueDesc } from "@/domain/attributes";
 import { callLlmStream, LLM_CONFIG, withWorldBook } from "@/data/llm";
 import { Panel, SectionTitle, DemoBadge, StatTile, CHIP_CLASS } from "@/ui/primitives";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { cn, fmtMoney } from "@/lib/utils";
+import { cn, fmt1, fmtMoney } from "@/lib/utils";
 
 // M1238 · The Transfer Broker — door 19, the one that prices a man. A fee is on the table for
 // one of the world's players and the model must rule ACCEPT, REJECT or COUNTER — the money
@@ -35,7 +36,7 @@ export function TransferBroker() {
   // same deal. The dossier is the roster's own facts.
   const dossier = useMemo<BrokerDossier>(() => {
     const players = footballProvider.players();
-    const p = [...players].sort((a, b) => b.value - a.value || a.id.localeCompare(b.id))[0];
+    const p = [...players].sort((a, b) => byValueDesc(a, b) || a.id.localeCompare(b.id))[0];
     return {
       playerName: p.name,
       clubName: getClub(p.clubId)?.name ?? p.clubId,
@@ -89,7 +90,7 @@ export function TransferBroker() {
       setAnswer(t("brk.via.local"));
       return;
     }
-    const parsed = parseBrokerRuling(result.text, deal);
+    const parsed = parseBrokerRuling(result.text);
     const lawBreaks = verifyBrokerText(result.text, deal);
     if (parsed.ruling && lawBreaks.length === 0) {
       const committed = brokerCommit(brokerPrecommit(desk, "pass"), result.text, parsed.ruling);
@@ -104,8 +105,12 @@ export function TransferBroker() {
     setRuling(refused.ruling);
   };
 
-  const rulingTone = (code: string) =>
-    code === "accept" ? "border-success text-success" : code === "reject" ? "border-destructive text-destructive" : "border-warning text-warning";
+  const RULING_TONE: Record<BrokerRulingCode, string> = {
+    accept: CHIP_CLASS.badgeSuccess,
+    reject: CHIP_CLASS.badgeDestructive,
+    counter: CHIP_CLASS.badgeWarning,
+  };
+  const rulingTone = (code: BrokerRulingCode): string => RULING_TONE[code];
 
   return (
     <div className="space-y-4">
@@ -124,7 +129,7 @@ export function TransferBroker() {
         <div className="mt-2 grid gap-3 sm:grid-cols-3">
           <StatTile label={t("brk.tileValue")} value={eur(dossier.value)} sub={t("brk.clubN", { club: dossier.clubName })} />
           <StatTile label={t("brk.tilePlayer")} value={dossier.playerName} sub={t("brk.ageOvrN", { age: dossier.age, overall: dossier.overall })} />
-          <StatTile label={t("brk.tileFee")} value={eur(deal.fee)} sub={t("brk.multipleN", { n: multiple.toFixed(1) })} />
+          <StatTile label={t("brk.tileFee")} value={eur(deal.fee)} sub={t("brk.multipleN", { n: fmt1(multiple) })} />
         </div>
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">{t("brk.feeLabel")}</span>
@@ -153,7 +158,7 @@ export function TransferBroker() {
           {violations && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               {violations.map((v) => (
-                <Badge key={v} variant="outline" className="border-warning text-warning">{t(`brk.v.${v}`)}</Badge>
+                <Badge key={v} variant="outline" className={CHIP_CLASS.badgeWarningStrong}>{t(`brk.v.${v}`)}</Badge>
               ))}
             </div>
           )}

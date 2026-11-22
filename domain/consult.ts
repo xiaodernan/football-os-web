@@ -8,7 +8,7 @@ import { round2 } from "@/lib/utils";
 import { round1 } from "@/domain/scouting";
 import type { PulseFold } from "@/domain/pulse";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
-import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { fsmPreflightGate, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit, type PreflightEntry } from "@/domain/tracedFsm";
 import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 
 export type ConsultStage = FsmStage;
@@ -103,10 +103,14 @@ export function verifyConsultText(text: string, fold: PulseFold): ConsultViolati
 }
 
 // ---- the state machine --------------------------------------------------
-export const consultPreflight = (s: ConsultState): ConsultState =>
-  s.fold.sessions > 0
-    ? step(s, { stage: "preflight", verdict: "pass", note: "foldInHand" }, "build")
-    : step({ ...s }, { stage: "preflight", verdict: "refused", note: "foldInHand" }, "refused");
+/** The preflight's own fact and entries: the fold is in hand, or it is not. */
+export const CONSULT_PREFLIGHT: PreflightEntry<ConsultState> = {
+  open: (s) => s.fold.sessions > 0,
+  pass: { stage: "preflight", verdict: "pass", note: "foldInHand" },
+  refused: { stage: "preflight", verdict: "refused", note: "foldInHand" },
+};
+
+export const consultPreflight = (s: ConsultState): ConsultState => fsmPreflightGate(s, CONSULT_PREFLIGHT);
 
 export const consultBuild = (s: ConsultState): ConsultState =>
   fsmBuild(s, CONSULT_BUILD_ENTRY, "model");

@@ -3,7 +3,7 @@ import { useI18n } from "@/i18n";
 import { footballProvider, getClub } from "@/data/footballService";
 import { keeperUnion } from "@/domain/keepers";
 import { Panel, SectionTitle, EmptyState, DemoBadge, Crest, StatTile, BAR_FILL } from "@/ui/primitives";
-import { fmt2 } from "@/lib/utils";
+import { ABSENT, fmt2 } from "@/lib/utils";
 
 // M1231 — the keepers' union: the world's goalkeepers, named. The leaders' wall board ranks the
 // clubs whose defence held; this screen names who stood between the posts for each of them, and
@@ -31,13 +31,13 @@ export function KeepersUnion() {
       <div className="grid gap-3 sm:grid-cols-3">
         <StatTile
           label={t("keep.tileBest")}
-          value={fold.best ? fold.best.name : "—"}
+          value={fold.best ? fold.best.name : ABSENT}
           sub={fold.best ? t("keep.overallN", { n: fold.best.overall }) : t("keep.none")}
           tone="up"
         />
         <StatTile
           label={t("keep.tileWall")}
-          value={fold.bestWall ? (getClub(fold.bestWall.clubId)?.short ?? fold.bestWall.clubId) : "—"}
+          value={fold.bestWall ? (getClub(fold.bestWall.clubId)?.short ?? fold.bestWall.clubId) : ABSENT}
           sub={fold.bestWall ? t("keep.rateN", { n: fmt2(fold.bestWall.rate) }) : t("keep.none")}
           tone="up"
         />

@@ -12,8 +12,9 @@ const fsm = readFileSync("domain/tracedFsm.ts", "utf8");
 const consult = readFileSync("domain/consult.ts", "utf8");
 const ops = readFileSync("features/ops/Ops.tsx", "utf8");
 
-ok("domain/consult.ts imports the shared traced-FSM body — no re-implementation of the step",
-  /import \{ step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit \} from "@\/domain\/tracedFsm"/.test(consult) &&
+ok("domain/consult.ts imports the shared traced-FSM bodies — no re-implementation of the step",
+  /import \{[^}]*fsmPreflightGate[^}]*fsmBuild[^}]*fsmCommit[^}]*fsmRefused[^}]*fsmPrecommit[^}]*\} from "@\/domain\/tracedFsm"/.test(consult) &&
+  !/function step\s*[<(]/.test(consult) &&
   /export const consultBuild/.test(consult) && /export const consultCommit/.test(consult) &&
   /export const consultRefused/.test(consult));
 

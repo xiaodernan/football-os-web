@@ -8,8 +8,10 @@ import type { Locale } from "@/i18n/dictionaries";
 import type { PositionGroup } from "./types";
 import type { Verdict as TraceVerdict, FsmStage } from "@/domain/tracedFsm";
 import { byOverall } from "./attributes";
+import { POSITION_BUCKETS } from "./scouting";
 import type { PlayerRef } from "./types";
-import { step, fsmBuild, fsmCommit, fsmRefused, fsmPrecommit } from "@/domain/tracedFsm";
+import { indexById } from "@/lib/utils";
+import { step, fsmBuild, fsmCommit, fsmRefusedWith, fsmPrecommit } from "@/domain/tracedFsm";
 import { DEEP_DIGEST_NUMBERS } from "@/data/deepDigest";
 
 export type ChairStage = FsmStage;
@@ -21,8 +23,12 @@ export interface ChairTraceEntry {
   readonly note: ChairNote;
 }
 
-/** The four lines a board has. */
-export type ChairLine = "GK" | "DEF" | "MID" | "ATT";
+/** The four lines a board has — the same four position buckets the scouting table names, so the
+ *  set is written once in domain/scouting.ts and the chair derives its own word from it. */
+export type ChairLine = (typeof POSITION_BUCKETS)[number];
+
+/** The eleven the laws of the game put on the pitch. */
+const XI_SIZE = 11;
 
 /** One squad member as the chair sees them — the roster's own facts, nothing inferred. */
 export interface ChairPlayer {
@@ -92,9 +98,9 @@ export function parseChairXi(text: string, squad: ChairSquad): { selection: Chai
   if (!m) return { selection: null, violations: ["notEleven"] };
   const ids = m[1].split(",").map((s) => s.trim()).filter((s) => s.length > 0);
   const out = new Set<ChairViolation>();
-  if (ids.length !== 11) out.add("notEleven");
+  if (ids.length !== XI_SIZE) out.add("notEleven");
   if (new Set(ids).size !== ids.length) out.add("duplicate");
-  const byId = new Map(squad.players.map((p) => [p.id, p]));
+  const byId = indexById(squad.players);
   if (ids.some((id) => !byId.has(id))) out.add("unknownPlayer");
   const known = ids.filter((id) => byId.has(id));
   if (known.filter((id) => byId.get(id)!.positionGroup === "GK").length !== 1) out.add("noKeeper");
@@ -135,7 +141,7 @@ export function verifyChairText(text: string, squad: ChairSquad): ChairViolation
 export function foldXi(squad: ChairSquad): ChairSelection | null {
   const gk = squad.players.filter((p) => p.positionGroup === "GK");
   if (squad.players.length < 11 || gk.length === 0) return null;
-  const rank = (a: ChairPlayer, b: ChairPlayer) => b.overall - a.overall || a.id.localeCompare(b.id);
+  const rank = (a: ChairPlayer, b: ChairPlayer) => byOverall(a, b) || a.id.localeCompare(b.id);
   const keeper = [...gk].sort(rank)[0];
   const outfield = squad.players.filter((p) => p.positionGroup !== "GK").sort(rank);
   const shape: Record<Exclude<ChairLine, "GK">, number> = { DEF: 4, MID: 3, ATT: 3 };
@@ -149,9 +155,9 @@ export function foldXi(squad: ChairSquad): ChairSelection | null {
   // and the unpicked set together, which double-counted a thin squad's bodies and put the
   // same player in the XI twice (caught by proof-selectionchair's thin-squad arm).
   const remaining = outfield.filter((p) => !picked.includes(p.id));
-  while (picked.length < 11 && remaining.length > 0) picked.push(remaining.shift()!.id);
-  if (picked.length !== 11) return null;
-  const byId = new Map(squad.players.map((p) => [p.id, p]));
+  while (picked.length < XI_SIZE && remaining.length > 0) picked.push(remaining.shift()!.id);
+  if (picked.length !== XI_SIZE) return null;
+  const byId = indexById(squad.players);
   const group = (g: ChairLine) => picked.filter((id) => byId.get(id)!.positionGroup === g);
   return { ids: picked, byPosition: { GK: group("GK"), DEF: group("DEF"), MID: group("MID"), ATT: group("ATT") } };
 }
@@ -184,4 +190,4 @@ export const chairCommit = (s: ChairState, answer: string, selection: ChairSelec
   fsmCommit({ ...s, answer, selection }, answer, CHAIR_COMMIT_ENTRY);
 
 export const chairRefused = (s: ChairState, answer: string): ChairState =>
-  fsmRefused({ ...s, answer, selection: foldXi(s.squad) }, answer, CHAIR_FOLD_ENTRY);
+  fsmRefusedWith(s, answer, "selection", foldXi(s.squad), CHAIR_FOLD_ENTRY);

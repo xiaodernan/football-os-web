@@ -209,7 +209,9 @@ const perUser = users.map((f) => `${f}=${n(useText(f), USE_ABSENT)}`).join(",");
 // M715: the same panel asks the standings too, and its two place lines read the door under the
 // same missing-row condition: Briefing.tsx 12 -> 14.
 const expectedUsers = [
-  "data/ai.ts", "data/footballService.ts", "data/intelligence.ts", "domain/scouting.ts",
+  "data/ai.ts", "data/footballService.ts", "data/intelligence.ts",
+  // M1242: the dressing room names its best player through the door.
+  "domain/dressingRoom.ts", "domain/scouting.ts",
   "features/analytics/Briefing.tsx", "features/analytics/DataRoom.tsx",
   "features/analytics/Discipline.tsx", "features/analytics/EventClock.tsx",
   // M970: the form table asks the door everywhere a fixture count or a position could be 0 —
@@ -223,17 +225,25 @@ const expectedUsers = [
   "features/analytics/RunIn.tsx",
   // M962: the runs screen falls back to the door on its three holder tiles.
   "features/analytics/Streaks.tsx", "features/analytics/VenueSplit.tsx",
-  "features/compare/ClubCompare.tsx", "features/dashboard/Dashboard.tsx",
+  "features/compare/ClubCompare.tsx",
+  // M1232/M1234/M1242/M1231/M1237: the five new boards print the door on their absent tiles.
+  "features/congestion/CongestedCalendar.tsx",
+  "features/dashboard/Dashboard.tsx",
+  "features/depth/SquadDepth.tsx", "features/dressing/DressingRoom.tsx",
   "features/film/FilmRoom.tsx", "features/football/Details.tsx",
   "features/football/FootballWorld.tsx",
   // M1155 The Grand Tour: the chase row's leader, the card's leader and the second line all
   // decline to print a placeholder where the committed wire itself carries none.
   "features/grandtour/GrandTour.tsx",
+  // M1231: the keepers board names its number one through the door.
+  "features/keepers/KeepersUnion.tsx",
   // M1176 The Ask-Desk StateGraph: the fold answer's absent arms (next fixture, the two clubs,
   // structural nothings) print the door rather than a dash literal — five reads, one import.
   "features/livewire/LiveWire.tsx",
   "features/load/LoadPage.tsx",
-  "features/manager/ManagerOS.tsx", "features/manager/SquadPlanning.tsx", "features/onboarding/Onboarding.tsx",
+  "features/manager/ManagerOS.tsx", "features/manager/SquadPlanning.tsx",
+  // M1237: the talent map's strongest/deepest nation tiles fall back to the door.
+  "features/nations/TalentMap.tsx", "features/onboarding/Onboarding.tsx",
   // M1225 The Prescription Council: the undecided decision cell folds through the door.
   "features/ops/Ops.tsx",
   "features/player/PlayerOS.tsx", "features/programme/Programme.tsx", "features/review/ReviewPage.tsx",
@@ -243,7 +253,8 @@ const expectedUsers = [
   "features/world/DynamicWorld.tsx",
 ];
 const expectedPerUser = [
-  ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20], ["domain/scouting.ts", 1],
+  ["data/ai.ts", 3], ["data/footballService.ts", 2], ["data/intelligence.ts", 20],
+  ["domain/dressingRoom.ts", 1], ["domain/scouting.ts", 1],
   ["features/analytics/Briefing.tsx", 14],
   ["features/analytics/DataRoom.tsx", 13], ["features/analytics/Discipline.tsx", 2],
   // M786: the contrast's peak line asks the door once per series — a league with no goal or no
@@ -272,16 +283,21 @@ const expectedPerUser = [
   // M982: a zero xG window keeps the field printing the door rather than a flat 0.00. 16 -> 17.
   // M1003: the zero-cards window cell keeps that same habit of printing the door. 17 -> 18.
   ["features/analytics/VenueSplit.tsx", 18],
-  ["features/compare/ClubCompare.tsx", 2], ["features/dashboard/Dashboard.tsx", 2],
+  ["features/compare/ClubCompare.tsx", 2], ["features/congestion/CongestedCalendar.tsx", 1],
+  ["features/dashboard/Dashboard.tsx", 2],
+  ["features/depth/SquadDepth.tsx", 2], ["features/dressing/DressingRoom.tsx", 2],
   ["features/film/FilmRoom.tsx", 1], ["features/football/Details.tsx", 9],
   ["features/football/FootballWorld.tsx", 1],
   // M1155 The Grand Tour: three doors read (chase leader, card leader, second line).
   ["features/grandtour/GrandTour.tsx", 3],
+  ["features/keepers/KeepersUnion.tsx", 2], // M1231
   // M1176 The Ask-Desk StateGraph: five ABSENT arms (next-Round fixtures, both table ladder
   // positions, one between-the-lines nothing) print the door rather than a literal dash.
   ["features/livewire/LiveWire.tsx", 5],
   ["features/load/LoadPage.tsx", 3],
-  ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1], ["features/onboarding/Onboarding.tsx", 2],
+  ["features/manager/ManagerOS.tsx", 2], ["features/manager/SquadPlanning.tsx", 1],
+  ["features/nations/TalentMap.tsx", 2], // M1237
+  ["features/onboarding/Onboarding.tsx", 2],
   // M1225: the council's undecided decision cell uses the door once.
   ["features/ops/Ops.tsx", 2], // M1226: the council and the ombudsman both print their undecided state through the ABSENT door
   // M1132: the programme's four ABSENT arms (form, GD, PPG cell, W-D-L cell) render no figure
