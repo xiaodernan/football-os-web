@@ -5,6 +5,9 @@ import { cn, fmtGrouped, hashRingPoint, safeDiv } from "@/lib/utils";
 import { footballProvider } from "@/data/footballService";
 import { hashString } from "@/lib/rng";
 import { PLATFORM_LIVE } from "@/domain/platform";
+import { TeachHint } from "@/ui/TeachHint";
+import { ASK_RING_CAP, LLM_CONFIG, WORLD_BRIEFING, recentAsks, type AskMeasurement } from "@/data/llm";
+import { measurePrompt } from "@/domain/promptBudget";
 import {
   CACHE_POLICY,
   MECH_KEYS,
@@ -147,6 +150,33 @@ export function CacheObservatory() {
     return () => { alive = false; window.clearInterval(iv); };
   }, []);
 
+  // M1246 · the prompt budget — the canonical prefix is measured here and now; the ask ledger is
+  // whatever the real call path has recorded this session. No ask → the panel says so, never zero.
+  const book = useMemo(
+    () => measurePrompt({ system: WORLD_BRIEFING, prefix: WORLD_BRIEFING, history: [], question: "" }),
+    [],
+  );
+  const [asks, setAsks] = useState<readonly AskMeasurement[]>(() => recentAsks());
+  useEffect(() => {
+    const iv = window.setInterval(() => setAsks(recentAsks()), 5_000);
+    return () => window.clearInterval(iv);
+  }, []);
+  // A fixed-width local clock, built from the fields — no toLocale* call, because formatting an
+  // instant through the host's locale is the pattern the i18n gate refuses app-wide.
+  const clock = (ms: number) => {
+    const d = new Date(ms);
+    const pad = (n: number) => String(n).padStart(2, "0");
+    return `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+  };
+  const askMode = (a: AskMeasurement) =>
+    a.ok === false
+      ? t("cache.promptFailed")
+      : a.streamed === null
+        ? t("cache.promptPending")
+        : a.streamed
+          ? t("cache.promptStreamed")
+          : t("cache.promptBuffered");
+
   return (
     <div className="space-y-5">
       {/* Cinematic hero for the cache tier — pure decor on the chrome, every word in the dictionary. */}
@@ -158,6 +188,7 @@ export function CacheObservatory() {
           <div className="flex items-center gap-2">
             <h1 className="fo-spectrum bg-gradient-to-r from-primary via-info to-chart-3 bg-clip-text text-2xl font-bold text-transparent">{t("cache.title")}</h1>
             <DemoBadge />
+            <TeachHint id="cache" />
           </div>
           <p className="mt-0.5 text-xs text-muted-foreground">{t("cache.subtitle")}</p>
           <div className="mt-3 flex flex-wrap items-center gap-3">
@@ -320,6 +351,35 @@ export function CacheObservatory() {
         </ul>
         <p className="mt-3 text-[11px] text-muted-foreground">{t("cache.witnessLine")}</p>
         <p className="mt-0.5 truncate font-mono text-[10px] text-muted-foreground">{t("cache.witnessCmd")}</p>
+      </Panel>
+
+      {/* M1246 · the prompt budget — the canonical prefix measured now, the ask ledger measured on
+         the real call path. An empty ledger says so; it never prints a fabricated zero. */}
+      <Panel className="p-5">
+        <SectionTitle title={t("cache.promptTitle")} hint={t("cache.promptHint")} />
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <Mini label={t("cache.promptPrefix")} value={fmtGrouped(book.prefixChars)} />
+          <Mini label={t("cache.promptTokens")} value={`≈${fmtGrouped(book.prefixTokens)}`} />
+          <Mini label={t("cache.promptStable")} value={book.prefixStable ? t("cache.promptStableYes") : t("cache.promptStableNo")} />
+        </div>
+        <p className="mt-2 text-xs text-muted-foreground">{t("cache.promptBookLine", { c: fmtGrouped(book.prefixChars), k: fmtGrouped(book.prefixTokens) })}</p>
+        <p className="mt-1 text-xs text-muted-foreground">{LLM_CONFIG.enabled ? t("cache.promptArmed") : t("cache.promptClosed")}</p>
+        {asks.length === 0 ? (
+          <p className="mt-3 text-sm text-muted-foreground">{t("cache.promptEmpty")}</p>
+        ) : (
+          <ul className="mt-3 space-y-1">
+            {asks.map((a) => (
+              <li key={`${a.at}-${a.question}`} className="flex flex-wrap items-center gap-x-2 gap-y-1 font-mono text-[11px]">
+                <span className="text-muted-foreground">{clock(a.at)}</span>
+                <span className="max-w-[24ch] truncate">{a.question}</span>
+                <span className={cn(CHIP_CLASS.mutedSoft, "rounded px-1.5 py-0.5")}>
+                  {t("cache.promptRow", { k: fmtGrouped(a.totalTokens), p: a.prefixShare, h: a.historyKept, d: a.historyDropped, mode: askMode(a) })}
+                </span>
+              </li>
+            ))}
+          </ul>
+        )}
+        <p className="mt-3 text-[11px] text-muted-foreground">{t("cache.promptMethod", { cap: ASK_RING_CAP })}</p>
       </Panel>
 
       {/* M1098 · the live wire — the proxy's own counters, fetched honestly. Real-time on this dev/preview server. */}

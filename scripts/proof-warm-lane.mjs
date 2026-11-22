@@ -49,6 +49,20 @@ ok("a planted fake tick cannot hide — the tick returns nothing meaningful to a
   mod.attachWarmLane({ __fo_warm: false, ssrLoadModule: () => Promise.resolve({ WORLD_BRIEFING: "x" }) },
     { LLM_KEEPWARM_SECONDS: "" }, llmConfig) === null);
 
+// M1246 The Prompt Budget found the heartbeat firing inside every proof: a proof boots a
+// middlewareMode Vite server, so `configureServer` armed a tick that loaded the 235 KB world book
+// on a transport that was already closing. The stack printed AFTER green tallies (the suite read it
+// as evidence of a crash) and, with the live arm closed, every process paid a doomed upstream try.
+const harness = { config: { server: { middlewareMode: true } }, ssrLoadModule: async () => ({ WORLD_BRIEFING: "x" }) };
+ok("M1246 a headless middlewareMode harness is refused the heartbeat, and is never marked armed",
+  mod.attachWarmLane(harness, { LLM_KEEPWARM_SECONDS: "45" }, llmConfig) === null &&
+  harness.__fo_warm === undefined);
+
+ok("M1246 the shipped source stops the tick when its server closes (structural read: a close listener sets the flag the tick reads and clears the interval)",
+  /server\.httpServer\?\.once\?\.\("close"/.test(PROXY) &&
+  /closed = true;\s*clearInterval\(id\);/.test(PROXY) &&
+  /if \(closed\) return;/.test(PROXY));
+
 await server.close();
 console.log(`\n${pass}/${pass + fail} checks passed`);
 process.exit(fail ? 1 : 0);

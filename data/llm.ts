@@ -27,6 +27,7 @@ import { footballProvider } from "./footballService";
 import leagueTables from "../services/league-service/src/main/resources/league-tables.json";
 import { byOverall } from "@/domain/attributes";
 import { DEEP_DIGEST } from "@/data/deepDigest";
+import { measurePrompt, windowHistory, type PromptBudget } from "@/domain/promptBudget";
 
 interface ChatMessage { role: "system" | "user" | "assistant"; content: string }
 
@@ -92,7 +93,7 @@ export const WORLD_BRIEFING = buildWorldBriefing() + "\n\n" + DEEP_DIGEST;
  */
 export const withWorldBook = (envelope: string): string => `${WORLD_BRIEFING}\n${envelope}`;
 
-// ── M969 · the history window is GROWING, trimmed in blocks ────────────────────────────────
+// ── M969 · the growing history window — M1246 · the policy now lives in domain/promptBudget.ts ──
 // Provider prompt caches match the LONGEST COMMON PREFIX of consecutive requests. A sliding
 // window (the old `slice(-6)`) shifts the whole history every turn, so request N+1 diverged
 // from request N at its SECOND message and the cache could only ever reuse the system briefing.
@@ -100,14 +101,57 @@ export const withWorldBook = (envelope: string): string => `${WORLD_BRIEFING}\n$
 // prior turn), so the cached span covers the whole conversation and the cached-token count
 // climbs with it. When the cap finally bites, the trim is BLOCK-ALIGNED — a whole block drops
 // at once — so the prefix stays stable for many turns between trims instead of shifting one
-// message per turn.
-export const HISTORY_CAP = 40;
-export const HISTORY_TRIM_BLOCK = 12;
+// message per turn. The constants and the fold moved to domain/promptBudget.ts so the budget
+// arithmetic and the call path read one source; these re-exports keep every older importer honest.
+export { HISTORY_CAP, HISTORY_TRIM_BLOCK, windowHistory } from "@/domain/promptBudget";
 
-export function windowHistory(history: ChatMessage[]): ChatMessage[] {
-  const over = history.length - HISTORY_CAP;
-  if (over <= 0) return history;
-  return history.slice(Math.ceil(over / HISTORY_TRIM_BLOCK) * HISTORY_TRIM_BLOCK);
+// ── M1246 · the ask ledger — the last few asks, measured as they actually left ─────────────
+// The cache observatory prints the canonical prefix size always, but it can only print what an
+// ask carried when an ask really happened. This ring records the real envelope of the last
+// ASK_RING_CAP asks (prefix chars, envelope chars, window kept/dropped, token estimate) at the
+// moment callLlmStream assembles them, plus the wire outcome. It is a session ledger in memory,
+// never persisted, and it is empty on a build with the live arm off — which is the honest thing
+// for the panel to say. The numbers come from domain/promptBudget, not from a second calculation.
+export const ASK_RING_CAP = 12;
+
+/** How much of a question the ledger keeps for display. The measured sizes always use the full
+ *  text; this only trims the string the panel prints, so a pasted essay cannot push a whole
+ *  paragraph into one ledger row. Named because 140 is also the chronicler's word ceiling for a
+ *  sealed tape — two different decisions that must never be silently merged into one number. */
+const ASK_QUESTION_DISPLAY_CAP = 140;
+
+export interface AskMeasurement extends PromptBudget {
+  /** Epoch milliseconds when the ask left this module. */
+  at: number;
+  /** The question, truncated for display only — the measured sizes use the full text. */
+  question: string;
+  /** True when the proxy answered with the streaming frames; null until the response headers. */
+  streamed: boolean | null;
+  /** True when the model answered; null until the ask resolves; false on any degrade. */
+  ok: boolean | null;
+}
+
+const askRing: AskMeasurement[] = [];
+
+/** A copy of the ledger, newest first. Callers cannot append to the ring — only the call path does. */
+export function recentAsks(): readonly AskMeasurement[] {
+  return askRing.slice();
+}
+
+function recordAsk(question: string, history: readonly ChatMessage[], system: string): AskMeasurement {
+  const entry: AskMeasurement = {
+    at: Date.now(),
+    question:
+      question.length > ASK_QUESTION_DISPLAY_CAP
+        ? question.slice(0, ASK_QUESTION_DISPLAY_CAP - 1) + "…"
+        : question,
+    ...measurePrompt({ system, prefix: WORLD_BRIEFING, history, question }),
+    streamed: null,
+    ok: null,
+  };
+  askRing.unshift(entry);
+  if (askRing.length > ASK_RING_CAP) askRing.length = ASK_RING_CAP;
+  return entry;
 }
 
 /** The ONE live call path — callLlmStream below. The plain buffered envelope survives only as
@@ -136,9 +180,15 @@ export async function callLlmStream(
   options: CallOptions = {},
 ): Promise<{ ok: true; text: string } | { ok: false; error: string }> {
   if (!LLM_CONFIG.hasKey) return { ok: false, error: "no key configured" };
+  const system = options.system ?? WORLD_BRIEFING;
+  // M1246: the ledger measures the RAW history and lets the fold report its own trim, so an
+  // ask that drops turns shows up as dropped turns instead of a silent zero. The envelope
+  // two lines below is the same fold over the same input, so what is measured is what leaves.
+  const ask = recordAsk(question, history, system);
+  const window = windowHistory(history);
   const messages: ChatMessage[] = [
-    { role: "system", content: options.system ?? WORLD_BRIEFING },
-    ...windowHistory(history),
+    { role: "system", content: system },
+    ...window,
     { role: "user", content: question },
   ];
   try {
@@ -148,18 +198,20 @@ export async function callLlmStream(
       body: JSON.stringify({ messages, model: LLM_CONFIG.model, stream: true }),
       signal: AbortSignal.timeout(30000),
     });
-    if (!r.ok) return { ok: false, error: `proxy ${r.status}` };
+    if (!r.ok) { ask.ok = false; ask.streamed = false; return { ok: false, error: `proxy ${r.status}` }; }
     const contentType = r.headers.get("content-type") ?? "";
+    ask.streamed = !contentType.includes("application/json");
     // The plain JSON envelope: an error the proxy already degraded, or an older deploy.
     if (contentType.includes("application/json")) {
       const body = await r.json();
       const text: unknown = body?.text;
-      if (typeof text !== "string" || !text.trim()) return { ok: false, error: body?.error ?? "empty model response" };
+      if (typeof text !== "string" || !text.trim()) { ask.ok = false; return { ok: false, error: body?.error ?? "empty model response" }; }
+      ask.ok = true;
       onDelta(text.trim());
       return { ok: true, text: text.trim() };
     }
     const reader = r.body?.getReader();
-    if (!reader) return { ok: false, error: "no stream body" };
+    if (!reader) { ask.ok = false; return { ok: false, error: "no stream body" }; }
     const decoder = new TextDecoder();
     let buf = "";
     let text = "";
@@ -182,10 +234,12 @@ export async function callLlmStream(
         } catch { /* a partial frame splits across chunks — the next read completes it */ }
       }
     }
-    if (error) return { ok: false, error };
-    if (!text.trim()) return { ok: false, error: "empty model response" };
+    if (error) { ask.ok = false; return { ok: false, error }; }
+    if (!text.trim()) { ask.ok = false; return { ok: false, error: "empty model response" }; }
+    ask.ok = true;
     return { ok: true, text: text.trim() };
   } catch (err) {
+    ask.ok = false;
     return { ok: false, error: err instanceof Error ? err.message : "network error" };
   }
 }

@@ -34,7 +34,7 @@ const locales = ["en", "zh-CN", "zh-TW"];
 const ids = TEACH_HINTS.map((h) => h.id);
 const keys = TEACH_HINTS.map((h) => h.key);
 ok(`the catalogue holds ${TEACH_HINTS.length} lessons with unique ids and unique dictionary keys, every key present in all three locales`,
-  TEACH_HINTS.length === 25 &&
+  TEACH_HINTS.length === 26 &&
   new Set(ids).size === ids.length &&
   new Set(keys).size === keys.length &&
   TEACH_HINTS.every((h) => h.id.length > 0 && locales.every((l) => typeof D[l][h.key] === "string" && D[l][h.key].trim().length > 0)));

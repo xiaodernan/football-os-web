@@ -18,9 +18,11 @@ export interface TeachHint {
   key: string;
 }
 
-// The catalogue is the dashboard's module grid, in the grid's own order, plus the four actions
-// the command palette puts within one tap of every screen. An id names a lesson, not a route:
-// the ledger must survive a route rename, which is why it never stores a path.
+// The catalogue is the dashboard's module grid, in the grid's own order, plus the actions the
+// command palette puts within one tap of every screen. An id names a lesson, not a route:
+// the ledger must survive a route rename, which is why it never stores a path. M1246 appends
+// "cache": the observatory is a palette goto, not a dashboard tile, and its prompt-budget panel
+// deserves the same one-line lesson as the rest of the wide interface.
 export const TEACH_HINTS: readonly TeachHint[] = [
   { id: "player", key: "teach.player" },
   { id: "manager", key: "teach.manager" },
@@ -47,6 +49,7 @@ export const TEACH_HINTS: readonly TeachHint[] = [
   { id: "palette", key: "teach.palette" },
   { id: "ops", key: "teach.ops" },
   { id: "manual", key: "teach.manual" },
+  { id: "cache", key: "teach.cache" },
 ];
 
 export const TEACH_HINT_IDS: readonly string[] = TEACH_HINTS.map((h) => h.id);

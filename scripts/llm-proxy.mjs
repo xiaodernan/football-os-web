@@ -585,8 +585,16 @@ export function attachWarmLane(server, env, cfg, cache) {
   const sec = clampKeepWarm(env?.LLM_KEEPWARM_SECONDS);
   if (sec === 0) return null;                      // opt-in; absent means absent
   if (!server || server.__fo_warm) return null;    // double-start refused
+  // M1246: a middlewareMode server is a headless harness — every proof in the suite boots one
+  // through Vite's SSR loader — not the dev server a human is chatting on. A heartbeat there has
+  // nobody to keep warm: it loads the world book on a transport that is already closing (the
+  // "transport was disconnected" stack the suite printed AFTER green tallies) and, with the live
+  // arm closed, spends a doomed upstream attempt in every one of the suite's processes.
+  if (server.config?.server?.middlewareMode) return null;
   server.__fo_warm = true;
+  let closed = false;
   const tick = async () => {
+    if (closed) return;
     try {
       const brief = await server.ssrLoadModule("/data/llm.ts");
       const ask = {
@@ -611,6 +619,13 @@ export function attachWarmLane(server, env, cfg, cache) {
   const id = setInterval(tick, sec * 1000);
   id.unref?.();
   setTimeout(tick, 1000).unref?.();
+  // M1246: a server that closes takes its heartbeat with it. The flag stops the next tick from
+  // loading the world book through a module transport that no longer exists; the interval is
+  // cleared outright so a long-lived process does not keep a dead timer around.
+  server.httpServer?.once?.("close", () => {
+    closed = true;
+    clearInterval(id);
+  });
   return id;
 }
 
