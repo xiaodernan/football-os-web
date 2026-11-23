@@ -1,9 +1,9 @@
 {
-  "head": "9dc5ca4b",
-  "total_commits": 1782,
-  "milestone": "M1242",
-  "milestone_full": "本提交落地后 M1242 The Dressing Room — a regression proof that native scroll direction is preserved",
-  "pwa_kb": 898,
+  "head": "18cf4ca",
+  "total_commits": 1784,
+  "milestone": "M1246",
+  "milestone_full": "本提交落地后 M1246 The Prompt Budget — 提示词预算：测量真正发出去的那一层信封",
+  "pwa_kb": 901,
   "assets": 126,
   "screens": 95,
   "screens_label": "95+ screens",
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-22T12:13:58.461Z"
+  "generated_at": "2026-11-23T05:05:07.671Z"
 }
