@@ -34,7 +34,12 @@ let pass = 0, fail = 0;
 const ok = (name, cond) => { if (cond) { pass++; console.log("ok   " + name); } else { fail++; console.log("FAIL " + name); } };
 
 const PROXY = await import(pathToFileURL(join(root, "scripts/llm-proxy.mjs")).href);
-const { llmProxyMiddleware, createLlmCache, llmCacheStats, laneKey, PROXY_ROUTE } = PROXY;
+const { llmProxyMiddleware, createLlmCache, llmCacheStats, laneKey, serverConfig, PROXY_ROUTE } = PROXY;
+
+ok("an inherited Clash proxy is ignored without an explicit opt-in",
+  serverConfig({ LLM_UPSTREAM_PROXY: "http://127.0.0.1:7897" }).upstreamProxy === "");
+ok("an explicit proxy opt-in still works when deliberately requested",
+  serverConfig({ LLM_ALLOW_UPSTREAM_PROXY: "1", LLM_UPSTREAM_PROXY: "http://127.0.0.1:7897" }).upstreamProxy === "http://127.0.0.1:7897");
 
 // The world book the app actually rides, loaded through Vite so the TS fold runs exactly as the
 // browser's call path runs it. A 235 KB system message is what a real ask carries; a toy string

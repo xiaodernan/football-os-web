@@ -67,9 +67,9 @@ const withWireDossier = (clean) => {
   return next;
 };
 import { Readable } from "node:stream";
-// M1167 honor the egress boundary — some providers refuse this network. One optional
-// server-side CONNECT proxy (LLM_UPSTREAM_PROXY) made per-request from the server's own env;
-// undici-only, never shipped to the browser, never logged: empty means direct fetch, as before.
+// Egress is direct by default. A server-side CONNECT proxy is an explicit opt-in: set both
+// LLM_ALLOW_UPSTREAM_PROXY=1 and LLM_UPSTREAM_PROXY to use one; an inherited proxy from a
+// system VPN/Clash is otherwise ignored. undici-only, never shipped to the browser, never logged.
 import { ProxyAgent, fetch as proxyFetch } from "undici";
 const upstreamProxyDispatchers = new Map();
 const upstreamDispatcher = (cfg) => {
@@ -555,9 +555,11 @@ export function serverConfig(env = process.env) {
     key: env.LLM_API_KEY || "",
     baseUrl: env.LLM_BASE_URL || DEFAULT_BASE,
     model: env.LLM_MODEL || DEFAULT_MODEL,
-    // M1167 honor the egress boundary: an optional CONNECT proxy the server reads from its own
-    // env only. Never serialized into a cache key, never returned in any response, never logged.
-    upstreamProxy: env.LLM_UPSTREAM_PROXY || "",
+    // Egress is DIRECT by default. A CONNECT proxy is an explicit opt-in: even if a stale
+    // LLM_UPSTREAM_PROXY survives in an inherited environment (Clash Verge's system proxy),
+    // it is ignored unless LLM_ALLOW_UPSTREAM_PROXY=1 is set deliberately. Never serialized
+    // into a cache key, never returned in any response, never logged.
+    upstreamProxy: env.LLM_ALLOW_UPSTREAM_PROXY === "1" ? (env.LLM_UPSTREAM_PROXY || "") : "",
   };
 }
 

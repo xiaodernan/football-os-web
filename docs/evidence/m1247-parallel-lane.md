@@ -14,9 +14,9 @@
   optional, never required; no more ECONNREFUSED when it is off.
 
 ## Gates measured on this tree
-- `proof-parallel-lane` **14/14**, `EXIT=0`.
+- `proof-parallel-lane` **16/16**, `EXIT=0`.
 - Full proof battery: `node scripts/run-proofs.mjs` **242/242 proof scripts proven
-  (5745/5745 checks counted)**, `EXIT=0`.
+  (5747/5747 checks counted)**, `EXIT=0`.
 - `tsc` 0, `npm run build` 0; `proof-pwa` 4/4 and `perf-baseline` 5/5 at the M1246 baseline
   (bundle unchanged, server/wire change only).
 - Full E2E across two shards (the single long run kept being killed by host restarts):
