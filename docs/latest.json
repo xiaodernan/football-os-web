@@ -1,8 +1,8 @@
 {
-  "head": "18cf4ca",
-  "total_commits": 1784,
-  "milestone": "M1246",
-  "milestone_full": "本提交落地后 M1246 The Prompt Budget — 提示词预算：测量真正发出去的那一层信封",
+  "head": "3c40786",
+  "total_commits": 1786,
+  "milestone": "M1247",
+  "milestone_full": "本提交落地后 M1247 The Parallel Lane — 流式代理路径观测真缓存标签，并发单飞离线实测",
   "pwa_kb": 901,
   "assets": 126,
   "screens": 95,
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-23T05:05:07.671Z"
+  "generated_at": "2026-11-24T07:03:50.607Z"
 }
