@@ -22,7 +22,7 @@ test("the transfer broker rules on a real deal", async ({ page }) => {
   await expect(page.getByText("2.0x the value")).toBeVisible();
 
   // The fold's ruling is on screen before anyone asks — the honest default.
-  await expect(page.getByText("The fold's ruling")).toBeVisible();
+  await expect(page.getByText("The fold's ruling").first()).toBeVisible();
 
   // Asking without a reachable model lands on the fold arm, labelled.
   await page.getByRole("button", { name: "Rule on the deal" }).click();

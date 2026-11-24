@@ -18,7 +18,7 @@ test("the selection chair answers with the fold's XI and names the squad", async
   await expect(page.getByText("Defenders").first()).toBeVisible();
 
   // The fold's XI is on screen before anyone asks — the honest default.
-  await expect(page.getByText("The fold's XI")).toBeVisible();
+  await expect(page.getByText("The fold's XI").first()).toBeVisible();
 
   // Asking without a reachable model lands on the fold arm, labelled.
   await page.getByRole("button", { name: "Ask the chair" }).click();
