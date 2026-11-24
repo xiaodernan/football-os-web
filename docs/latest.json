@@ -1,8 +1,8 @@
 {
-  "head": "c06dcf5",
-  "total_commits": 1796,
-  "milestone": "M1248",
-  "milestone_full": "本提交落地后 M1248 No Clash Dependency — 把「无 Clash 硬绑定」变成常驻门禁",
+  "head": "d846b06",
+  "total_commits": 1798,
+  "milestone": "M1249",
+  "milestone_full": "本提交落地后 M1249 Egress Doctor — 一条命令离线自检端口与代理状态",
   "pwa_kb": 901,
   "assets": 126,
   "screens": 95,
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-24T12:06:16.785Z"
+  "generated_at": "2026-11-24T19:07:39.958Z"
 }
