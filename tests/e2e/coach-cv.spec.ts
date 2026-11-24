@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { completeOnboarding } from "./helpers";
+import { completeOnboarding, dismissTour } from "./helpers";
 
 // M966 — the coach résumé end to end: the career a visitor builds in the manager OS is the
 // same record the coach CV derives from, through one fixture actually played in the browser.
@@ -11,6 +11,7 @@ test("a played manager career builds the coach CV, its badges and the public car
 
   // Take charge: the picker boards the strongest club of the first competition.
   await page.goto("/#/manager");
+  await dismissTour(page);
   await page.locator("button", { hasText: /OVR \d+/i }).first().click();
   await expect(page.getByRole("button", { name: /Play next fixture/ })).toBeVisible();
 

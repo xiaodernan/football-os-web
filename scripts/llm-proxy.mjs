@@ -387,8 +387,11 @@ export async function handleLlmRequest(cfg, requestBody, cache = null) {
     { "X-FootballOS-LLM-Cache": "miss", "X-FootballOS-LLM-Usage-Cached": String(cachedTokens ?? 0) });
 }
 
-/** One ndjson frame carrying the whole answer — the UI cannot tell this from a memo hit. */
-const singleFrameNdjson = (text, model) => {
+/** One ndjson frame carrying the whole answer — the UI cannot tell this from a memo hit.
+ *  `cacheLabel` is what THIS response's cache state was, so the streaming wire can emit the same
+ *  observable header the buffered wire does (M1247: the header was promised at the top of this
+ *  file and silently absent on the only path the browser rides). */
+const singleFrameNdjson = (text, model, cacheLabel) => {
   const encoder = new TextEncoder();
   const stream = new ReadableStream({
     start(controller) {
@@ -399,7 +402,7 @@ const singleFrameNdjson = (text, model) => {
       controller.close();
     },
   });
-  return { status: 200, stream, contentType: STREAM_CONTENT_TYPE, model };
+  return { status: 200, stream, contentType: STREAM_CONTENT_TYPE, model, cache: cacheLabel };
 };
 
 // ─── M969b · the streaming path — the model's own SSE reaches the browser ──────────────────
@@ -435,7 +438,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
   const key = cacheKey(model, clean);
   if (cache && cache.policy.enabled) {
     const hit = cache.read(key, Date.now());
-    if (hit) return singleFrameNdjson(hit.text, hit.model);
+    if (hit) return singleFrameNdjson(hit.text, hit.model, "hit");
     // M1189 single-flight: an identical concurrent ask already owns the cold load. The frames
     // stream as they arrive for the owner — the sibling cannot tee a live SSE stream that is
     // consumed by someone else, so it waits for the owner's assembled answer and re-emits it
@@ -445,7 +448,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
     if (cache.inFlight.has(key)) {
       cache.stats.coalesced++;
       const shared = await cache.inFlight.get(key).catch(() => null);
-      if (shared && shared.ok) return singleFrameNdjson(shared.text, shared.model);
+      if (shared && shared.ok) return singleFrameNdjson(shared.text, shared.model, "coalesced");
       if (shared && !shared.ok) return notStream(502, { ok: false, error: shared.error });
       // shared === null (owner threw unexpectedly): fall through and become a fresh owner.
     }
@@ -543,7 +546,7 @@ export async function handleLlmStream(cfg, requestBody, cache = null) {
       }
     },
   });
-  return { status: 200, stream, contentType: STREAM_CONTENT_TYPE, model };
+  return { status: 200, stream, contentType: STREAM_CONTENT_TYPE, model, cache: "miss" };
 }
 
 /** Read the server-only config. Recognises the non-VITE_ names; ignores VITE_-prefixed keys. */
@@ -671,6 +674,7 @@ export function llmProxyMiddleware(configFor = () => serverConfig(), cache = cre
         res.setHeader("Cache-Control", "no-store");
         res.setHeader("Content-Type", out.contentType);
         res.setHeader("X-Accel-Buffering", "no");
+        if (out.cache) res.setHeader("X-FootballOS-LLM-Cache", out.cache);
         res.setHeader("X-FootballOS-Wire-Dossier", wireDossierState());
         const nodeStream = Readable.fromWeb(out.stream);
         for await (const chunk of nodeStream) res.write(chunk);

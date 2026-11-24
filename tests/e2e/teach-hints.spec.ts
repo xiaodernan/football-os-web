@@ -33,17 +33,19 @@ test("the dashboard's module tiles each carry a lesson that teaches without navi
 test("the settings row counts the unread lessons and marks them all unread again", async ({ page }) => {
   await completeOnboarding(page, "Teach Visitor");
   await page.goto("/#/settings");
+  await dismissTour(page);
 
   await expect(page.getByText("Teaching hints").first()).toBeVisible();
-  await expect(page.getByText("25 lessons unread")).toBeVisible();
+  await expect(page.getByText("26 lessons unread")).toBeVisible();
 
   await page.getByRole("button", { name: "Mark all unread" }).click();
   await expect(page.getByText("All lessons marked unread")).toBeVisible();
-  await expect(page.getByText("25 lessons unread")).toBeVisible();
+  await expect(page.getByText("26 lessons unread")).toBeVisible();
 });
 
 test("the palette trigger wears its lesson beside the search box", async ({ page }) => {
   await completeOnboarding(page, "Teach Visitor");
+  await dismissTour(page);
   const paletteHint = page.locator("header").getByRole("button", { name: "Unread lesson" });
   await paletteHint.click();
   await expect(page.getByText("The command palette: press the button (or Ctrl+K) to jump anywhere or run any action.")).toBeVisible();

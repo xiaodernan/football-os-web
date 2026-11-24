@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { dismissTour } from "./helpers";
 
 // M1147 · the Dream XI must be playable end-to-end: pick a formation, add players, watch the stats, save.
 test("the dream XI screen builds a formation, picks players, and saves", async ({ page }) => {
@@ -7,6 +8,7 @@ test("the dream XI screen builds a formation, picks players, and saves", async (
   page.on("pageerror", (e) => errors.push(`pageerror: ${String(e).slice(0, 200)}`));
 
   await page.goto("/#/dream-team", { waitUntil: "domcontentloaded" });
+  await dismissTour(page);
   await expect(page.getByRole("heading", { level: 1, name: /the dream xi/i })).toBeVisible({ timeout: 20000 });
   // Stats render with a fresh zero XI
   await expect(page.getByText(/picks/i).first()).toBeVisible();

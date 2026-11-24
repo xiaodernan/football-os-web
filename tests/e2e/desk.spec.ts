@@ -16,7 +16,7 @@ test("the training desk prescribes from the player's own dossier", async ({ page
   await expect(page.getByText(/Desk Visitor · the dossier in the desk's hands/)).toBeVisible();
 
   // The fold's prescription is on screen before anyone asks — the honest default.
-  await expect(page.getByText("The fold's prescription")).toBeVisible();
+  await expect(page.getByText("The fold's prescription").first()).toBeVisible();
 
   // Asking without a reachable model lands on the fold arm, labelled.
   await page.getByRole("button", { name: "Ask the desk" }).click();

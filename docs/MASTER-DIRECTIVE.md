@@ -7,7 +7,7 @@
 ## 〇、大模型 API（真实可用，必须实测跑通）
 
 - Key `sk-BDRT…`（仅服务端 `.env`，永不进浏览器包）；Base `https://api.aizzz.xyz/v1`；模型 `gpt-6.2-sol`。
-- 出口走本机 Clash Verge（`LLM_UPSTREAM_PROXY=http://127.0.0.1:7897`），打不通就多重试。
+- 出口默认走正常网络（直连）；`LLM_UPSTREAM_PROXY` 留空。仅在用户明确需要时才填本地 CONNECT 代理，任何环境都不得强制绑定 Clash Verge，否则不开代理会出现 ECONNREFUSED。
 - **2026-11-22 实测**：`node scripts/verify-llm-live.mjs --clean` **19/19**——真实作答 200/8530ms、
   grounded（Manchester City / Real Madrid / Inter / 89）、越界问题 GUARDED、缓存二次命中 6ms
   （0 新 token）、4 并发相同请求合并为 1 次真实调用、usage 诚实回显

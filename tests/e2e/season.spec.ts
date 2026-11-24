@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { completeOnboarding } from "./helpers";
+import { completeOnboarding, dismissTour } from "./helpers";
 
 // M967 — a season actually unfolds: three fixtures played through the manager OS, the league
 // table and the outlook reading the same record the coach CV will report. The engine is
@@ -10,6 +10,7 @@ test("three played fixtures carry through the table, the outlook and the coach C
   await completeOnboarding(page, "E2E Gaffer");
 
   await page.goto("/#/manager");
+  await dismissTour(page);
   await page.locator("button", { hasText: /OVR \d+/i }).first().click();
   await expect(page.getByRole("button", { name: /Play next fixture/ })).toBeVisible();
   for (let i = 0; i < 3; i++) {

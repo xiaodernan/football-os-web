@@ -20,7 +20,7 @@ test("the dressing room briefs the next opponent", async ({ page }) => {
   await expect(page.getByText("Last five").first()).toBeVisible();
 
   // The fold's briefing is on screen before anyone asks — the honest default.
-  await expect(page.getByText("The fold's briefing")).toBeVisible();
+  await expect(page.getByText("The fold's briefing").first()).toBeVisible();
 
   // Asking without a reachable model lands on the fold arm, labelled.
   await page.getByRole("button", { name: "Brief the dressing room" }).click();

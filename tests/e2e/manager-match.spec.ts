@@ -1,9 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { completeOnboarding } from "./helpers";
+import { completeOnboarding, dismissTour } from "./helpers";
 
 test("the manager OS opens on a league and lists its clubs", async ({ page }) => {
   await completeOnboarding(page, "Manager Visitor");
   await page.goto("/#/manager");
+  await dismissTour(page);
 
   // First, go through the ClubPicker - select Premier League
   await expect(page.getByRole("button", { name: /Premier League/ })).toBeVisible();
