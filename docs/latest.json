@@ -1,6 +1,6 @@
 {
-  "head": "3c40786",
-  "total_commits": 1786,
+  "head": "d7db9a8",
+  "total_commits": 1788,
   "milestone": "M1247",
   "milestone_full": "本提交落地后 M1247 The Parallel Lane — 流式代理路径观测真缓存标签，并发单飞离线实测",
   "pwa_kb": 901,
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-24T07:03:50.607Z"
+  "generated_at": "2026-11-24T07:26:18.268Z"
 }
