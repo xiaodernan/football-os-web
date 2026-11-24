@@ -34,9 +34,11 @@ jobs:
       - name: Configure Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: dist
+      - name: Let artifact metadata settle
+        run: sleep 15
       - name: Deploy
         id: deployment
         uses: actions/deploy-pages@v4
