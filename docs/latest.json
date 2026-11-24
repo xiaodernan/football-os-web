@@ -1,8 +1,8 @@
 {
-  "head": "4f1e986",
-  "total_commits": 1794,
-  "milestone": "M1247",
-  "milestone_full": "本提交落地后 M1247 The Parallel Lane — 流式代理路径观测真缓存标签，并发单飞离线实测",
+  "head": "c06dcf5",
+  "total_commits": 1796,
+  "milestone": "M1248",
+  "milestone_full": "本提交落地后 M1248 No Clash Dependency — 把「无 Clash 硬绑定」变成常驻门禁",
   "pwa_kb": 901,
   "assets": 126,
   "screens": 95,
@@ -18,5 +18,5 @@
     "The Chapter — tonight's one chapter",
     "The Moonshots — the uncashed ceilings"
   ],
-  "generated_at": "2026-11-24T11:27:58.353Z"
+  "generated_at": "2026-11-24T12:06:16.785Z"
 }
