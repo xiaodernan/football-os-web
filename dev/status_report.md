@@ -2,14 +2,15 @@
 
 ## 📊 当前项目状态
 
-**当前HEAD**: 本提交落地后 `M1248` No Clash Dependency — 把「无 Clash 硬绑定」变成常驻门禁（此前基线 `M1247` The Parallel Lane · `M1246` The Prompt Budget · `M1245` The Shared Body）
-**总提交数**: 1796（本提交落地后）
+**当前HEAD**: 本提交落地后 `M1249` Egress Doctor — 一条命令离线自检端口与代理状态（此前基线 `M1248` No Clash Dependency · `M1247` The Parallel Lane · `M1246` The Prompt Budget）
+**总提交数**: 1798（本提交落地后）
 **大模型 API 状态**: 2026-11-23 业主已关闭 LLM API（成本与用量控制），后续开发一律离线实测：缓存/车道/令牌全部走「真代理处理函数 + 桩上游」，界面上明说没有活体调用，不假装跑过。
 **开发状态**: 持续进行中，无阻塞（M1246 接手停摆并轨时抓到一处真实的静默零：账本读的是已裁剪窗口，被上限裁掉 12 轮的那一问在读者的屏幕上印成「丢弃 0 / 窗口稳定」——已改为喂原始历史，让折叠自己报告裁剪）
 **远端分支**: `github.com:xiaodernan/football-os-web.git` master 已同步
 
-## M1248–M1206 · Latest ledger (newest first)
+## M1249–M1206 · Latest ledger (newest first)
 
+- **M1249 Egress Doctor — `npm run doctor` 离线自检：7897 端口空闲、无继承代理环境、本地 dev server 5199 返回 200。实测 3/3 通过。无 bundle 改动。**
 - **M1248 No Clash Dependency — 新增 `scripts/proof-no-clash.mjs`（4/4）：遍历 641 个可执行源码文件，忽略注释后拒绝任何硬编码 `127.0.0.1:789x` 代理端口，并验证 `LLM_ALLOW_UPSTREAM_PROXY=1` 双 opt-in 守卫与本地 `.env` 不强制代理。配合 M1247 的 `serverConfig` 改动，出口默认直连，继承的 Clash/系统代理被忽略。全电池 243/243（5751/5751），bundle 不变 901 KB/126 assets，E2E 不变 299 passed/12 skipped。**
 - **M1247 The Parallel Lane — 流式 wire 现在和缓冲 wire 一样写 `X-FootballOS-LLM-Cache`（hit/coalesced/miss），浏览器真正走的那条路不再静默。** `scripts/proof-parallel-lane.mjs` 离线驱动真代理中间件 + 桩上游，实测八路同时同问只拨一次、七路 coalesced、LRU 淘汰顺序、内容派生单车道和逐路诚实 header；无真模型调用。同时解除 Clash 依赖：本地 `.env` 不再强制 `LLM_UPSTREAM_PROXY`，总指令改为默认直连。`proof-parallel-lane` 16/16（新增两项：继承的 Clash 代理无 opt-in 必须被忽略，显式 opt-in 仍可用），全电池 242/242（5747/5747），tsc/build 0，PWA/perf 绿，E2E 分片合计 299 passed/12 skipped/0 failed。
 - **M1246 The Prompt Budget — 提示词预算（/cache 观察台的新面板）。** 用户第四条（缓存命中率与上下文利用）要的是可核对的数字，不是一堆决策描述：这一里把「一次问答到底带了多少东西」折成一个纯函数。`domain/promptBudget.ts`（新，从 `data/llm.ts` 迁出且由调用路径重新导出，两边不可能漂移）——`windowHistory`（M969 的增长窗口 + 整块裁剪，上限之内的同一数组恒等返回）、`estimateTokens`（ceil(字符/4)，非空永不为零）、`splitSystem`（只有规范前缀逐字节领头才算 stable，否则整段算信封——错位切分不当成功）、`measurePrompt`（前缀/信封/历史/问题四段字符、令牌估计、前缀占比、窗口保留与丢弃）。`data/llm.ts` 新增问答账本（`ASK_RING_CAP = 12`、`recentAsks()`、`recordAsk()`），流式/缓冲/失败三态都记；`features/cache/CacheObservatory.tsx` 打印世界书底数与最近 12 问的真实信封，并挂上 `TeachHint id="cache"`。`scripts/proof-prompt-budget.mjs`（新，18/18）逐笔重算每一项算术，并种植三种会说谎的测量：不稳前缀、缩水的窗口、错位信封，另拒「非空问答值 0 令牌」的假话。**接手时抓到的真实缺陷**：账本被喂了裁剪后的窗口，于是被上限裁掉轮次的那些问答永远报告「丢弃 0 / 窗口稳定」——正是本项目禁止的静默零；现在账本喂原始历史，折叠自己报告丢弃了几轮（新增一条闭合双臂：折叠与信封不可能各说一套）。门禁：coverage 26/26（POP 253→254、domain 103→104）、storage 63/63（APP_FILES 245→246）、router 29/29（242→243）、app-tree 13/13（APP_MODULE 252→253）、i18n（literal 3991→4008、litVar 625→628、APP_SRC 249→250、SRC 252→253）、teachhint 26 条；三语 18 键（17 个 `cache.prompt*` + `teach.cache`）；tsc 0、build 0、bundle 898→901 KB（baseline 同提交重录）。**无活体见证臂**：API 已关，本里程碑的证据全部离线。元门禁也上了一场：proof-i18n 的空口零断言普查拒绝了一条只写「没有第二套算术」却没有证人的绿，于是新增一条变异臂证词——把两处谎（再写一遍 ceil(/4)、把账本喂成裁剪后的窗口）种进 `data/llm.ts` 的副本，证明那两个否定扫描真有牙；同一提交里顺手修掉 proof-i18n 注释里两个历史遗留的 U+FFFD。落地树全套件：**241/241 脚本、5731/5731 断言全绿**，tsc 0、build 0。
