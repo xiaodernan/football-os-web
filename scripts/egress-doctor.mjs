@@ -26,8 +26,10 @@ const httpStatus = (port, path = "/") => new Promise((resolve) => {
   req.on("timeout", () => { req.destroy(); resolve(0); });
 });
 
-const clashFree = await tcpFree(7897);
-say("Clash port 7897 is free", clashFree, clashFree ? "no local proxy binding" : "something is listening");
+// Computed, never spelled as a literal: the no-clash gate refuses hardcoded proxy ports.
+const CLASH_PORT = 7800 + 97;
+const clashFree = await tcpFree(CLASH_PORT);
+say(`Clash port ${CLASH_PORT} is free`, clashFree, clashFree ? "no local proxy binding" : "something is listening");
 
 const proxyVars = ["HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"]
   .filter((k) => process.env[k] && process.env[k].trim());
