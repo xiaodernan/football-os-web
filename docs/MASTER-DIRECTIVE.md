@@ -7,7 +7,7 @@
 ## 〇、大模型 API（真实可用，必须实测跑通）
 
 - Key `sk-BDRT…`（仅服务端 `.env`，永不进浏览器包）；Base `https://api.aizzz.xyz/v1`；模型 `gpt-6.2-sol`。
-- 出口默认走正常网络（直连）。代理是双重 opt-in：即使继承到 `LLM_UPSTREAM_PROXY`，也必须再设 `LLM_ALLOW_UPSTREAM_PROXY=1` 才会生效；否则一律忽略，不开 Clash Verge 也绝不会 ECONNREFUSED。
+- 出口默认走正常网络（直连）。代理是双重 opt-in：即使继承到 `LLM_UPSTREAM_PROXY`，也必须再设 `LLM_ALLOW_UPSTREAM_PROXY=1` 才会生效；否则一律忽略，不开 Clash Verge 也绝不会 ECONNREFUSED。若本机仍见该错误，是 Clash Verge 的「系统代理」在拦截 `127.0.0.1:5199`：关闭系统代理或把 `127.0.0.1`/`localhost` 加入绕过列表，并重启 `npm run dev` 以重新载入干净的 `.env`。
 - **2026-11-22 实测**：`node scripts/verify-llm-live.mjs --clean` **19/19**——真实作答 200/8530ms、
   grounded（Manchester City / Real Madrid / Inter / 89）、越界问题 GUARDED、缓存二次命中 6ms
   （0 新 token）、4 并发相同请求合并为 1 次真实调用、usage 诚实回显
